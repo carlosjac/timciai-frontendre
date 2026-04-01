@@ -1,0 +1,68 @@
+---
+description: Timci Refine admin — UI (es), código (en), WCAG nivel A en código nuevo, capas shared/features, TimciDataList, menu.*.
+globs: frontendrefine/**/*
+alwaysApply: false
+---
+
+# Timci Admin (Refine) — Convenciones de frontend
+
+Regla para el proyecto **`frontendrefine/`**. Ampliar este archivo cuando acordéis nuevos estándares.
+
+## 1. Idioma: código en inglés, producto en español
+
+- **Código** (identificadores, nombres de archivo, comentarios, nombres de `resource` de Refine, rutas URL, tipos TypeScript): **inglés**.
+- **Texto de usuario** (etiquetas, botones, notificaciones, cabeceras de tabla, vacíos, errores hacia el usuario final): **español** vía **`src/i18n/`** (`locale.es.ts` y provider). Evitar español hardcodeado en JSX; añadir clave al locale.
+- **Locale por defecto:** español. Mantener alineados Ant Design (`es_ES`) y el provider de Refine.
+
+## 2. Organización de carpetas (`src/`)
+
+- **`app-shell/`** — Layout de aplicación: cabecera, `TenantPicker`, menú de usuario, sider (sin duplicar logout si ya está en cabecera), `NavigateToFirstAccessibleList` según permisos.
+- **`features/<dominio>/`** — Pantallas por dominio (p. ej. `features/roles/list.tsx`, `features/preferences/`, `features/change-password/`). Imports hacia Timci compartido: **`../../shared/timci/...`** (y `../../shared/lib/...` solo si aplica desde fuera de `shared/timci`).
+- **`shared/timci/`** — Todo lo acoplado al API Timci: **`http.ts`**, **`apiUrl.ts`** (`getResourceApiBase`, listas globales vs `tenants/:id/...`), **`listQuery.ts`**, **`actionCodes.ts`**, **`passwordPolicy.ts`**, **`list/`** (dominio + infra + UI de tabla), **`form/`**, **`i18n/apiErrorTranslations.ts`**.
+- **`shared/lib/`** — Utilidades **puras** sin React (p. ej. `csv-export.ts`, `fetch-all-pages.ts`). No importar Refine ni hooks.
+- **`providers/`** — `createTimciAuthProvider`, `createTimciAccessControlProvider`, `createTimciDataProvider`.
+- **`i18n/`** — Provider de Refine y export de mensajes; **`config.ts`** en raíz de `src/` para `getV1Base` y claves de almacenamiento de tenant.
+
+## 3. Listados — `TimciDataList`
+
+- Ruta: **`src/shared/timci/list/ui/TimciDataList.tsx`**.
+- Usar para listas estándar salvo motivo fuerte en contra.
+- Incluye: visibilidad de columnas (popover + `localStorage` por recurso), filtros por columna (`filter: { kind: 'text' | 'number' | 'boolean' | 'date' }` → criterios JSON alineados con `buildTimciFilter` / `listQuery`), barra de filtros aplicados, **export CSV** de **todo** el conjunto filtrado/ordenado (paginación en cliente vía `fetchAllListPages` + misma query que el data provider), solo columnas visibles y cabeceras en español vía i18n (`titleKey`). Usar `exportValue` cuando la celda no sea un escalar directo.
+- **`requiresTenant`:** poner en `true` en listados cuya API sea bajo `tenants/:tenantId/...` para no disparar la query hasta que haya tenant en cabecera (`getStoredTenantId`).
+- Columnas: tipo **`TimciColumnDef`** en **`src/shared/timci/list/domain/timci-column-def.ts`**; **`titleKey`** apuntando a claves del locale (p. ej. `table.roles.name`).
+
+## 4. Capas (hexagonal relajada)
+
+- **Dominio** — `src/shared/timci/list/domain/`: tipos y contratos de columnas; sin React ni Refine.
+- **Aplicación / utilidades** — `src/shared/lib/`: lógica pura reutilizable.
+- **Infraestructura** — `src/shared/timci/list/infrastructure/` (p. ej. `timci-list-http.fetcher.ts`): `timciFetch`, `getResourceApiBase`, construcción de query; compartido con el data provider.
+- **UI / adaptadores** — `list/ui/`: React + hooks Refine (`useTable`, `useDataProvider`) en el borde.
+
+## 5. Data provider
+
+- **`createTimciDataProvider`** debe delegar **`getList`** en **`fetchTimciListPage`** (mismo módulo que usa la exportación CSV) para que query strings, tenant y recursos globales coincidan.
+
+## 6. Control de acceso y menú
+
+- Cada ítem del menú lateral depende de **`actionCodes`** devueltos por **`GET /v1/authorization/me/action-codes`**: códigos con prefijo **`menu.`** (p. ej. `menu.countries`, `menu.users`, `menu.roles`) y, para entidades, también códigos de negocio cuando aplica (`entities.list`, `entities.update`, `menu.allEntities`).
+- Implementación en este repo: **`fetchTimciActionCodes`**, **`canSeeResourceMenuItem`**, **`TIMCI_RESOURCE_LIST_ORDER`**, **`getFirstAccessibleListPath`** en **`src/shared/timci/actionCodes.ts`**; **`createTimciAccessControlProvider`** delega en `canSeeResourceMenuItem` para `can({ resource })`.
+- Mapeo recurso → código (no exhaustivo): `userTenantRoles` requiere **`menu.assignments`**; `permissions` requiere **`menu.permissions`**; el resto sigue las ramas del `switch` en `canSeeResourceMenuItem`.
+
+## 7. Formularios y errores de API
+
+- Errores de validación/guardado desde el backend: **`TimciFormServerAlert`**, **`useTimciFormServerErrors`**, **`timciApiErrorParsing`**, traducciones **`apiErrorTranslations.ts`** bajo **`shared/timci/`**.
+
+## 8. TypeScript y módulos
+
+- Proyecto **NodeNext** / **`moduleResolution`**: en imports relativos usar **extensión `.js`** en el path (apunta al `.ts`/`.tsx` compilado), coherente con el resto del árbol.
+
+## 9. Accesibilidad (WCAG 2.x nivel A)
+
+- **Objetivo:** todo **código nuevo o generado** (por personas o asistentes) debe **orientarse a cumplir el nivel A** de WCAG en la medida de lo razonable para el tipo de pantalla (admin CRUD). No se exige nivel AA salvo decisión explícita del producto.
+- **Qué implica en la práctica (resumen):** controles con **nombre accesible** (etiqueta visible, `aria-label` o equivalente cuando solo hay icono); **formularios** con instrucción o etiqueta asociada; **errores** identificables y, si aplica, ligados al campo; **teclado** usable en interacciones propias (sin trampas de foco en diálogos/popovers custom); **no basar el significado solo en el color** para estados esenciales; **`lang`** coherente en documento (ya `es` en `index.html`).
+- **Stack:** Refine y Ant Design aportan parte del comportamiento; las piezas **custom** (`TimciDataList`, cabecera, filtros, etc.) son las que hay que revisar con más cuidado.
+- **Verificación:** antes de dar por cerrada una pantalla con interacción relevante, comprobar al menos **navegación solo teclado** y que iconos/botones sin texto tengan nombre para tecnologías de asistencia.
+
+## 10. Mantenimiento de esta regla
+
+- Nuevos estándares de UI o arquitectura: añadir subsección breve con título y viñetas.

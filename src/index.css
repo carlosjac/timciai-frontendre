@@ -1,0 +1,13 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+/* Refine mobile sider: hide fixed hamburger (top: 64px); we open the drawer from AppHeader instead. */
+@media (max-width: 991px) {
+  .timci-app .ant-layout.ant-layout-has-sider > button.ant-btn.ant-btn-lg {
+    display: none !important;
+  }
+}
