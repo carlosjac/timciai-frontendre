@@ -2,6 +2,7 @@ import { getV1Base, LEGACY_TENANT_STORAGE_KEY, TENANT_STORAGE_KEY } from '../../
 
 const GLOBAL_LIST: Record<string, string> = {
   users: 'authentication/users',
+  sessions: 'auth/sessions',
   tenants: 'authorization/tenants',
   roles: 'authorization/roles',
   actions: 'authorization/actions',

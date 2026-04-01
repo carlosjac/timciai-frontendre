@@ -18,10 +18,33 @@ export function translateEs(key: string, defaultMessage?: string): string {
   return defaultMessage ?? key;
 }
 
+function applyMustacheParams(text: string, params: Record<string, string>): string {
+  let out = text;
+  for (const [k, val] of Object.entries(params)) {
+    out = out.replaceAll(`{{${k}}}`, val);
+  }
+  return out;
+}
+
 export function createTimciI18nProvider(): I18nProvider {
   return {
-    translate: (key: string, _options?: unknown, defaultMessage?: string) =>
-      translateEs(key, defaultMessage),
+    translate: (key: string, options?: unknown, defaultMessage?: string) => {
+      let resolvedDefault = defaultMessage;
+      let params: Record<string, string> | undefined;
+
+      if (typeof options === 'string') {
+        resolvedDefault = options;
+      } else if (options != null && typeof options === 'object' && !Array.isArray(options)) {
+        const entries = Object.entries(options as Record<string, unknown>).filter(
+          (e): e is [string, string] => typeof e[1] === 'string',
+        );
+        if (entries.length > 0) params = Object.fromEntries(entries);
+      }
+
+      let text = translateEs(key, resolvedDefault);
+      if (params) text = applyMustacheParams(text, params);
+      return text;
+    },
     changeLocale: async (locale: string) => {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(LOCALE_STORAGE_KEY, locale);

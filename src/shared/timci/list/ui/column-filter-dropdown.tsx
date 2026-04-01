@@ -1,5 +1,6 @@
 import type { LogicalFilter } from '@refinedev/core';
 import { Button, Card, DatePicker, Input, InputNumber, Select, Space, theme } from 'antd';
+import { antdDatePickerLocaleEs } from '../../antdPickerLocaleEs.js';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
@@ -208,6 +209,7 @@ export function ColumnFilterDropdown(props: Props) {
             <RangePicker
               style={{ width: '100%', marginBottom: token.marginSM }}
               format={pickerDateFormat}
+              locale={antdDatePickerLocaleEs}
               value={
                 dateRange
                   ? [toDayjs(dateRange[0]), toDayjs(dateRange[1])]
@@ -227,6 +229,7 @@ export function ColumnFilterDropdown(props: Props) {
           <DatePicker
             style={{ width: '100%', marginBottom: token.marginSM }}
             format={pickerDateFormat}
+            locale={antdDatePickerLocaleEs}
             value={toDayjs(dateSingle)}
             onChange={(d) => setDateSingle(d ? d.format('YYYY-MM-DD') : '')}
           />

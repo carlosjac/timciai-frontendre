@@ -1,9 +1,23 @@
 import { List, useTable } from '@refinedev/antd';
-import { useTranslate, type BaseRecord, type CrudFilter, type LogicalFilter } from '@refinedev/core';
+import {
+  useTranslate,
+  type BaseRecord,
+  type CrudFilter,
+  type CrudSort,
+  type LogicalFilter,
+} from '@refinedev/core';
 import { Alert, App, Button, Checkbox, Popover, Space, Table, theme } from 'antd';
 import { DownloadOutlined, FilterOutlined, SettingOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import type { ColumnsType, TableProps } from 'antd/es/table';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type CSSProperties,
+} from 'react';
 import type { TimciColumnDef } from '../domain/timci-column-def.js';
 import { fetchAllListPages } from '../../../lib/fetch-all-pages.js';
 import { downloadTextFile, rowsToCsv } from '../../../lib/csv-export.js';
@@ -40,6 +54,14 @@ export type TimciDataListProps<T extends BaseRecord> = {
   requiresTenant?: boolean;
   /** Formato de fechas en filtros (p. ej. `useUserPreferences().dateFormat`). */
   pickerDateFormat?: string;
+  /** Clave localStorage para columnas visibles (p. ej. por lista de precios). Por defecto `resource`. */
+  columnVisibilityStorageId?: string;
+  /** No muestra el título del `List` (p. ej. dentro de pestañas). */
+  hideTitle?: boolean;
+  /** Reenviado a `List` `createButtonProps` (p. ej. `onClick` si el recurso no tiene ruta `create`). */
+  listCreateButtonProps?: ComponentProps<typeof List>['createButtonProps'];
+  /** Orden inicial del listado en servidor (sustituye el default de Refine si se indica). */
+  initialSorters?: CrudSort[];
 };
 
 function filterForField(filters: CrudFilter[] | undefined, field: string): LogicalFilter | undefined {
@@ -51,6 +73,8 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
   const { message } = App.useApp();
   const { token } = theme.useToken();
   const pickerDateFormat = props.pickerDateFormat ?? 'DD/MM/YYYY';
+  const columnStorageKey =
+    COLUMN_STORAGE_PREFIX + (props.columnVisibilityStorageId ?? props.resource);
   const [columnPopoverOpen, setColumnPopoverOpen] = useState(false);
 
   const tenantReady =
@@ -69,6 +93,10 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     resource: props.resource,
     syncWithLocation: props.syncWithLocation ?? true,
     meta: props.meta,
+    sorters:
+      props.initialSorters != null && props.initialSorters.length > 0
+        ? { initial: props.initialSorters, mode: 'server' }
+        : undefined,
     queryOptions: {
       ...props.queryOptions,
       enabled: tenantReady && (props.queryOptions?.enabled !== false),
@@ -107,7 +135,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
   }, [defaultVisible]);
 
   useEffect(() => {
-    const raw = localStorage.getItem(COLUMN_STORAGE_PREFIX + props.resource);
+    const raw = localStorage.getItem(columnStorageKey);
     if (!raw) return;
     try {
       const arr = JSON.parse(raw) as unknown;
@@ -118,15 +146,15 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     } catch {
       /* ignore */
     }
-  }, [props.resource, props.columnDefs]);
+  }, [columnStorageKey, props.columnDefs]);
 
   const persistVisible = useCallback(
     (next: Set<string>) => {
       if (next.size === 0) return;
       setVisibleKeys(next);
-      localStorage.setItem(COLUMN_STORAGE_PREFIX + props.resource, JSON.stringify([...next]));
+      localStorage.setItem(columnStorageKey, JSON.stringify([...next]));
     },
-    [props.resource],
+    [columnStorageKey],
   );
 
   const removeFilterField = useCallback(
@@ -181,6 +209,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
   }, [filters, message, props.columnDefs, props.meta, props.resource, sorters, translate, visibleKeys]);
 
   const antColumns: ColumnsType<T> = useMemo(() => {
+    const primarySort = sorters?.[0];
     return props.columnDefs
       .filter((d) => visibleKeys.has(d.key))
       .map((def) => {
@@ -192,6 +221,13 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
           sorter: def.sorter,
           width: def.width,
         };
+        if (
+          def.sorter &&
+          primarySort &&
+          String(primarySort.field) === String(def.dataIndex)
+        ) {
+          col.sortOrder = primarySort.order === 'desc' ? 'descend' : 'ascend';
+        }
         if (def.render) {
           col.render = (value, record) => def.render!(value, record as T);
         }
@@ -244,18 +280,41 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     filters,
     pickerDateFormat,
     setFiltersAndResetPage,
+    sorters,
     token.colorPrimary,
     translate,
     visibleKeys,
   ]);
 
-  const { columns: refineColumns, rowKey: refineRowKey, ...tableRest } = tableProps;
+  const {
+    columns: refineColumns,
+    rowKey: refineRowKey,
+    onChange: refineTableOnChange,
+    ...tableRest
+  } = tableProps;
   void refineColumns;
   void refineRowKey;
 
+  /**
+   * Refine `useTable` maps Ant Design `filters` back into CrudFilters. We only use `filteredValue`
+   * as a visual marker (`['on']`) for custom column filters; real criteria live in Refine `filters`.
+   * On pagination/sort, Ant passes those sentinels and would corrupt API filters (e.g. tenantName → ['on']).
+   */
+  const handleTableChange = useCallback<NonNullable<TableProps<T>['onChange']>>(
+    (pagination, _antdFilters, sorter, extra) => {
+      refineTableOnChange?.(pagination, {}, sorter, extra);
+    },
+    [refineTableOnChange],
+  );
+
   if (props.requiresTenant && !tenantReady) {
     return (
-      <List title={translate(props.titleKey)}>
+      <List
+        resource={props.resource}
+        title={props.hideTitle ? false : translate(props.titleKey)}
+        breadcrumb={props.hideTitle ? false : undefined}
+        createButtonProps={props.listCreateButtonProps}
+      >
         <Alert type="warning" showIcon message={translate('tenant.selectFirst')} />
       </List>
     );
@@ -286,7 +345,10 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
 
   return (
     <List
-      title={listTitle}
+      resource={props.resource}
+      title={props.hideTitle ? false : listTitle}
+      breadcrumb={props.hideTitle ? false : undefined}
+      createButtonProps={props.listCreateButtonProps}
       headerButtons={({ defaultButtons }) => (
         <Space wrap>
           <Popover
@@ -327,7 +389,9 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         {...tableRest}
         rowKey={props.rowKey}
         columns={antColumns}
+        onChange={handleTableChange}
         aria-label={tableAriaLabel}
+        locale={{ emptyText: translate('list.emptyData') }}
       />
     </List>
   );

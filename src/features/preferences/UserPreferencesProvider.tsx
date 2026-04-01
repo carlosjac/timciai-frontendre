@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import dayjs from 'dayjs';
+import 'dayjs/locale/es';
 import { loadUserPreferences, saveUserPreferences, type UserPreferencesState } from './storage.js';
 import { UserPreferencesContext } from './userPreferencesContextBase.js';
 import type { UserPreferencesContextValue } from './userPreferencesTypes.js';
@@ -14,6 +15,8 @@ function applyTimeZoneDefault(tz: string): void {
       /* ignore */
     }
   }
+  // `setDefault` puede dejar el locale de dayjs en inglés; el calendario Ant usa dayjs para fechas.
+  dayjs.locale('es');
 }
 
 export function UserPreferencesProvider({ children }: { children: ReactNode }) {
