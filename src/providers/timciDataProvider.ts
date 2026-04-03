@@ -31,6 +31,17 @@ import {
   getSellableItemByIdUrl,
   getSellableItemsEntityListUrl,
 } from '../shared/timci/sellableItemsApi.js';
+import { normalizeTimciAuditFieldsInPlace } from '../shared/timci/auditUserDisplay.js';
+import { hydrateTimciRowsWithUserDirectory } from '../shared/timci/userDisplayNameHydration.js';
+
+async function normalizeAndHydrateGetOnePayload<T>(payload: T): Promise<T> {
+  if (payload != null && typeof payload === 'object') {
+    const row = payload as Record<string, unknown>;
+    normalizeTimciAuditFieldsInPlace(row);
+    await hydrateTimciRowsWithUserDirectory([row]);
+  }
+  return payload;
+}
 
 function paginationValues(p: Pagination | undefined): { current: number; pageSize: number } {
   const ext = p as Pagination & { current?: number; currentMode?: 'off' | 'server' | 'client' };
@@ -69,7 +80,7 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getSellableItemByIdUrl(tenantId, String(id)));
-        return { data: json as TData };
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
       }
       if (resource === 'price_lists') {
         const tenantId = getStoredTenantId();
@@ -77,7 +88,7 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getPriceListByIdUrl(tenantId, String(id)));
-        return { data: json as TData };
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
       }
       if (resource === 'price_list_items') {
         const tenantId = getStoredTenantId();
@@ -85,14 +96,14 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getPriceListItemByIdUrl(tenantId, String(id)));
-        return { data: json as TData };
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
       }
       const base = getResourceApiBase(resource);
       if (!base) {
         throw toHttpError(400, 'Select a tenant in the header for this resource.');
       }
       const { json } = await timciFetch(`${base}/${id}`);
-      return { data: json as TData };
+      return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
     },
 
     create: async <TData extends BaseRecord = BaseRecord, TVariables = Record<string, unknown>>({

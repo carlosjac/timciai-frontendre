@@ -15,6 +15,7 @@ import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormSe
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { SELLABLE_ITEM_KINDS } from './kindChoices.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { SellableItemPricesTab } from './SellableItemPricesTab.js';
 
 const SELLABLE_EDIT_FIELDS = ['kind', 'name', 'code', 'description'] as const;
@@ -26,8 +27,8 @@ type SellableRecord = {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  createdByName?: string;
-  updatedByName?: string;
+  createdBy?: TimciAuditUserRef;
+  updatedBy?: TimciAuditUserRef;
 };
 
 export function SellableItemEdit() {
@@ -203,8 +204,8 @@ export function SellableItemEdit() {
                       timeZone={timeZone}
                       createdAt={record.createdAt}
                       updatedAt={record.updatedAt}
-                      createdByName={record.createdByName}
-                      updatedByName={record.updatedByName}
+                      createdBy={record.createdBy}
+                      updatedBy={record.updatedBy}
                     />
                   )}
                 </>

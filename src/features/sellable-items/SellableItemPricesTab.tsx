@@ -1,12 +1,14 @@
 import { useList, usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Alert, Button, Select, Space, Spin, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
+import { formatTimciUserDateOnly, formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
+import { TIMCI_LIST_SORT_BY_AUDIT_USER_NAME } from '../../shared/timci/list/domain/timci-audit-list-sort-fields.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { SellableItemPriceDrawer } from './SellableItemPriceDrawer.js';
 
 type PriceListRow = BaseRecord & { id: string; name?: string; isActive?: boolean };
@@ -16,6 +18,10 @@ type ItemRow = BaseRecord & {
   unitPriceAmount?: string;
   validFrom?: string | null;
   validTo?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: TimciAuditUserRef;
+  updatedBy?: TimciAuditUserRef;
 };
 
 export type SellableItemPricesTabProps = {
@@ -113,7 +119,7 @@ export function SellableItemPricesTab({
         dataIndex: 'unitPriceAmount',
         titleKey: 'table.priceListItems.unitPrice',
         sorter: true,
-        filter: { kind: 'text' },
+        filter: { kind: 'number' },
       },
       {
         key: 'validFrom',
@@ -130,6 +136,38 @@ export function SellableItemPricesTab({
         sorter: true,
         filter: { kind: 'date' },
         render: (v: unknown) => formatTimciUserDateOnly(v, { dateFormat, timeZone }),
+      },
+      {
+        key: 'createdAt',
+        dataIndex: 'createdAt',
+        titleKey: 'table.priceListItems.createdAt',
+        defaultVisible: false,
+        filter: { kind: 'date' },
+        render: (v: unknown) => formatTimciUserDateTime(v, { dateFormat, timeZone }),
+      },
+      {
+        key: 'updatedAt',
+        dataIndex: 'updatedAt',
+        titleKey: 'table.priceListItems.updatedAt',
+        defaultVisible: false,
+        filter: { kind: 'date' },
+        render: (v: unknown) => formatTimciUserDateTime(v, { dateFormat, timeZone }),
+      },
+      {
+        key: 'createdBy',
+        dataIndex: 'createdBy',
+        sortField: TIMCI_LIST_SORT_BY_AUDIT_USER_NAME.createdBy,
+        titleKey: 'table.priceListItems.createdByName',
+        sorter: true,
+        defaultVisible: false,
+      },
+      {
+        key: 'updatedBy',
+        dataIndex: 'updatedBy',
+        sortField: TIMCI_LIST_SORT_BY_AUDIT_USER_NAME.updatedBy,
+        titleKey: 'table.priceListItems.updatedByName',
+        sorter: true,
+        defaultVisible: false,
       },
     );
     return cols;

@@ -5,14 +5,19 @@ import { Button, Tag } from 'antd';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
+import { TIMCI_LIST_SORT_BY_AUDIT_USER_NAME } from '../../shared/timci/list/domain/timci-audit-list-sort-fields.js';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
+import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 
 type PriceListRow = BaseRecord & {
   name: string;
   isActive?: boolean;
   createdAt?: string;
+  updatedAt?: string;
+  createdBy?: TimciAuditUserRef;
+  updatedBy?: TimciAuditUserRef;
 };
 
 export function PriceListList() {
@@ -75,7 +80,33 @@ export function PriceListList() {
         titleKey: 'table.priceLists.createdAt',
         sorter: true,
         filter: { kind: 'date' },
+        defaultVisible: false,
         render: (v: unknown) => formatTimciUserDateTime(v, { dateFormat, timeZone }),
+      },
+      {
+        key: 'updatedAt',
+        dataIndex: 'updatedAt',
+        titleKey: 'table.priceLists.updatedAt',
+        sorter: true,
+        filter: { kind: 'date' },
+        defaultVisible: false,
+        render: (v: unknown) => formatTimciUserDateTime(v, { dateFormat, timeZone }),
+      },
+      {
+        key: 'createdBy',
+        dataIndex: 'createdBy',
+        sortField: TIMCI_LIST_SORT_BY_AUDIT_USER_NAME.createdBy,
+        titleKey: 'table.priceLists.createdByName',
+        sorter: true,
+        defaultVisible: false,
+      },
+      {
+        key: 'updatedBy',
+        dataIndex: 'updatedBy',
+        sortField: TIMCI_LIST_SORT_BY_AUDIT_USER_NAME.updatedBy,
+        titleKey: 'table.priceLists.updatedByName',
+        sorter: true,
+        defaultVisible: false,
       },
     );
 

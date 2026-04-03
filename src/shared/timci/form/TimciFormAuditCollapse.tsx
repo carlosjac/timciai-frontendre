@@ -1,6 +1,8 @@
 import { useTranslate } from '@refinedev/core';
 import { Collapse, Space, theme } from 'antd';
 import type { CSSProperties, ReactNode } from 'react';
+import type { TimciAuditUserRef } from '../auditUserRef.js';
+import { timciAuditUserDisplayText } from '../auditUserDisplay.js';
 import { formatTimciUserDateTime, type TimciUserDateTimePrefs } from '../formatUserDateTime.js';
 
 export type TimciFormAuditLabelKeys = {
@@ -22,8 +24,9 @@ const DEFAULT_LABEL_KEYS: TimciFormAuditLabelKeys = {
 export type TimciFormAuditCollapseProps = TimciUserDateTimePrefs & {
   createdAt?: unknown;
   updatedAt?: unknown;
-  createdByName?: string | null;
-  updatedByName?: string | null;
+  /** Backend `AuditUserRef` (`{ id, name }`). */
+  createdBy?: TimciAuditUserRef | null;
+  updatedBy?: TimciAuditUserRef | null;
   /** Claves i18n; por defecto `audit.*` */
   labelKeys?: Partial<TimciFormAuditLabelKeys>;
   /** Contenido extra dentro del panel (debajo de las filas estándar) */
@@ -34,6 +37,13 @@ export type TimciFormAuditCollapseProps = TimciUserDateTimePrefs & {
 
 function hasNonEmptyString(v: unknown): boolean {
   return v != null && String(v).trim() !== '';
+}
+
+function auditRefHasSomething(ref: TimciAuditUserRef | null | undefined): boolean {
+  if (ref == null) return false;
+  const id = typeof ref.id === 'string' ? ref.id.trim() : '';
+  const name = typeof ref.name === 'string' ? ref.name.trim() : '';
+  return id !== '' || name !== '';
 }
 
 /**
@@ -69,22 +79,32 @@ export function TimciFormAuditCollapse(props: TimciFormAuditCollapseProps) {
       ),
     });
   }
-  if (hasNonEmptyString(props.createdByName)) {
+  if (auditRefHasSomething(props.createdBy)) {
+    const label = timciAuditUserDisplayText(
+      { createdBy: props.createdBy ?? undefined },
+      'created',
+    );
     rows.push({
       key: 'createdBy',
       content: (
         <div style={{ color: token.colorTextSecondary }}>
-          {translate(keys.createdBy)}: {String(props.createdByName)}
+          {translate(keys.createdBy)}:{' '}
+          {label || translate('audit.userNameUnavailable')}
         </div>
       ),
     });
   }
-  if (hasNonEmptyString(props.updatedByName)) {
+  if (auditRefHasSomething(props.updatedBy)) {
+    const label = timciAuditUserDisplayText(
+      { updatedBy: props.updatedBy ?? undefined },
+      'updated',
+    );
     rows.push({
       key: 'updatedBy',
       content: (
         <div style={{ color: token.colorTextSecondary }}>
-          {translate(keys.updatedBy)}: {String(props.updatedByName)}
+          {translate(keys.updatedBy)}:{' '}
+          {label || translate('audit.userNameUnavailable')}
         </div>
       ),
     });

@@ -59,6 +59,7 @@ export function SessionList() {
         dataIndex: 'userName',
         titleKey: 'table.sessions.userName',
         sorter: true,
+        filter: { kind: 'text' },
         render: (v: unknown) => (typeof v === 'string' && v ? v : '—'),
       },
       {
@@ -90,6 +91,20 @@ export function SessionList() {
           ),
         exportValue: (r) =>
           r.current ? translate('table.sessions.yes') : translate('table.sessions.no'),
+      },
+      {
+        key: 'isOwn',
+        dataIndex: 'isOwn',
+        titleKey: 'table.sessions.ownSession',
+        sorter: true,
+        render: (v: unknown) =>
+          v ? (
+            <Tag color="blue">{translate('table.sessions.yes')}</Tag>
+          ) : (
+            <Tag>{translate('table.sessions.no')}</Tag>
+          ),
+        exportValue: (r) =>
+          r.isOwn ? translate('table.sessions.yes') : translate('table.sessions.no'),
       },
       ...(showRevoke
         ? ([

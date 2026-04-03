@@ -26,6 +26,10 @@ import { getStoredTenantId } from '../../apiUrl.js';
 import { isLogicalFilter } from '../../listQuery.js';
 import { AppliedFiltersBar } from './applied-filters-bar.js';
 import { ColumnFilterDropdown } from './column-filter-dropdown.js';
+import {
+  timciAuditColumnKind,
+  timciAuditUserDisplayText,
+} from '../../auditUserDisplay.js';
 
 const COLUMN_STORAGE_PREFIX = 'timci-refine-list-cols-';
 
@@ -191,6 +195,10 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         header: translate(d.titleKey, undefined, d.titleKey),
         accessor: (row: T) => {
           if (d.exportValue) return d.exportValue(row);
+          const auditKind = timciAuditColumnKind(String(d.dataIndex));
+          if (auditKind) {
+            return timciAuditUserDisplayText(row as Record<string, unknown>, auditKind);
+          }
           const v = row[d.dataIndex as keyof T];
           if (v == null) return '';
           if (typeof v === 'object') return JSON.stringify(v);
@@ -214,8 +222,9 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
       .filter((d) => visibleKeys.has(d.key))
       .map((def) => {
         const columnTitleText = translate(def.titleKey, undefined, def.titleKey);
+        const sortKey = def.sortField ?? def.key;
         const col: ColumnsType<T>[number] = {
-          key: def.key,
+          key: sortKey,
           title: columnTitleText,
           dataIndex: def.dataIndex as string,
           sorter: def.sorter,
@@ -224,12 +233,22 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         if (
           def.sorter &&
           primarySort &&
-          String(primarySort.field) === String(def.dataIndex)
+          String(primarySort.field) === String(sortKey)
         ) {
           col.sortOrder = primarySort.order === 'desc' ? 'descend' : 'ascend';
         }
+        const auditKind = timciAuditColumnKind(String(def.dataIndex));
         if (def.render) {
           col.render = (value, record) => def.render!(value, record as T);
+        } else if (auditKind) {
+          col.render = (_, record) => {
+            const text = timciAuditUserDisplayText(record as Record<string, unknown>, auditKind);
+            return text ? (
+              text
+            ) : (
+              <span style={{ color: token.colorTextSecondary }}>—</span>
+            );
+          };
         }
 
         if (def.filter) {

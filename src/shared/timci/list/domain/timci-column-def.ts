@@ -11,6 +11,8 @@ export type TimciColumnDef<T extends Record<string, unknown> = Record<string, un
   /** Stable id for visibility + export (English, kebab or camel). */
   key: string;
   dataIndex: keyof T & string;
+  /** If set, sent as Refine/API sort field (Ant column `key`); defaults to `key`. For audit users use `TIMCI_LIST_SORT_BY_AUDIT_USER_NAME`. */
+  sortField?: string;
   /** i18n key for header label (Spanish in locale file). */
   titleKey: string;
   sorter?: boolean;

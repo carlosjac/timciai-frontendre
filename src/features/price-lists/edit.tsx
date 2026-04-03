@@ -14,6 +14,7 @@ import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAle
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { PriceListItemsReadonlyTab } from './PriceListItemsReadonlyTab.js';
 
 const PRICE_LIST_EDIT_FIELDS = ['name'] as const;
@@ -24,8 +25,8 @@ type PriceListRecord = {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  createdByName?: string;
-  updatedByName?: string;
+  createdBy?: TimciAuditUserRef;
+  updatedBy?: TimciAuditUserRef;
 };
 
 export function PriceListEdit() {
@@ -176,8 +177,8 @@ export function PriceListEdit() {
                       timeZone={timeZone}
                       createdAt={record.createdAt}
                       updatedAt={record.updatedAt}
-                      createdByName={record.createdByName}
-                      updatedByName={record.updatedByName}
+                      createdBy={record.createdBy}
+                      updatedBy={record.updatedBy}
                     />
                   )}
                 </>

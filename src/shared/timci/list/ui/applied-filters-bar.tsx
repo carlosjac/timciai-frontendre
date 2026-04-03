@@ -1,6 +1,8 @@
 import type { BaseRecord, CrudFilter, LogicalFilter } from '@refinedev/core';
 import { CloseOutlined } from '@ant-design/icons';
 import { Button, Space, Tag, theme, Typography } from 'antd';
+import { useUserPreferences } from '../../../../features/preferences/useUserPreferences.js';
+import { formatTimciUserDateOnly } from '../../formatUserDateTime.js';
 import { isLogicalFilter } from '../../listQuery.js';
 import type { TimciColumnDef } from '../domain/timci-column-def.js';
 import { type TimciFilterKind } from '../domain/filter-operators.js';
@@ -21,8 +23,21 @@ function formatChipValue(
   f: LogicalFilter,
   kind: TimciFilterKind | undefined,
   translate: Translate,
+  dateFormat: string,
+  timeZone: string,
 ): string {
   const op = String(f.operator);
+  const datePrefs = { dateFormat, timeZone };
+
+  if (kind === 'date') {
+    if (op === 'between' && Array.isArray(f.value)) {
+      const a = formatTimciUserDateOnly(f.value[0], datePrefs);
+      const b = formatTimciUserDateOnly(f.value[1], datePrefs);
+      return `${a} — ${b}`;
+    }
+    return formatTimciUserDateOnly(f.value, datePrefs);
+  }
+
   if (op === 'between' && Array.isArray(f.value)) {
     return `${String(f.value[0] ?? '')} — ${String(f.value[1] ?? '')}`;
   }
@@ -47,6 +62,7 @@ type Props<T extends BaseRecord> = {
 
 export function AppliedFiltersBar<T extends BaseRecord>(props: Props<T>) {
   const { token } = theme.useToken();
+  const { dateFormat, timeZone } = useUserPreferences();
   const { filters, columnDefs, translate, onRemoveField, onClearAll } = props;
 
   const logical = (filters ?? []).filter((f): f is LogicalFilter => isLogicalFilter(f));
@@ -66,7 +82,7 @@ export function AppliedFiltersBar<T extends BaseRecord>(props: Props<T>) {
             : f.field;
           const opKey = `list.filter.op.${String(f.operator)}`;
           const opLabel = translate(opKey, undefined, String(f.operator));
-          const valStr = formatChipValue(f, kind, translate);
+          const valStr = formatChipValue(f, kind, translate, dateFormat, timeZone);
           const removeLabel = `${translate('list.a11y.removeFilterForColumn')}: ${colTitle}`;
           return (
             <Tag

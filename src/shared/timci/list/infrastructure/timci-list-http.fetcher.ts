@@ -1,10 +1,24 @@
 import type { BaseRecord, CrudFilter, CrudSort } from '@refinedev/core';
 import { getResourceApiBase, getStoredTenantId } from '../../apiUrl.js';
-import { buildSortRangeParams, buildTimciFilter, parseContentRangeTotal } from '../../listQuery.js';
+import {
+  buildSortRangeParams,
+  buildTimciFilter,
+  isLogicalFilter,
+  logicalFilterToTimciCriterion,
+  parseContentRangeTotal,
+} from '../../listQuery.js';
 import { timciFetch, toHttpError } from '../../http.js';
 import { getPriceListItemsListUrl } from '../../priceListItemsApi.js';
 import { getPriceListsEntityListUrl } from '../../priceListsApi.js';
 import { getSellableItemsEntityListUrl } from '../../sellableItemsApi.js';
+import { mapTimciListRowsWithAuditFields } from '../../auditUserDisplay.js';
+import { hydrateTimciRowsWithUserDirectory } from '../../userDisplayNameHydration.js';
+
+async function mapHydrateTimciListRows<T>(rows: T[]): Promise<T[]> {
+  const mapped = mapTimciListRowsWithAuditFields(rows);
+  await hydrateTimciRowsWithUserDirectory(mapped as Record<string, unknown>[]);
+  return mapped;
+}
 
 export type TimciListFetchInput = {
   resource: string;
@@ -34,7 +48,7 @@ function normalizeSessionRow(row: Record<string, unknown>): Record<string, unkno
     expiresAt: parseSessionTime(row.expiresAt),
     current: Boolean(row.current),
     userName: typeof row.userName === 'string' ? row.userName : undefined,
-    isOwn: typeof row.isOwn === 'boolean' ? row.isOwn : undefined,
+    isOwn: row.isOwn === true,
   };
 }
 
@@ -45,6 +59,8 @@ function sessionSortValue(row: Record<string, unknown>, field: string): string |
       return typeof row[field] === 'number' ? (row[field] as number) : 0;
     case 'current':
       return Boolean(row.current);
+    case 'isOwn':
+      return Boolean(row.isOwn);
     case 'userName':
       return String(row.userName ?? '').toLowerCase();
     case 'id':
@@ -68,6 +84,46 @@ function compareSessionRows(
   return asc ? cmp : -cmp;
 }
 
+function sessionRowMatchesUserNameCriterion(
+  row: Record<string, unknown>,
+  operator: string,
+  rawValue: string,
+): boolean {
+  const haystack = String(row.userName ?? '').toLowerCase();
+  const needle = rawValue.trim().toLowerCase();
+  if (needle === '') return true;
+  switch (operator) {
+    case 'eq':
+      return haystack === needle;
+    case 'contains':
+      return haystack.includes(needle);
+    case 'startsWith':
+      return haystack.startsWith(needle);
+    case 'endsWith':
+      return haystack.endsWith(needle);
+    default:
+      return true;
+  }
+}
+
+/** Sesiones: lista completa en una respuesta; filtros Refine se aplican en cliente. */
+function applySessionListFilters(
+  rows: Record<string, unknown>[],
+  filters: CrudFilter[] | undefined,
+): Record<string, unknown>[] {
+  if (!filters?.length) return rows;
+  let out = rows;
+  for (const f of filters) {
+    if (!isLogicalFilter(f) || f.field !== 'userName') continue;
+    const crit = logicalFilterToTimciCriterion(f);
+    if (!crit) continue;
+    const op = String(crit.operator);
+    const val = String(crit.value ?? '');
+    out = out.filter((row) => sessionRowMatchesUserNameCriterion(row, op, val));
+  }
+  return out;
+}
+
 export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
   input: TimciListFetchInput,
 ): Promise<{ data: TData[]; total: number }> {
@@ -87,7 +143,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       filterObj,
     });
     const { json, headers } = await timciFetch(`${listBase}?${qs.toString()}`);
-    const data = Array.isArray(json) ? (json as TData[]) : [];
+    const data = await mapHydrateTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
     const total = parseContentRangeTotal(headers) ?? data.length;
     return { data, total };
   }
@@ -108,7 +164,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       filterObj,
     });
     const { json, headers } = await timciFetch(`${listBase}?${qs.toString()}`);
-    const data = Array.isArray(json) ? (json as TData[]) : [];
+    const data = await mapHydrateTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
     const total = parseContentRangeTotal(headers) ?? data.length;
     return { data, total };
   }
@@ -134,7 +190,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       filterObj,
     });
     const { json, headers } = await timciFetch(`${listBase}?${qs.toString()}`);
-    const data = Array.isArray(json) ? (json as TData[]) : [];
+    const data = await mapHydrateTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
     const total = parseContentRangeTotal(headers) ?? data.length;
     return { data, total };
   }
@@ -153,18 +209,22 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       ? (json as { sessions: Record<string, unknown>[] }).sessions
       : [];
     const normalized = raw.map((r) => normalizeSessionRow(r)) as TData[];
+    const filtered = applySessionListFilters(
+      normalized as Record<string, unknown>[],
+      input.filters,
+    ) as TData[];
     const sortField =
       input.sorters?.[0]?.field != null ? String(input.sorters[0].field) : 'startedAt';
     const asc =
       input.sorters?.[0]?.order != null
         ? String(input.sorters[0].order).toLowerCase() === 'asc'
         : false;
-    normalized.sort((a, b) =>
+    filtered.sort((a, b) =>
       compareSessionRows(a as Record<string, unknown>, b as Record<string, unknown>, sortField, asc),
     );
-    const total = normalized.length;
+    const total = filtered.length;
     const start = (input.page - 1) * input.pageSize;
-    const data = normalized.slice(start, start + input.pageSize);
+    const data = filtered.slice(start, start + input.pageSize);
     return { data, total };
   }
 
@@ -203,7 +263,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
   });
 
   const { json, headers } = await timciFetch(`${base}?${qs.toString()}`);
-  const data = Array.isArray(json) ? (json as TData[]) : [];
+  const data = await mapHydrateTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
   const total = parseContentRangeTotal(headers) ?? data.length;
 
   return { data, total };
