@@ -7,6 +7,7 @@ import {
   type LogicalFilter,
 } from '@refinedev/core';
 import { Alert, App, Button, Checkbox, Popover, Space, Table, theme } from 'antd';
+import esES from 'antd/locale/es_ES';
 import { DownloadOutlined, FilterOutlined, SettingOutlined } from '@ant-design/icons';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import {
@@ -19,6 +20,21 @@ import {
   type CSSProperties,
 } from 'react';
 import type { TimciColumnDef } from '../domain/timci-column-def.js';
+
+/** Alineado con `rc-pagination` `es_ES` por si el locale de antd no se resuelve en runtime. */
+const RC_PAGINATION_ES_FALLBACK = {
+  items_per_page: '/ página',
+  jump_to: 'Ir a',
+  jump_to_confirm: 'confirmar',
+  page: 'Página',
+  prev_page: 'Página anterior',
+  next_page: 'Página siguiente',
+  prev_5: '5 páginas previas',
+  next_5: '5 páginas siguientes',
+  prev_3: '3 páginas previas',
+  next_3: '3 páginas siguientes',
+  page_size: 'tamaño de página',
+} as const;
 import { fetchAllListPages } from '../../../lib/fetch-all-pages.js';
 import { downloadTextFile, rowsToCsv } from '../../../lib/csv-export.js';
 import { fetchTimciListPage } from '../infrastructure/timci-list-http.fetcher.js';
@@ -309,10 +325,32 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     columns: refineColumns,
     rowKey: refineRowKey,
     onChange: refineTableOnChange,
+    pagination: tablePagination,
     ...tableRest
   } = tableProps;
   void refineColumns;
   void refineRowKey;
+
+  /**
+   * Fuerza textos de rc-pagination en español ("Página", "/ página", etc.).
+   * El locale debe ir **después** de cualquier `tablePagination.locale`: Ant Design puede reinyectar
+   * cadenas en inglés al propagar el estado de paginación y, con el orden anterior, machacaban el español.
+   */
+  const paginationWithEsLocale = useMemo(() => {
+    if (tablePagination === false) return false;
+    if (tablePagination == null) return tablePagination;
+    const prevLocale =
+      typeof tablePagination === 'object' &&
+      tablePagination.locale != null &&
+      typeof tablePagination.locale === 'object'
+        ? tablePagination.locale
+        : {};
+    const rcEs = esES.Pagination ?? RC_PAGINATION_ES_FALLBACK;
+    return {
+      ...tablePagination,
+      locale: { ...prevLocale, ...rcEs },
+    };
+  }, [tablePagination]);
 
   /**
    * Refine `useTable` maps Ant Design `filters` back into CrudFilters. We only use `filteredValue`
@@ -406,6 +444,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
       />
       <Table<T>
         {...tableRest}
+        pagination={paginationWithEsLocale}
         rowKey={props.rowKey}
         columns={antColumns}
         onChange={handleTableChange}

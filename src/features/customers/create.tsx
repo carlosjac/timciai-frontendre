@@ -1,7 +1,7 @@
 import { Create, useForm, useSelect } from '@refinedev/antd';
 import { useList, useTranslate, type BaseRecord } from '@refinedev/core';
 import { useMemo, useEffect, useState } from 'react';
-import { Alert, Form, Input, InputNumber, Select, Switch } from 'antd';
+import { Alert, Button, Form, Input, InputNumber, Select, Space, Switch, Typography } from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import {
@@ -18,15 +18,26 @@ type DocTypeRow = BaseRecord & {
   appliesTo?: string;
 };
 
+const emptyContactRow = () => ({
+  name: '',
+  email: '',
+  phone: '',
+  notifySales: false,
+  notifyCreditos: false,
+  notifyDebits: false,
+  notifyCollections: false,
+  notifyOverduePayments: false,
+});
+
 export function CustomerCreate() {
   const translate = useTranslate();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
+  /** Misma convención que alta de entidad: id de entidad = organización actual del header. */
+  const entityId = tenantId;
   const [policies, setPolicies] = useState<OverduePolicyItem[]>([]);
   const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
 
   const { formProps, saveButtonProps, onFinish, form } = useForm({ resource: 'customers' });
-
-  const entityIdWatched = Form.useWatch('entityId', form);
 
   const { selectProps: countrySelect } = useSelect({
     resource: 'countries',
@@ -45,14 +56,6 @@ export function CustomerCreate() {
   });
   const currencySelect = stripSelectServerSearch(currencySelectRaw);
 
-  const { selectProps: entitySelect } = useSelect({
-    resource: 'entities',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 200 },
-    queryOptions: { enabled: !!tenantId },
-  });
-
   const { result: docTypeResult } = useList<DocTypeRow>({
     resource: 'document_types',
     pagination: { currentPage: 1, pageSize: 500 },
@@ -62,24 +65,25 @@ export function CustomerCreate() {
   const docTypes = docTypeResult.data ?? [];
 
   useEffect(() => {
-    if (!tenantId) return;
+    if (!tenantId || !entityId) return;
     void fetchOverduePolicyCatalog(tenantId).then(setPolicies);
-  }, [tenantId]);
+  }, [tenantId, entityId]);
 
   useEffect(() => {
-    if (!tenantId || !entityIdWatched) {
-      setPriceLists([]);
-      form?.setFieldValue('priceListId', undefined);
-      return;
-    }
-    void fetchPriceListsForEntity(tenantId, String(entityIdWatched)).then((rows) => {
+    if (!tenantId || !entityId) return;
+    let cancelled = false;
+    void fetchPriceListsForEntity(tenantId, entityId).then((rows) => {
+      if (cancelled) return;
       setPriceLists(rows);
       const current = form?.getFieldValue('priceListId') as string | undefined;
       if (current && !rows.some((r) => r.id === current)) {
         form?.setFieldValue('priceListId', rows[0]?.id);
       }
     });
-  }, [tenantId, entityIdWatched, form]);
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId, entityId, form]);
 
   useEffect(() => {
     if (policies.length === 0) return;
@@ -99,7 +103,7 @@ export function CustomerCreate() {
     [policies],
   );
 
-  if (!tenantId) {
+  if (!tenantId || !entityId) {
     return (
       <Create title={translate('pages.customers.create')}>
         <Alert type="warning" showIcon message={translate('tenant.selectFirst')} />
@@ -109,21 +113,48 @@ export function CustomerCreate() {
 
   return (
     <Create title={translate('pages.customers.create')} saveButtonProps={saveButtonProps}>
+      <Typography.Paragraph type="secondary">
+        {translate('create.customer.entityFromHeaderHint')}
+      </Typography.Paragraph>
       <Form
         {...formProps}
         layout="vertical"
         initialValues={{
-          entityId: tenantId,
           personType: 'physical_person',
           defaultPaymentTermDays: 30,
           isActive: true,
+          contacts: [emptyContactRow()],
         }}
         onFinish={async (values: Record<string, unknown>) => {
+          const rawContacts = values.contacts as
+            | Array<{
+                name?: string;
+                email?: string;
+                phone?: string;
+                notifySales?: boolean;
+                notifyCreditos?: boolean;
+                notifyDebits?: boolean;
+                notifyCollections?: boolean;
+                notifyOverduePayments?: boolean;
+              }>
+            | undefined;
+
+          const contacts = (rawContacts ?? []).map((row) => ({
+            name: String(row.name ?? '').trim(),
+            email: String(row.email ?? '').trim(),
+            phone: String(row.phone ?? '').trim(),
+            notifySales: row.notifySales === true,
+            notifyCreditos: row.notifyCreditos === true,
+            notifyDebits: row.notifyDebits === true,
+            notifyCollections: row.notifyCollections === true,
+            notifyOverduePayments: row.notifyOverduePayments === true,
+          }));
+
           await onFinish({
             name: values.name,
             address: values.address,
             countryId: values.countryId,
-            entityId: values.entityId,
+            entityId,
             priceListId: values.priceListId,
             defaultCurrencyId: values.defaultCurrencyId,
             personType: values.personType,
@@ -132,6 +163,7 @@ export function CustomerCreate() {
             defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
             defaultPaymentTermDays: values.defaultPaymentTermDays,
             isActive: values.isActive !== false,
+            contacts,
           });
         }}
       >
@@ -157,13 +189,6 @@ export function CustomerCreate() {
           <Select {...countrySelect} showSearch optionFilterProp="label" />
         </Form.Item>
         <Form.Item
-          label={translate('create.customer.entity')}
-          name="entityId"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Select {...entitySelect} showSearch optionFilterProp="label" />
-        </Form.Item>
-        <Form.Item
           label={translate('create.customer.priceList')}
           name="priceListId"
           rules={[{ required: true, message: translate('form.validation.requiredField') }]}
@@ -171,15 +196,9 @@ export function CustomerCreate() {
           <Select
             showSearch
             optionFilterProp="label"
-            disabled={!entityIdWatched || priceLists.length === 0}
+            disabled={priceLists.length === 0}
             options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
-            placeholder={
-              !entityIdWatched
-                ? translate('create.customer.entity')
-                : priceLists.length === 0
-                  ? '…'
-                  : undefined
-            }
+            placeholder={priceLists.length === 0 ? '…' : undefined}
           />
         </Form.Item>
         <Form.Item
@@ -269,6 +288,151 @@ export function CustomerCreate() {
         >
           <Switch />
         </Form.Item>
+
+        <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+          {translate('create.customer.contactsSection')}
+        </Typography.Text>
+        <Form.List
+          name="contacts"
+          rules={[
+            {
+              validator: async (_, value) => {
+                if (!Array.isArray(value) || value.length < 1) {
+                  return Promise.reject(new Error(translate('create.customer.contactsMinOne')));
+                }
+              },
+            },
+          ]}
+        >
+          {(fields, { add, remove, move }) => (
+            <>
+              {fields.map((field, index) => {
+                const { key, name: rowName, ...restField } = field;
+                return (
+                  <div
+                    key={key}
+                    style={{
+                      marginBottom: 16,
+                      padding: 16,
+                      border: '1px solid var(--ant-color-border-secondary, #f0f0f0)',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <Space wrap style={{ marginBottom: 12 }}>
+                      <Button
+                        type="default"
+                        htmlType="button"
+                        disabled={index === 0}
+                        onClick={() => move(index, index - 1)}
+                      >
+                        {translate('create.customer.moveContactUp')}
+                      </Button>
+                      <Button
+                        type="default"
+                        htmlType="button"
+                        disabled={index === fields.length - 1}
+                        onClick={() => move(index, index + 1)}
+                      >
+                        {translate('create.customer.moveContactDown')}
+                      </Button>
+                      <Button
+                        type="default"
+                        htmlType="button"
+                        danger
+                        disabled={fields.length <= 1}
+                        onClick={() => remove(rowName)}
+                      >
+                        {translate('create.customer.removeContact')}
+                      </Button>
+                    </Space>
+                    <Form.Item
+                      {...restField}
+                      name={[rowName, 'name']}
+                      label={translate('create.customer.contactName')}
+                      rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                      style={{ marginBottom: 12 }}
+                    >
+                      <Input maxLength={120} />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[rowName, 'email']}
+                      label={translate('create.customer.contactEmail')}
+                      rules={[
+                        { required: true, message: translate('form.validation.requiredField') },
+                        { type: 'email', message: translate('pages.login.errors.validEmail') },
+                      ]}
+                      style={{ marginBottom: 12 }}
+                    >
+                      <Input type="email" autoComplete="off" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[rowName, 'phone']}
+                      label={translate('create.customer.contactPhone')}
+                      style={{ marginBottom: 12 }}
+                    >
+                      <Input />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[rowName, 'notifySales']}
+                      label={translate('create.customer.notifySales')}
+                      valuePropName="checked"
+                      style={{ marginBottom: 8 }}
+                    >
+                      <Switch />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[rowName, 'notifyCreditos']}
+                      label={translate('create.customer.notifyCreditos')}
+                      valuePropName="checked"
+                      style={{ marginBottom: 8 }}
+                    >
+                      <Switch />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[rowName, 'notifyDebits']}
+                      label={translate('create.customer.notifyDebits')}
+                      valuePropName="checked"
+                      style={{ marginBottom: 8 }}
+                    >
+                      <Switch />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[rowName, 'notifyCollections']}
+                      label={translate('create.customer.notifyCollections')}
+                      valuePropName="checked"
+                      style={{ marginBottom: 8 }}
+                    >
+                      <Switch />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[rowName, 'notifyOverduePayments']}
+                      label={translate('create.customer.notifyOverduePayments')}
+                      valuePropName="checked"
+                    >
+                      <Switch />
+                    </Form.Item>
+                  </div>
+                );
+              })}
+              <Button
+                type="dashed"
+                htmlType="button"
+                onClick={() => add(emptyContactRow())}
+                block
+                style={{ marginBottom: 8 }}
+              >
+                {translate('create.customer.addContact')}
+              </Button>
+            </>
+          )}
+        </Form.List>
       </Form>
     </Create>
   );

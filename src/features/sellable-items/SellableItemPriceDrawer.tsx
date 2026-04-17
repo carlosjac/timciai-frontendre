@@ -156,7 +156,6 @@ export function SellableItemPriceDrawer({
       width={520}
       open={open}
       onClose={handleClose}
-      destroyOnClose
       extra={
         <Button type="primary" loading={loading} onClick={() => form.submit()}>
           {translate('buttons.save')}

@@ -38,21 +38,24 @@ export function CustomerList() {
         filter: { kind: 'text' },
       },
       {
-        key: 'documentNumber',
-        dataIndex: 'documentNumber',
-        titleKey: 'table.customers.document',
-        sorter: true,
-      },
-      {
         key: 'documentTypeName',
         dataIndex: 'documentTypeName',
         titleKey: 'table.customers.documentType',
         render: (v: unknown) => (typeof v === 'string' && v ? v : '—'),
       },
       {
+        key: 'documentNumber',
+        dataIndex: 'documentNumber',
+        titleKey: 'table.customers.document',
+        sorter: true,
+        filter: { kind: 'text' },
+      },
+      {
         key: 'countryName',
         dataIndex: 'countryName',
         titleKey: 'table.customers.country',
+        sorter: true,
+        filter: { kind: 'text' },
         render: (v: unknown) => (typeof v === 'string' && v ? v : '—'),
       },
       {
@@ -67,6 +70,8 @@ export function CustomerList() {
         key: 'priceListName',
         dataIndex: 'priceListName',
         titleKey: 'table.customers.priceList',
+        sorter: true,
+        filter: { kind: 'text' },
         render: (v: unknown) => (typeof v === 'string' && v ? v : '—'),
       },
       {
