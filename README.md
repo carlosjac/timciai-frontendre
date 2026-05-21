@@ -33,7 +33,7 @@ El navegador llama a `http://localhost:5174/v1/...` y Vite reenvía a la API. **
 1. Arranca el backend en el puerto de `VITE_BACKEND_PORT` (ver README de `backend`).
 2. El proxy apunta por defecto a **`127.0.0.1`** para evitar `localhost` → `::1` cuando la API solo escucha IPv4.
 3. En la consola de Vite puede aparecer un aviso si no hay nada escuchando en la URL de destino.
-4. Otra máquina o Docker: define `VITE_PROXY_TARGET=http://host:puerto` en `.env` y reinicia Vite.
+4. Otra máquina o Podman: define `VITE_PROXY_TARGET=http://host:puerto` en `.env` y reinicia Vite.
 
 ## Idioma
 
