@@ -241,6 +241,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
     if (on) extra.includeInactive = 'true';
   }
 
+  /** e.g. document_types admin list (`meta.includeInactive`), tenants column filter. */
   if (
     input.meta &&
     typeof input.meta === 'object' &&

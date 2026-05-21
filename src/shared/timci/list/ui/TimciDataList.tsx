@@ -19,6 +19,7 @@ import {
   type ComponentProps,
   type CSSProperties,
 } from 'react';
+import { useNavigate } from 'react-router';
 import type { TimciColumnDef } from '../domain/timci-column-def.js';
 
 /** Alineado con `rc-pagination` `es_ES` por si el locale de antd no se resuelve en runtime. */
@@ -82,14 +83,26 @@ export type TimciDataListProps<T extends BaseRecord> = {
   listCreateButtonProps?: ComponentProps<typeof List>['createButtonProps'];
   /** Orden inicial del listado en servidor (sustituye el default de Refine si se indica). */
   initialSorters?: CrudSort[];
+  /** Si devuelve ruta, la fila es clicable y navega a la pantalla de detalle (p. ej. show). */
+  getRowShowPath?: (record: T) => string | undefined;
 };
 
 function filterForField(filters: CrudFilter[] | undefined, field: string): LogicalFilter | undefined {
   return filters?.find((f): f is LogicalFilter => isLogicalFilter(f) && f.field === field);
 }
 
+function isRowNavigationTarget(element: EventTarget | null): boolean {
+  if (!(element instanceof HTMLElement)) return false;
+  return (
+    element.closest(
+      'button,a,[role="button"],.ant-btn,.anticon,svg,[data-timci-row-action]',
+    ) != null
+  );
+}
+
 export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>) {
   const translate = useTranslate();
+  const navigate = useNavigate();
   const { message } = App.useApp();
   const { token } = theme.useToken();
   const pickerDateFormat = props.pickerDateFormat ?? 'DD/MM/YYYY';
@@ -308,10 +321,17 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
           );
         }
 
+        if (def.key === 'actions' && props.getRowShowPath) {
+          col.onCell = () => ({
+            onClick: (e) => e.stopPropagation(),
+          });
+        }
+
         return col;
       });
   }, [
     props.columnDefs,
+    props.getRowShowPath,
     filters,
     pickerDateFormat,
     setFiltersAndResetPage,
@@ -363,6 +383,22 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     },
     [refineTableOnChange],
   );
+
+  const tableOnRow = useMemo((): TableProps<T>['onRow'] | undefined => {
+    const getPath = props.getRowShowPath;
+    if (!getPath) return undefined;
+    return (record) => {
+      const path = getPath(record);
+      if (!path) return {};
+      return {
+        style: { cursor: 'pointer' },
+        onClick: (e) => {
+          if (isRowNavigationTarget(e.target)) return;
+          navigate(path);
+        },
+      };
+    };
+  }, [navigate, props.getRowShowPath]);
 
   if (props.requiresTenant && !tenantReady) {
     return (
@@ -448,6 +484,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         rowKey={props.rowKey}
         columns={antColumns}
         onChange={handleTableChange}
+        onRow={tableOnRow}
         aria-label={tableAriaLabel}
         locale={{ emptyText: translate('list.emptyData') }}
       />

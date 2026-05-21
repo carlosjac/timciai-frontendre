@@ -26,6 +26,10 @@ import {
   getPriceListsEntityListUrl,
 } from '../shared/timci/priceListsApi.js';
 import {
+  buildDocumentTypeUpdateBody,
+  getDocumentTypeByIdUrl,
+} from '../shared/timci/documentTypesApi.js';
+import {
   buildSellableItemCreateBody,
   buildSellableItemUpdateBody,
   getSellableItemByIdUrl,
@@ -96,6 +100,14 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getPriceListItemByIdUrl(tenantId, String(id)));
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+      }
+      if (resource === 'document_types') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const { json } = await timciFetch(getDocumentTypeByIdUrl(tenantId, String(id)));
         return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
       }
       const base = getResourceApiBase(resource);
@@ -215,6 +227,18 @@ export function createTimciDataProvider(): DataProvider {
         const body = buildPriceListItemUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getPriceListItemByIdUrl(tenantId, String(id)), {
           method: 'PUT',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
+      if (resource === 'document_types') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const body = buildDocumentTypeUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(getDocumentTypeByIdUrl(tenantId, String(id)), {
+          method: 'PATCH',
           body: JSON.stringify(body),
         });
         return { data: { ...(json as object), id } as TData };

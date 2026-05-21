@@ -1,6 +1,8 @@
+import { EditButton } from '@refinedev/antd';
 import { useMemo } from 'react';
-import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
+import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -24,8 +26,23 @@ type DocTypeRow = BaseRecord & {
 export function DocumentTypeList() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
+  const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const canView = permData?.actionCodes?.includes('document_types.view') ?? false;
+  const canUpdate = permData?.actionCodes?.includes('document_types.update') ?? false;
+
+  const listMeta = useMemo(() => ({ includeInactive: true }), []);
+
+  const getRowShowPath = useMemo(
+    () =>
+      canView
+        ? (record: DocTypeRow) =>
+            `/document-types/show/${encodeURIComponent(String(record.id))}`
+        : undefined,
+    [canView],
+  );
+
   const columnDefs = useMemo((): TimciColumnDef<DocTypeRow>[] => {
-    return [
+    const cols: TimciColumnDef<DocTypeRow>[] = [
       {
         key: 'name',
         dataIndex: 'name',
@@ -61,7 +78,7 @@ export function DocumentTypeList() {
           v ? (
             <Tag color="green">{translate('table.users.yes')}</Tag>
           ) : (
-            <Tag>{translate('table.users.no')}</Tag>
+            <Tag color="red">{translate('table.users.no')}</Tag>
           ),
         exportValue: (r) => (r.isActive ? translate('table.users.yes') : translate('table.users.no')),
       },
@@ -106,7 +123,30 @@ export function DocumentTypeList() {
         defaultVisible: false,
       },
     ];
-  }, [dateFormat, timeZone, translate]);
+
+    if (canUpdate) {
+      cols.push({
+        key: 'actions',
+        dataIndex: 'id',
+        titleKey: 'table.documentTypes.actions',
+        width: 72,
+        render: (_: unknown, record: DocTypeRow) => (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="document_types"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.documentTypes.edit')}
+              aria-label={translate('table.documentTypes.edit')}
+            />
+          </span>
+        ),
+        exportValue: () => '',
+      });
+    }
+
+    return cols;
+  }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
     <TimciDataList<DocTypeRow>
@@ -115,7 +155,9 @@ export function DocumentTypeList() {
       titleKey="pages.documentTypes.title"
       columnDefs={columnDefs}
       requiresTenant
+      meta={listMeta}
       pickerDateFormat={dateFormat}
+      getRowShowPath={getRowShowPath}
     />
   );
 }

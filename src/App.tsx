@@ -57,6 +57,8 @@ import { CustomerList } from './features/customers/list.js';
 import { CustomerCreate } from './features/customers/create.js';
 import { DocumentTypeList } from './features/document-types/list.js';
 import { DocumentTypeCreate } from './features/document-types/create.js';
+import { DocumentTypeEdit } from './features/document-types/edit.js';
+import { DocumentTypeShow } from './features/document-types/show.js';
 import { CurrencyList } from './features/currencies/list.js';
 import { PermissionList } from './features/permissions/list.js';
 import { PermissionCreate } from './features/permissions/create.js';
@@ -96,6 +98,8 @@ function TimciRefineTree() {
         name: 'document_types',
         list: '/document-types',
         create: '/document-types/create',
+        show: '/document-types/show/:id',
+        edit: '/document-types/edit/:id',
         meta: { label: esMessages.nav.documentTypes, icon: <FileTextOutlined /> },
       },
       {
@@ -237,6 +241,8 @@ function TimciRefineTree() {
               <Route path="/customers/create" element={<CustomerCreate />} />
               <Route path="/document-types" element={<DocumentTypeList />} />
               <Route path="/document-types/create" element={<DocumentTypeCreate />} />
+              <Route path="/document-types/show/:id" element={<DocumentTypeShow />} />
+              <Route path="/document-types/edit/:id" element={<DocumentTypeEdit />} />
               <Route path="/currencies" element={<CurrencyList />} />
               <Route path="/preferences" element={<PreferencesPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />

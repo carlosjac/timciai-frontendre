@@ -51,7 +51,7 @@ export function EntityCreate() {
     queryOptions: { enabled: !!tenantId },
   });
 
-  const docTypes = docTypeResult.data ?? [];
+  const docTypes = (docTypeResult.data ?? []).filter((dt) => dt.isActive !== false);
 
   useEffect(() => {
     if (!tenantId) return;

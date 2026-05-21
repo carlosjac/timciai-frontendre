@@ -6,6 +6,7 @@ export const esMessages = {
     create: 'Crear',
     save: 'Guardar',
     cancel: 'Cancelar',
+    edit: 'Editar',
   },
   notifications: {
     success: 'Operación completada correctamente',
@@ -16,6 +17,10 @@ export const esMessages = {
     editError: 'No se pudo actualizar {{resource}}',
     deleteSuccess: 'Se eliminó {{resource}} correctamente',
     deleteError: 'No se pudo eliminar {{resource}}',
+  },
+  /** Nombre del recurso en notificaciones Refine (`{{identifier}}.{{identifier}}`). */
+  document_types: {
+    document_types: 'el tipo de documento',
   },
   form: {
     serverError: {
@@ -218,7 +223,22 @@ export const esMessages = {
         validRange: 'La fecha “desde” no puede ser posterior a “hasta”.',
       },
     },
-    documentTypes: { title: 'Tipos de documento', create: 'Crear tipo de documento' },
+    documentTypes: {
+      title: 'Tipos de documento',
+      create: 'Crear tipo de documento',
+      showTitle: 'Tipo de documento',
+      editTitle: 'Editar tipo de documento',
+      activate: 'Activar',
+      deactivate: 'Desactivar',
+      activated: 'Tipo de documento activado',
+      deactivated: 'Tipo de documento desactivado',
+      toggleError: 'No se pudo cambiar el estado',
+      confirmActivateTitle: '¿Activar tipo de documento?',
+      confirmActivateBody: 'Quedará activo y podrá usarse en clientes y entidades.',
+      confirmDeactivateTitle: '¿Desactivar tipo de documento?',
+      confirmDeactivateBody:
+        'Quedará inactivo y no podrá asignarse hasta que se reactive.',
+    },
     currencies: { title: 'Monedas' },
     changePassword: {
       title: 'Cambiar contraseña',
@@ -422,6 +442,8 @@ export const esMessages = {
       updatedByName: 'Actualizado por',
     },
     documentTypes: {
+      actions: 'Acciones',
+      edit: 'Editar',
       name: 'Nombre',
       country: 'País',
       appliesTo: 'Aplica a',
