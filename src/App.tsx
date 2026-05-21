@@ -34,6 +34,8 @@ import { UserPreferencesProvider } from './features/preferences/UserPreferencesP
 import { useUserPreferences } from './features/preferences/useUserPreferences.js';
 import { UserList } from './features/users/list.js';
 import { UserCreate } from './features/users/create.js';
+import { UserShow } from './features/users/show.js';
+import { UserEdit } from './features/users/edit.js';
 import { TenantList } from './features/tenants/list.js';
 import { TenantCreate } from './features/tenants/create.js';
 import { SessionList } from './features/sessions/list.js';
@@ -136,6 +138,8 @@ function TimciRefineTree() {
         name: 'users',
         list: '/users',
         create: '/users/create',
+        show: '/users/show/:id',
+        edit: '/users/edit/:id',
         meta: { label: esMessages.nav.users, icon: <TeamOutlined /> },
       },
       {
@@ -216,6 +220,8 @@ function TimciRefineTree() {
               <Route index element={<NavigateToFirstAccessibleList />} />
               <Route path="/users" element={<UserList />} />
               <Route path="/users/create" element={<UserCreate />} />
+              <Route path="/users/show/:id" element={<UserShow />} />
+              <Route path="/users/edit/:id" element={<UserEdit />} />
               <Route path="/sessions" element={<SessionList />} />
               <Route path="/tenants" element={<TenantList />} />
               <Route path="/tenants/create" element={<TenantCreate />} />

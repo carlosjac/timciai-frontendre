@@ -22,6 +22,9 @@ export const esMessages = {
   document_types: {
     document_types: 'el tipo de documento',
   },
+  users: {
+    users: 'el usuario',
+  },
   form: {
     serverError: {
       title: 'No se pudo guardar',
@@ -141,7 +144,21 @@ export const esMessages = {
       signin: 'Entrar',
       signup: 'Registrarse',
     },
-    users: { title: 'Usuarios', create: 'Crear usuario' },
+    users: {
+      title: 'Usuarios',
+      create: 'Crear usuario',
+      showTitle: 'Usuario',
+      editTitle: 'Editar usuario',
+      activate: 'Activar',
+      deactivate: 'Desactivar',
+      activated: 'Usuario activado',
+      deactivated: 'Usuario desactivado',
+      toggleError: 'No se pudo cambiar el estado',
+      confirmActivateTitle: '¿Activar usuario?',
+      confirmActivateBody: 'Quedará activo y podrá iniciar sesión.',
+      confirmDeactivateTitle: '¿Desactivar usuario?',
+      confirmDeactivateBody: 'Quedará inactivo y no podrá iniciar sesión hasta que se reactive.',
+    },
     sessions: {
       title: 'Sesiones',
       revoke: 'Revocar',
@@ -294,6 +311,8 @@ export const esMessages = {
       legal_person: 'Persona jurídica',
     },
     users: {
+      actions: 'Acciones',
+      edit: 'Editar',
       email: 'Correo',
       name: 'Nombre',
       active: 'Activo',

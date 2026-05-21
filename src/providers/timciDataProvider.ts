@@ -29,6 +29,7 @@ import {
   buildDocumentTypeUpdateBody,
   getDocumentTypeByIdUrl,
 } from '../shared/timci/documentTypesApi.js';
+import { buildUserUpdateBody, getUserByIdUrl } from '../shared/timci/usersApi.js';
 import {
   buildSellableItemCreateBody,
   buildSellableItemUpdateBody,
@@ -238,6 +239,14 @@ export function createTimciDataProvider(): DataProvider {
         }
         const body = buildDocumentTypeUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getDocumentTypeByIdUrl(tenantId, String(id)), {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
+      if (resource === 'users') {
+        const body = buildUserUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(getUserByIdUrl(String(id)), {
           method: 'PATCH',
           body: JSON.stringify(body),
         });
