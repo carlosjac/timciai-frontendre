@@ -25,6 +25,11 @@ import {
   getPriceListByIdUrl,
   getPriceListsEntityListUrl,
 } from '../shared/timci/priceListsApi.js';
+import { buildCountryUpdateBody, getCountryByIdUrl } from '../shared/timci/countriesApi.js';
+import {
+  buildCurrencyUpdateBody,
+  getCurrencyByIdUrl,
+} from '../shared/timci/currenciesApi.js';
 import {
   buildDocumentTypeUpdateBody,
   getDocumentTypeByIdUrl,
@@ -109,6 +114,26 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getDocumentTypeByIdUrl(tenantId, String(id)));
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+      }
+      if (resource === 'countries') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const { json } = await timciFetch(getCountryByIdUrl(tenantId, String(id)));
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+      }
+      if (resource === 'currencies') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const { json } = await timciFetch(getCurrencyByIdUrl(tenantId, String(id)));
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+      }
+      if (resource === 'users') {
+        const { json } = await timciFetch(getUserByIdUrl(String(id)));
         return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
       }
       const base = getResourceApiBase(resource);
@@ -239,6 +264,30 @@ export function createTimciDataProvider(): DataProvider {
         }
         const body = buildDocumentTypeUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getDocumentTypeByIdUrl(tenantId, String(id)), {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
+      if (resource === 'countries') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const body = buildCountryUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(getCountryByIdUrl(tenantId, String(id)), {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
+      if (resource === 'currencies') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const body = buildCurrencyUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(getCurrencyByIdUrl(tenantId, String(id)), {
           method: 'PATCH',
           body: JSON.stringify(body),
         });

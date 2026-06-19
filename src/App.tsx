@@ -47,6 +47,8 @@ import { UserTenantRoleList } from './features/user-tenant-roles/list.js';
 import { UserTenantRoleCreate } from './features/user-tenant-roles/create.js';
 import { CountryList } from './features/countries/list.js';
 import { CountryCreate } from './features/countries/create.js';
+import { CountryShow } from './features/countries/show.js';
+import { CountryEdit } from './features/countries/edit.js';
 import { EntityList } from './features/entities/list.js';
 import { EntityCreate } from './features/entities/create.js';
 import { SellableItemList } from './features/sellable-items/list.js';
@@ -62,6 +64,9 @@ import { DocumentTypeCreate } from './features/document-types/create.js';
 import { DocumentTypeEdit } from './features/document-types/edit.js';
 import { DocumentTypeShow } from './features/document-types/show.js';
 import { CurrencyList } from './features/currencies/list.js';
+import { CurrencyCreate } from './features/currencies/create.js';
+import { CurrencyShow } from './features/currencies/show.js';
+import { CurrencyEdit } from './features/currencies/edit.js';
 import { PermissionList } from './features/permissions/list.js';
 import { PermissionCreate } from './features/permissions/create.js';
 import { PreferencesPage } from './features/preferences/PreferencesPage.js';
@@ -89,11 +94,16 @@ function TimciRefineTree() {
         name: 'countries',
         list: '/countries',
         create: '/countries/create',
+        show: '/countries/show/:id',
+        edit: '/countries/edit/:id',
         meta: { label: esMessages.nav.countries, icon: <GlobalOutlined /> },
       },
       {
         name: 'currencies',
         list: '/currencies',
+        create: '/currencies/create',
+        show: '/currencies/show/:id',
+        edit: '/currencies/edit/:id',
         meta: { label: esMessages.nav.currencies, icon: <DollarOutlined /> },
       },
       {
@@ -235,6 +245,8 @@ function TimciRefineTree() {
               <Route path="/permissions/create" element={<PermissionCreate />} />
               <Route path="/countries" element={<CountryList />} />
               <Route path="/countries/create" element={<CountryCreate />} />
+              <Route path="/countries/show/:id" element={<CountryShow />} />
+              <Route path="/countries/edit/:id" element={<CountryEdit />} />
               <Route path="/entities" element={<EntityList />} />
               <Route path="/entities/create" element={<EntityCreate />} />
               <Route path="/sellable-items" element={<SellableItemList />} />
@@ -250,6 +262,9 @@ function TimciRefineTree() {
               <Route path="/document-types/show/:id" element={<DocumentTypeShow />} />
               <Route path="/document-types/edit/:id" element={<DocumentTypeEdit />} />
               <Route path="/currencies" element={<CurrencyList />} />
+              <Route path="/currencies/create" element={<CurrencyCreate />} />
+              <Route path="/currencies/show/:id" element={<CurrencyShow />} />
+              <Route path="/currencies/edit/:id" element={<CurrencyEdit />} />
               <Route path="/preferences" element={<PreferencesPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />
               <Route path="*" element={<NavigateToFirstAccessibleList />} />

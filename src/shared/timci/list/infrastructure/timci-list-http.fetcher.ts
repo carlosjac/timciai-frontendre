@@ -27,7 +27,16 @@ export type TimciListFetchInput = {
   sorters?: CrudSort[];
   filters?: CrudFilter[];
   meta?: Record<string, unknown>;
+  /** When true, sends includeInactive=true (admin ABM lists). Prefer TimciDataList includeInactive prop. */
+  includeInactive?: boolean;
 };
+
+function shouldIncludeInactiveInList(input: TimciListFetchInput): boolean {
+  if (input.includeInactive === true) return true;
+  if (input.meta?._timciListIncludeInactive === true) return true;
+  const fromMeta = input.meta?.includeInactive;
+  return fromMeta === true || fromMeta === 'true' || fromMeta === 1;
+}
 
 /**
  * Single HTTP list request — shared by DataProvider.getList and CSV export.
@@ -241,13 +250,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
     if (on) extra.includeInactive = 'true';
   }
 
-  /** e.g. document_types admin list (`meta.includeInactive`), tenants column filter. */
-  if (
-    input.meta &&
-    typeof input.meta === 'object' &&
-    'includeInactive' in input.meta &&
-    input.meta.includeInactive === true
-  ) {
+  if (shouldIncludeInactiveInList(input)) {
     extra.includeInactive = 'true';
   }
 

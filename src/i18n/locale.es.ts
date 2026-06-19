@@ -25,6 +25,9 @@ export const esMessages = {
   users: {
     users: 'el usuario',
   },
+  countries: {
+    countries: 'el país',
+  },
   form: {
     serverError: {
       title: 'No se pudo guardar',
@@ -176,7 +179,22 @@ export const esMessages = {
       create: 'Asignar rol a usuario en entidad',
       deleteConfirmTitle: '¿Quitar esta asignación?',
     },
-    countries: { title: 'Países', create: 'Crear país' },
+    countries: {
+      title: 'Países',
+      create: 'Crear país',
+      showTitle: 'País',
+      editTitle: 'Editar país',
+      activate: 'Activar',
+      deactivate: 'Desactivar',
+      activated: 'País activado',
+      deactivated: 'País desactivado',
+      toggleError: 'No se pudo cambiar el estado',
+      confirmActivateTitle: '¿Activar país?',
+      confirmActivateBody: 'Quedará activo y podrá usarse en entidades y clientes.',
+      confirmDeactivateTitle: '¿Desactivar país?',
+      confirmDeactivateBody:
+        'Quedará inactivo y no podrá asignarse hasta que se reactive.',
+    },
     entities: { title: 'Entidades', create: 'Crear entidad' },
     customers: { title: 'Clientes', create: 'Crear cliente' },
     sellableItems: {
@@ -256,7 +274,22 @@ export const esMessages = {
       confirmDeactivateBody:
         'Quedará inactivo y no podrá asignarse hasta que se reactive.',
     },
-    currencies: { title: 'Monedas' },
+    currencies: {
+      title: 'Monedas',
+      create: 'Crear moneda',
+      showTitle: 'Moneda',
+      editTitle: 'Editar moneda',
+      activate: 'Activar',
+      deactivate: 'Desactivar',
+      activated: 'Moneda activada',
+      deactivated: 'Moneda desactivada',
+      toggleError: 'No se pudo cambiar el estado',
+      confirmActivateTitle: '¿Activar moneda?',
+      confirmActivateBody: 'Quedará activa y podrá usarse en entidades y clientes.',
+      confirmDeactivateTitle: '¿Desactivar moneda?',
+      confirmDeactivateBody:
+        'Quedará inactiva y no podrá asignarse hasta que se reactive.',
+    },
     changePassword: {
       title: 'Cambiar contraseña',
       policyHint:
@@ -385,6 +418,8 @@ export const esMessages = {
       actions: 'Acciones',
     },
     countries: {
+      actions: 'Acciones',
+      edit: 'Editar',
       name: 'Nombre',
       iso: 'ISO',
       active: 'Activo',
@@ -476,6 +511,13 @@ export const esMessages = {
     currencies: {
       code: 'Código',
       name: 'Nombre',
+      active: 'Activo',
+      actions: 'Acciones',
+      edit: 'Editar',
+      createdAt: 'Creado',
+      updatedAt: 'Actualizado',
+      createdByName: 'Creado por',
+      updatedByName: 'Actualizado por',
     },
   },
   create: {

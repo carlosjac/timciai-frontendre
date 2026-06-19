@@ -1,33 +1,27 @@
-import { Edit, SaveButton, useForm, useSelect } from '@refinedev/antd';
-import { useInvalidate, usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { App, Alert, Button, Form, Input, Modal, Select } from 'antd';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Edit, SaveButton, useForm } from '@refinedev/antd';
+import { useInvalidate, usePermissions, useTranslate } from '@refinedev/core';
+import { App, Alert, Button, Form, Input, Modal } from 'antd';
+import { useCallback, useState } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import {
-  getDocumentTypeActivateUrl,
-  getDocumentTypeDeactivateUrl,
-} from '../../shared/timci/documentTypesApi.js';
+  getCountryActivateUrl,
+  getCountryDeactivateUrl,
+} from '../../shared/timci/countriesApi.js';
 import { timciFetch } from '../../shared/timci/http.js';
-import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCollapse.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
-import { documentTypeValidationRulesForCountryIso } from './validationRuleChoices.js';
 
-const DOCUMENT_TYPE_EDIT_FIELDS = ['name', 'countryId', 'appliesTo', 'validationRuleKey'] as const;
+const COUNTRY_EDIT_FIELDS = ['name', 'isoCode'] as const;
 
-type CountryRow = BaseRecord & { id: string; name?: string; isoCode?: string };
-
-type DocumentTypeRecord = {
+type CountryRecord = {
   id?: string;
   name?: string;
-  countryId?: string | null;
-  appliesTo?: string;
-  validationRuleKey?: string | null;
+  isoCode?: string;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -35,7 +29,7 @@ type DocumentTypeRecord = {
   updatedBy?: TimciAuditUserRef;
 };
 
-export function DocumentTypeEdit() {
+export function CountryEdit() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
   const { message } = App.useApp();
@@ -43,49 +37,18 @@ export function DocumentTypeEdit() {
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const codes = permData?.actionCodes ?? [];
-  const canActivate = codes.includes('document_types.activate');
-  const canDeactivate = codes.includes('document_types.deactivate');
+  const canActivate = codes.includes('countries.activate');
+  const canDeactivate = codes.includes('countries.deactivate');
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
-    resource: 'document_types',
+    resource: 'countries',
     action: 'edit',
   });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
-    formFieldNames: DOCUMENT_TYPE_EDIT_FIELDS,
+    formFieldNames: COUNTRY_EDIT_FIELDS,
   });
 
-  const { selectProps: countrySelectRaw, query: countriesQuery } = useSelect({
-    resource: 'countries',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-  const countrySelect = stripSelectServerSearch(countrySelectRaw);
-
-  const record = query?.data?.data as DocumentTypeRecord | undefined;
-  const countryId = Form.useWatch('countryId', form);
-  const countries = useMemo(
-    () => (countriesQuery.data?.data ?? []) as CountryRow[],
-    [countriesQuery.data],
-  );
-  const selectedCountryIso = useMemo(() => {
-    const row = countries.find((c) => c.id === countryId);
-    return row?.isoCode;
-  }, [countries, countryId]);
-
-  const validationRuleOptions = useMemo(
-    () => documentTypeValidationRulesForCountryIso(selectedCountryIso),
-    [selectedCountryIso],
-  );
-
-  useEffect(() => {
-    const key = form?.getFieldValue('validationRuleKey') as string | undefined;
-    if (!key) return;
-    const stillValid = validationRuleOptions.some((o) => o.value === key);
-    if (!stillValid) form?.setFieldValue('validationRuleKey', undefined);
-  }, [countryId, validationRuleOptions, form]);
-
+  const record = query?.data?.data as CountryRecord | undefined;
   const [toggleOpen, setToggleOpen] = useState(false);
   const [toggleLoading, setToggleLoading] = useState(false);
 
@@ -99,22 +62,22 @@ export function DocumentTypeEdit() {
     setToggleOpen(false);
     try {
       const url = record.isActive
-        ? getDocumentTypeDeactivateUrl(tenantId, record.id)
-        : getDocumentTypeActivateUrl(tenantId, record.id);
+        ? getCountryDeactivateUrl(tenantId, record.id)
+        : getCountryActivateUrl(tenantId, record.id);
       await timciFetch(url, { method: 'PATCH' });
       message.success(
         record.isActive
-          ? translate('pages.documentTypes.deactivated')
-          : translate('pages.documentTypes.activated'),
+          ? translate('pages.countries.deactivated')
+          : translate('pages.countries.activated'),
       );
       await invalidate({
-        resource: 'document_types',
+        resource: 'countries',
         invalidates: ['list', 'detail'],
         id: record.id,
       });
       await query?.refetch?.();
     } catch (e: unknown) {
-      message.error(e instanceof Error ? e.message : translate('pages.documentTypes.toggleError'));
+      message.error(e instanceof Error ? e.message : translate('pages.countries.toggleError'));
     } finally {
       setToggleLoading(false);
     }
@@ -122,26 +85,26 @@ export function DocumentTypeEdit() {
 
   if (!tenantId) {
     return (
-      <Edit title={translate('pages.documentTypes.editTitle')}>
+      <Edit title={translate('pages.countries.editTitle')}>
         <Alert type="warning" showIcon message={translate('tenant.selectFirst')} />
       </Edit>
     );
   }
 
   const toggleLabel = record?.isActive
-    ? translate('pages.documentTypes.deactivate')
-    : translate('pages.documentTypes.activate');
+    ? translate('pages.countries.deactivate')
+    : translate('pages.countries.activate');
   const toggleConfirmTitle = record?.isActive
-    ? translate('pages.documentTypes.confirmDeactivateTitle')
-    : translate('pages.documentTypes.confirmActivateTitle');
+    ? translate('pages.countries.confirmDeactivateTitle')
+    : translate('pages.countries.confirmActivateTitle');
   const toggleConfirmBody = record?.isActive
-    ? translate('pages.documentTypes.confirmDeactivateBody')
-    : translate('pages.documentTypes.confirmActivateBody');
+    ? translate('pages.countries.confirmDeactivateBody')
+    : translate('pages.countries.confirmActivateBody');
 
   return (
     <>
       <Edit
-        title={translate('pages.documentTypes.editTitle')}
+        title={translate('pages.countries.editTitle')}
         isLoading={formLoading}
         saveButtonProps={saveButtonProps}
         footerButtons={({ saveButtonProps: refineSaveProps }) => (
@@ -178,13 +141,11 @@ export function DocumentTypeEdit() {
           layout="vertical"
           onFinish={async (values: Record<string, unknown>) => {
             clearServerErrors(form);
-            const rawRule = values.validationRuleKey;
-            const validationRuleKey =
-              typeof rawRule === 'string' && rawRule.trim() !== '' ? rawRule.trim() : null;
             try {
               await submitRecord({
                 ...values,
-                validationRuleKey,
+                name: typeof values.name === 'string' ? values.name.trim() : values.name,
+                isoCode: typeof values.isoCode === 'string' ? values.isoCode.trim() : values.isoCode,
               });
             } catch (e) {
               applyServerError(form, e);
@@ -193,57 +154,18 @@ export function DocumentTypeEdit() {
           }}
         >
           <Form.Item
-            label={translate('create.documentType.typeName')}
+            label={translate('table.countries.name')}
             name="name"
             rules={[{ required: true, message: translate('form.validation.requiredField') }]}
           >
             <Input maxLength={100} />
           </Form.Item>
           <Form.Item
-            label={translate('create.documentType.country')}
-            name="countryId"
+            label={translate('table.countries.iso')}
+            name="isoCode"
             rules={[{ required: true, message: translate('form.validation.requiredField') }]}
           >
-            <Select
-              {...countrySelect}
-              showSearch
-              optionFilterProp="label"
-              filterOption={(input, option) => {
-                const label = option?.label;
-                const text = typeof label === 'string' ? label : String(label ?? '');
-                return text.toLowerCase().includes(input.trim().toLowerCase());
-              }}
-            />
-          </Form.Item>
-          <Form.Item
-            label={translate('create.documentType.appliesTo')}
-            name="appliesTo"
-            rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-          >
-            <Select
-              options={[
-                { value: 'physical_person', label: translate('create.documentType.physical') },
-                { value: 'legal_person', label: translate('create.documentType.legal') },
-                { value: 'both', label: translate('create.documentType.both') },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item
-            label={translate('create.documentType.validationRuleNumber')}
-            name="validationRuleKey"
-          >
-            <Select
-              allowClear
-              disabled={!countryId}
-              placeholder={
-                !countryId
-                  ? translate('create.documentType.validationRulePickCountry')
-                  : validationRuleOptions.length === 0
-                    ? translate('create.documentType.validationRuleNoneForCountry')
-                    : translate('create.documentType.validationRulePlaceholder')
-              }
-              options={validationRuleOptions}
-            />
+            <Input maxLength={8} />
           </Form.Item>
         </Form>
         {record && (

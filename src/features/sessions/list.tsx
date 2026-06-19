@@ -45,7 +45,28 @@ export function SessionList() {
   const columnDefs = useMemo((): TimciColumnDef<SessionRow>[] => {
     const showRevoke = canDeleteLoaded && !!canDelete?.can;
 
-    return [
+    const revokeColumn: TimciColumnDef<SessionRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.sessions.actions',
+      width: 140,
+      render: (_: unknown, record: SessionRow) => (
+        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+          <Button
+            type="link"
+            danger
+            size="small"
+            disabled={revoking}
+            onClick={() => setRevokeTarget({ id: record.id, isOwn: record.isOwn })}
+          >
+            {translate('pages.sessions.revoke')}
+          </Button>
+        </span>
+      ),
+      exportValue: () => '',
+    };
+
+    const dataColumns: TimciColumnDef<SessionRow>[] = [
       {
         key: 'id',
         dataIndex: 'id',
@@ -106,29 +127,9 @@ export function SessionList() {
         exportValue: (r) =>
           r.isOwn ? translate('table.sessions.yes') : translate('table.sessions.no'),
       },
-      ...(showRevoke
-        ? ([
-            {
-              key: 'actions',
-              dataIndex: 'id',
-              titleKey: 'table.sessions.actions',
-              width: 140,
-              render: (_: unknown, record: SessionRow) => (
-                <Button
-                  type="link"
-                  danger
-                  size="small"
-                  disabled={revoking}
-                  onClick={() => setRevokeTarget({ id: record.id, isOwn: record.isOwn })}
-                >
-                  {translate('pages.sessions.revoke')}
-                </Button>
-              ),
-              exportValue: () => '',
-            },
-          ] satisfies TimciColumnDef<SessionRow>[])
-        : []),
     ];
+
+    return showRevoke ? [revokeColumn, ...dataColumns] : dataColumns;
   }, [canDelete?.can, canDeleteLoaded, dateFormat, revoking, timeZone, translate]);
 
   const handleRevokeOk = async () => {

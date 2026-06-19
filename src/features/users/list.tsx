@@ -42,6 +42,25 @@ export function UserList() {
   );
 
   const columnDefs = useMemo((): TimciColumnDef<UserRow>[] => {
+    const editColumn: TimciColumnDef<UserRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.users.actions',
+      width: 72,
+      render: (_: unknown, record: UserRow) => (
+        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+          <EditButton
+            resource="users"
+            recordItemId={record.id}
+            hideText
+            title={translate('table.users.edit')}
+            aria-label={translate('table.users.edit')}
+          />
+        </span>
+      ),
+      exportValue: () => '',
+    };
+
     const cols: TimciColumnDef<UserRow>[] = [
       {
         key: 'email',
@@ -124,28 +143,7 @@ export function UserList() {
       },
     ];
 
-    if (canUpdate) {
-      cols.push({
-        key: 'actions',
-        dataIndex: 'id',
-        titleKey: 'table.users.actions',
-        width: 72,
-        render: (_: unknown, record: UserRow) => (
-          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-            <EditButton
-              resource="users"
-              recordItemId={record.id}
-              hideText
-              title={translate('table.users.edit')}
-              aria-label={translate('table.users.edit')}
-            />
-          </span>
-        ),
-        exportValue: () => '',
-      });
-    }
-
-    return cols;
+    return canUpdate ? [editColumn, ...cols] : cols;
   }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (

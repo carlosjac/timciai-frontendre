@@ -1,6 +1,8 @@
+import { EditButton } from '@refinedev/antd';
 import { useMemo } from 'react';
-import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
+import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -21,8 +23,39 @@ type CountryRow = BaseRecord & {
 export function CountryList() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
+  const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const canView = permData?.actionCodes?.includes('countries.view') ?? false;
+  const canUpdate = permData?.actionCodes?.includes('countries.update') ?? false;
+
+  const getRowShowPath = useMemo(
+    () =>
+      canView
+        ? (record: CountryRow) => `/countries/show/${encodeURIComponent(String(record.id))}`
+        : undefined,
+    [canView],
+  );
+
   const columnDefs = useMemo((): TimciColumnDef<CountryRow>[] => {
-    return [
+    const editColumn: TimciColumnDef<CountryRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.countries.actions',
+      width: 72,
+      render: (_: unknown, record: CountryRow) => (
+        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+          <EditButton
+            resource="countries"
+            recordItemId={record.id}
+            hideText
+            title={translate('table.countries.edit')}
+            aria-label={translate('table.countries.edit')}
+          />
+        </span>
+      ),
+      exportValue: () => '',
+    };
+
+    const cols: TimciColumnDef<CountryRow>[] = [
       {
         key: 'name',
         dataIndex: 'name',
@@ -47,7 +80,7 @@ export function CountryList() {
           v ? (
             <Tag color="green">{translate('table.users.yes')}</Tag>
           ) : (
-            <Tag>{translate('table.users.no')}</Tag>
+            <Tag color="red">{translate('table.users.no')}</Tag>
           ),
         exportValue: (r) => (r.isActive ? translate('table.users.yes') : translate('table.users.no')),
       },
@@ -58,8 +91,7 @@ export function CountryList() {
         sorter: true,
         filter: { kind: 'date' },
         defaultVisible: false,
-        render: (v: unknown) =>
-          formatTimciUserDateTime(v, { dateFormat, timeZone }),
+        render: (v: unknown) => formatTimciUserDateTime(v, { dateFormat, timeZone }),
       },
       {
         key: 'updatedAt',
@@ -68,8 +100,7 @@ export function CountryList() {
         sorter: true,
         filter: { kind: 'date' },
         defaultVisible: false,
-        render: (v: unknown) =>
-          formatTimciUserDateTime(v, { dateFormat, timeZone }),
+        render: (v: unknown) => formatTimciUserDateTime(v, { dateFormat, timeZone }),
       },
       {
         key: 'createdBy',
@@ -88,7 +119,9 @@ export function CountryList() {
         defaultVisible: false,
       },
     ];
-  }, [dateFormat, timeZone, translate]);
+
+    return canUpdate ? [editColumn, ...cols] : cols;
+  }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
     <TimciDataList<CountryRow>
@@ -97,7 +130,9 @@ export function CountryList() {
       titleKey="pages.countries.title"
       columnDefs={columnDefs}
       requiresTenant
+      includeInactive
       pickerDateFormat={dateFormat}
+      getRowShowPath={getRowShowPath}
     />
   );
 }

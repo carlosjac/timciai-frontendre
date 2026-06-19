@@ -5,28 +5,28 @@ import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 
-const COUNTRY_CREATE_FIELDS = ['name', 'isoCode', 'isActive'] as const;
+const CURRENCY_CREATE_FIELDS = ['code', 'name', 'isActive'] as const;
 
-export function CountryCreate() {
+export function CurrencyCreate() {
   const translate = useTranslate();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { formProps, saveButtonProps, onFinish: submitRecord, form } = useForm({
-    resource: 'countries',
+    resource: 'currencies',
   });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
-    formFieldNames: COUNTRY_CREATE_FIELDS,
+    formFieldNames: CURRENCY_CREATE_FIELDS,
   });
 
   if (!tenantId) {
     return (
-      <Create title={translate('pages.countries.create', 'Crear país')}>
+      <Create title={translate('pages.currencies.create', 'Crear moneda')}>
         <Alert type="warning" showIcon message={translate('tenant.selectFirst')} />
       </Create>
     );
   }
 
   return (
-    <Create title={translate('pages.countries.create', 'Crear país')} saveButtonProps={saveButtonProps}>
+    <Create title={translate('pages.currencies.create', 'Crear moneda')} saveButtonProps={saveButtonProps}>
       <TimciFormServerAlert messages={generalMessages} />
       <Form
         {...formProps}
@@ -36,8 +36,8 @@ export function CountryCreate() {
           try {
             await submitRecord({
               ...values,
+              code: typeof values.code === 'string' ? values.code.trim() : values.code,
               name: typeof values.name === 'string' ? values.name.trim() : values.name,
-              isoCode: typeof values.isoCode === 'string' ? values.isoCode.trim() : values.isoCode,
             });
           } catch (e) {
             applyServerError(form, e);
@@ -46,21 +46,21 @@ export function CountryCreate() {
         }}
       >
         <Form.Item
-          label={translate('table.countries.name')}
+          label={translate('table.currencies.code')}
+          name="code"
+          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+        >
+          <Input maxLength={3} />
+        </Form.Item>
+        <Form.Item
+          label={translate('table.currencies.name')}
           name="name"
           rules={[{ required: true, message: translate('form.validation.requiredField') }]}
         >
           <Input maxLength={100} />
         </Form.Item>
         <Form.Item
-          label={translate('table.countries.iso')}
-          name="isoCode"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Input maxLength={8} />
-        </Form.Item>
-        <Form.Item
-          label={translate('table.users.active')}
+          label={translate('table.currencies.active')}
           name="isActive"
           valuePropName="checked"
           initialValue

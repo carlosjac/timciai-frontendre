@@ -50,6 +50,31 @@ import {
 
 const COLUMN_STORAGE_PREFIX = 'timci-refine-list-cols-';
 
+/** Always visible; excluded from the column picker (edit shortcut). */
+function isPinnedListColumn(key: string): boolean {
+  return key === 'actions';
+}
+
+function withPinnedListColumns(keys: Set<string>, columnKeys: Iterable<string>): Set<string> {
+  const next = new Set(keys);
+  for (const key of columnKeys) {
+    if (isPinnedListColumn(key)) next.add(key);
+  }
+  return next;
+}
+
+/** Pinned columns (e.g. `actions`) render first regardless of `columnDefs` order. */
+function orderVisibleListColumnDefs<T extends Record<string, unknown>>(
+  defs: TimciColumnDef<T>[],
+  visible: Set<string>,
+): TimciColumnDef<T>[] {
+  const visibleDefs = defs.filter((d) => visible.has(d.key));
+  const pinned = visibleDefs.filter((d) => isPinnedListColumn(d.key));
+  const rest = visibleDefs.filter((d) => !isPinnedListColumn(d.key));
+
+  return [...pinned, ...rest];
+}
+
 /** Visually hidden text for filter trigger accessible name (WCAG A). */
 const SR_ONLY: CSSProperties = {
   position: 'absolute',
@@ -85,6 +110,8 @@ export type TimciDataListProps<T extends BaseRecord> = {
   initialSorters?: CrudSort[];
   /** Si devuelve ruta, la fila es clicable y navega a la pantalla de detalle (p. ej. show). */
   getRowShowPath?: (record: T) => string | undefined;
+  /** Incluye registros inactivos en el listado (envía includeInactive=true al API). */
+  includeInactive?: boolean;
 };
 
 function filterForField(filters: CrudFilter[] | undefined, field: string): LogicalFilter | undefined {
@@ -113,6 +140,12 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
   const tenantReady =
     !props.requiresTenant || (typeof window !== 'undefined' && !!getStoredTenantId());
 
+  const listQueryMeta = useMemo(() => {
+    const base = props.meta ?? {};
+    if (!props.includeInactive) return base;
+    return { ...base, includeInactive: true, _timciListIncludeInactive: true };
+  }, [props.meta, props.includeInactive]);
+
   const {
     tableProps,
     filters,
@@ -125,7 +158,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
   } = useTable<T>({
     resource: props.resource,
     syncWithLocation: props.syncWithLocation ?? true,
-    meta: props.meta,
+    meta: listQueryMeta,
     sorters:
       props.initialSorters != null && props.initialSorters.length > 0
         ? { initial: props.initialSorters, mode: 'server' }
@@ -156,16 +189,23 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     [setCurrentPage],
   );
 
+  const columnKeys = useMemo(
+    () => props.columnDefs.map((c) => c.key),
+    [props.columnDefs],
+  );
+
   const defaultVisible = useMemo(
     () => new Set(props.columnDefs.filter((c) => c.defaultVisible !== false).map((c) => c.key)),
     [props.columnDefs],
   );
 
-  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(() => defaultVisible);
+  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(() =>
+    withPinnedListColumns(defaultVisible, columnKeys),
+  );
 
   useEffect(() => {
-    setVisibleKeys(defaultVisible);
-  }, [defaultVisible]);
+    setVisibleKeys(withPinnedListColumns(defaultVisible, columnKeys));
+  }, [defaultVisible, columnKeys]);
 
   useEffect(() => {
     const raw = localStorage.getItem(columnStorageKey);
@@ -173,21 +213,27 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     try {
       const arr = JSON.parse(raw) as unknown;
       if (!Array.isArray(arr)) return;
-      const valid = new Set(props.columnDefs.map((c) => c.key));
+      const valid = new Set(columnKeys);
       const next = arr.filter((k): k is string => typeof k === 'string' && valid.has(k));
-      if (next.length > 0) setVisibleKeys(new Set(next));
+      if (next.length > 0) {
+        setVisibleKeys(withPinnedListColumns(new Set(next), columnKeys));
+      }
     } catch {
       /* ignore */
     }
-  }, [columnStorageKey, props.columnDefs]);
+  }, [columnStorageKey, columnKeys]);
 
   const persistVisible = useCallback(
     (next: Set<string>) => {
-      if (next.size === 0) return;
-      setVisibleKeys(next);
-      localStorage.setItem(columnStorageKey, JSON.stringify([...next]));
+      const merged = withPinnedListColumns(next, columnKeys);
+      if (merged.size === 0) return;
+      setVisibleKeys(merged);
+      localStorage.setItem(
+        columnStorageKey,
+        JSON.stringify([...merged].filter((k) => !isPinnedListColumn(k))),
+      );
     },
-    [columnStorageKey],
+    [columnStorageKey, columnKeys],
   );
 
   const removeFilterField = useCallback(
@@ -214,12 +260,13 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
             pageSize,
             sorters,
             filters,
-            meta: props.meta,
+            meta: listQueryMeta,
+            includeInactive: props.includeInactive,
           }),
         pageSize: 250,
       });
 
-      const visibleDefs = props.columnDefs.filter((d) => visibleKeys.has(d.key));
+      const visibleDefs = orderVisibleListColumnDefs(props.columnDefs, visibleKeys);
       const csvCols = visibleDefs.map((d) => ({
         header: translate(d.titleKey, undefined, d.titleKey),
         accessor: (row: T) => {
@@ -243,13 +290,11 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     } finally {
       setExporting(false);
     }
-  }, [filters, message, props.columnDefs, props.meta, props.resource, sorters, translate, visibleKeys]);
+  }, [filters, message, listQueryMeta, props.columnDefs, props.includeInactive, props.resource, sorters, translate, visibleKeys]);
 
   const antColumns: ColumnsType<T> = useMemo(() => {
     const primarySort = sorters?.[0];
-    return props.columnDefs
-      .filter((d) => visibleKeys.has(d.key))
-      .map((def) => {
+    return orderVisibleListColumnDefs(props.columnDefs, visibleKeys).map((def) => {
         const columnTitleText = translate(def.titleKey, undefined, def.titleKey);
         const sortKey = def.sortField ?? def.key;
         const col: ColumnsType<T>[number] = {
@@ -418,13 +463,16 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
       aria-label={translate('list.a11y.columnPickerGroup')}
       style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 200 }}
       value={[...visibleKeys]}
-      options={props.columnDefs.map((d) => ({
-        label: translate(d.titleKey, undefined, d.titleKey),
-        value: d.key,
-      }))}
+      options={props.columnDefs
+        .filter((d) => !isPinnedListColumn(d.key))
+        .map((d) => ({
+          label: translate(d.titleKey, undefined, d.titleKey),
+          value: d.key,
+        }))}
       onChange={(vals) => {
-        const next = new Set(vals as string[]);
-        if (next.size === 0) {
+        const next = withPinnedListColumns(new Set(vals as string[]), columnKeys);
+        const togglableCount = [...next].filter((k) => !isPinnedListColumn(k)).length;
+        if (togglableCount === 0) {
           message.warning(translate('list.columnsMinOne'));
           return;
         }

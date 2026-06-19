@@ -43,6 +43,8 @@ export function canCreateResource(resource: string | undefined, codes: string[])
   switch (resource) {
     case 'countries':
       return has('countries.add');
+    case 'currencies':
+      return has('currencies.add');
     case 'document_types':
       return has('document_types.add');
     case 'customers':

@@ -32,7 +32,26 @@ export function UserTenantRoleList() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
   const columnDefs = useMemo((): TimciColumnDef<UserTenantRoleRow>[] => {
+    const actionsColumn: TimciColumnDef<UserTenantRoleRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.userTenantRoles.actions',
+      width: 72,
+      render: (_, record) => (
+        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+          <DeleteButton
+            resource="userTenantRoles"
+            recordItemId={record.id}
+            hideText
+            confirmTitle={translate('pages.userTenantRoles.deleteConfirmTitle')}
+          />
+        </span>
+      ),
+      exportValue: () => '',
+    };
+
     return [
+      actionsColumn,
       {
         key: 'userName',
         dataIndex: 'userName',
@@ -114,21 +133,6 @@ export function UserTenantRoleList() {
         titleKey: 'table.userTenantRoles.updatedByName',
         sorter: true,
         defaultVisible: false,
-      },
-      {
-        key: 'actions',
-        dataIndex: 'id',
-        titleKey: 'table.userTenantRoles.actions',
-        width: 72,
-        render: (_, record) => (
-          <DeleteButton
-            resource="userTenantRoles"
-            recordItemId={record.id}
-            hideText
-            confirmTitle={translate('pages.userTenantRoles.deleteConfirmTitle')}
-          />
-        ),
-        exportValue: () => '',
       },
     ];
   }, [dateFormat, timeZone, translate]);

@@ -4,7 +4,10 @@ import { App, Button, Form, Input, Modal, Radio, Select } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { timciFetch } from '../../shared/timci/http.js';
-import { buildUserIsActiveBody, getUserByIdUrl } from '../../shared/timci/usersApi.js';
+import {
+  getUserActivateUrl,
+  getUserDeactivateUrl,
+} from '../../shared/timci/usersApi.js';
 import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCollapse.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
@@ -48,7 +51,9 @@ export function UserEdit() {
   const { message } = App.useApp();
   const invalidate = useInvalidate();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
-  const canUpdate = permData?.actionCodes?.includes('users.update') ?? false;
+  const codes = permData?.actionCodes ?? [];
+  const canActivate = codes.includes('users.activate');
+  const canDeactivate = codes.includes('users.deactivate');
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
     resource: 'users',
@@ -72,18 +77,19 @@ export function UserEdit() {
   const [toggleOpen, setToggleOpen] = useState(false);
   const [toggleLoading, setToggleLoading] = useState(false);
 
-  const showToggle = !!record?.id && canUpdate;
+  const showToggle =
+    !!record?.id &&
+    ((record.isActive && canDeactivate) || (!record.isActive && canActivate));
 
   const performActivateDeactivate = useCallback(async () => {
     if (!record?.id) return;
     setToggleLoading(true);
     setToggleOpen(false);
     try {
-      const body = buildUserIsActiveBody(!record.isActive);
-      await timciFetch(getUserByIdUrl(record.id), {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-      });
+      const url = record.isActive
+        ? getUserDeactivateUrl(record.id)
+        : getUserActivateUrl(record.id);
+      await timciFetch(url, { method: 'PATCH' });
       message.success(
         record.isActive
           ? translate('pages.users.deactivated')

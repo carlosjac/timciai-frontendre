@@ -15,6 +15,16 @@ export const apiErrorMessagesEs: Record<string, string> = {
   FORBIDDEN_GLOBAL_TENANT: 'El tenant global no puede desactivarse',
   VALIDATION: 'Error de validación. Revisa los datos enviados.',
   CONFLICT_NAME: 'Ya existe un registro con ese nombre',
+  CONFLICT_INACTIVE_NAME:
+    'Ya existe un país inactivo con ese nombre. Búscalo en el listado (Activo: No) y reactívalo.',
+  CONFLICT_ISO_CODE: 'Ya existe un país con ese código ISO',
+  CONFLICT_INACTIVE_ISO_CODE:
+    'Ya existe un país inactivo con ese código ISO. Búscalo en el listado (Activo: No) y reactívalo.',
+  CONFLICT_CURRENCY_CODE: 'Ya existe una moneda con ese código',
+  CONFLICT_INACTIVE_CURRENCY_CODE:
+    'Ya existe una moneda inactiva con ese código. Búscala en el listado (Activo: No) y reactívala.',
+  CONFLICT_INACTIVE_CURRENCY_NAME:
+    'Ya existe una moneda inactiva con ese nombre. Búscala en el listado (Activo: No) y reactívala.',
   CONFLICT_EMAIL: 'Ya existe un usuario con ese email',
   CONFLICT_DOCUMENT: 'Ya existe un cliente con ese tipo y número de documento en esta entidad',
   CONFLICT_CODE: 'Ya existe una acción con ese código',
@@ -30,6 +40,11 @@ export const apiErrorMessagesEs: Record<string, string> = {
 };
 
 const documentValidationMessagesEs: Record<string, string> = {
+  'ISO code must be exactly 2 uppercase letters':
+    'El código ISO debe tener exactamente 2 letras mayúsculas',
+  'Currency code must be exactly 3 uppercase letters':
+    'El código de moneda debe tener exactamente 3 letras mayúsculas',
+  'Name is required': 'El nombre es obligatorio',
   'CUIT has invalid check digit': 'El CUIT tiene dígito verificador inválido',
   'CUIL has invalid check digit': 'El CUIL tiene dígito verificador inválido',
   'CUIT must have 11 digits (no hyphens)': 'El CUIT debe tener 11 dígitos (sin guiones)',
@@ -71,6 +86,10 @@ export function translateTimciApiErrorMessage(code: string | undefined, message:
   if (c === 'VALIDATION') {
     if (trimmed && documentValidationMessagesEs[trimmed]) {
       return documentValidationMessagesEs[trimmed];
+    }
+    if (trimmed) {
+      const normalized = normalizeValidationMessage(trimmed);
+      return normalized;
     }
     return apiErrorMessagesEs.VALIDATION;
   }

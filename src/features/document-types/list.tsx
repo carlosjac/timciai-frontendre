@@ -42,6 +42,25 @@ export function DocumentTypeList() {
   );
 
   const columnDefs = useMemo((): TimciColumnDef<DocTypeRow>[] => {
+    const editColumn: TimciColumnDef<DocTypeRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.documentTypes.actions',
+      width: 72,
+      render: (_: unknown, record: DocTypeRow) => (
+        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+          <EditButton
+            resource="document_types"
+            recordItemId={record.id}
+            hideText
+            title={translate('table.documentTypes.edit')}
+            aria-label={translate('table.documentTypes.edit')}
+          />
+        </span>
+      ),
+      exportValue: () => '',
+    };
+
     const cols: TimciColumnDef<DocTypeRow>[] = [
       {
         key: 'name',
@@ -124,28 +143,7 @@ export function DocumentTypeList() {
       },
     ];
 
-    if (canUpdate) {
-      cols.push({
-        key: 'actions',
-        dataIndex: 'id',
-        titleKey: 'table.documentTypes.actions',
-        width: 72,
-        render: (_: unknown, record: DocTypeRow) => (
-          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-            <EditButton
-              resource="document_types"
-              recordItemId={record.id}
-              hideText
-              title={translate('table.documentTypes.edit')}
-              aria-label={translate('table.documentTypes.edit')}
-            />
-          </span>
-        ),
-        exportValue: () => '',
-      });
-    }
-
-    return cols;
+    return canUpdate ? [editColumn, ...cols] : cols;
   }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
