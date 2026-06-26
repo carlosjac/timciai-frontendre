@@ -66,6 +66,9 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       if (action === 'delete' && resource === 'userTenantRoles') {
         return { can: codes.includes('assignments.admin') };
       }
+      if (action === 'delete' && resource === 'permissions') {
+        return { can: codes.includes('permissions.admin') };
+      }
       return { can: canSeeResourceMenuItem(resource, codes) };
     },
     options: {

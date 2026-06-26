@@ -1,5 +1,8 @@
+import { DeleteButton } from '@refinedev/antd';
 import { useMemo } from 'react';
-import { type BaseRecord } from '@refinedev/core';
+import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { ROLE_ROOT_ID } from '../../shared/timci/rolesApi.js';
+import { GLOBAL_TENANT_ID } from '../../shared/timci/tenantsApi.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -8,6 +11,9 @@ import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 
 type PermissionRow = BaseRecord & {
+  id: string;
+  roleId?: string;
+  tenantId?: string;
   actionId?: string;
   roleName?: string;
   tenantName?: string;
@@ -24,10 +30,38 @@ function shortId(id: unknown): string {
   return `${s.slice(0, 6)}…${s.slice(-4)}`;
 }
 
+function isProtectedRootGlobalPermission(record: PermissionRow): boolean {
+  return record.roleId === ROLE_ROOT_ID && record.tenantId === GLOBAL_TENANT_ID;
+}
+
 export function PermissionList() {
+  const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
   const columnDefs = useMemo((): TimciColumnDef<PermissionRow>[] => {
+    const actionsColumn: TimciColumnDef<PermissionRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.permissions.actions',
+      width: 72,
+      render: (_, record) => {
+        if (isProtectedRootGlobalPermission(record)) return null;
+        return (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <DeleteButton
+              resource="permissions"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.permissions.delete')}
+              confirmTitle={translate('pages.permissions.deleteConfirmTitle')}
+            />
+          </span>
+        );
+      },
+      exportValue: () => '',
+    };
+
     return [
+      actionsColumn,
       {
         key: 'roleName',
         dataIndex: 'roleName',
@@ -95,7 +129,7 @@ export function PermissionList() {
         defaultVisible: false,
       },
     ];
-  }, [dateFormat, timeZone]);
+  }, [dateFormat, timeZone, translate]);
 
   return (
     <TimciDataList<PermissionRow>

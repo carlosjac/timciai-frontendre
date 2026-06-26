@@ -28,6 +28,12 @@ export const esMessages = {
   countries: {
     countries: 'el país',
   },
+  userTenantRoles: {
+    userTenantRoles: 'la asignación',
+  },
+  permissions: {
+    permissions: 'el permiso',
+  },
   form: {
     serverError: {
       title: 'No se pudo guardar',
@@ -203,7 +209,7 @@ export const esMessages = {
         'Quedará inactivo y sus permisos dejarán de aplicarse hasta que se reactive.',
     },
     actions: { title: 'Acciones', create: 'Crear acción' },
-    permissions: { title: 'Permisos', create: 'Asignar permiso' },
+    permissions: { title: 'Permisos', create: 'Asignar permiso', deleteConfirmTitle: '¿Quitar este permiso?' },
     userTenantRoles: {
       title: 'Asignaciones',
       create: 'Asignar rol a usuario en entidad',
@@ -430,6 +436,8 @@ export const esMessages = {
       updatedByName: 'Actualizado por',
     },
     permissions: {
+      actions: 'Acciones',
+      delete: 'Eliminar',
       roleName: 'Rol',
       tenantName: 'Organización',
       actionName: 'Acción',

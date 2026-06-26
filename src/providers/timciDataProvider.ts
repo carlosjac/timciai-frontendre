@@ -348,7 +348,7 @@ export function createTimciDataProvider(): DataProvider {
         await timciFetch(`${base}/${encodeURIComponent(String(id))}`, { method: 'DELETE' });
         return { data: { id } as TData };
       }
-      if (resource !== 'userTenantRoles') {
+      if (resource !== 'userTenantRoles' && resource !== 'permissions') {
         throw toHttpError(501, 'Delete is not wired for this resource.');
       }
       const base = getResourceApiBase(resource);
