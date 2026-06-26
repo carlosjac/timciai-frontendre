@@ -38,9 +38,13 @@ import { UserShow } from './features/users/show.js';
 import { UserEdit } from './features/users/edit.js';
 import { TenantList } from './features/tenants/list.js';
 import { TenantCreate } from './features/tenants/create.js';
+import { TenantShow } from './features/tenants/show.js';
+import { TenantEdit } from './features/tenants/edit.js';
 import { SessionList } from './features/sessions/list.js';
 import { RoleList } from './features/roles/list.js';
 import { RoleCreate } from './features/roles/create.js';
+import { RoleShow } from './features/roles/show.js';
+import { RoleEdit } from './features/roles/edit.js';
 import { ActionList } from './features/actions/list.js';
 import { ActionCreate } from './features/actions/create.js';
 import { UserTenantRoleList } from './features/user-tenant-roles/list.js';
@@ -161,12 +165,16 @@ function TimciRefineTree() {
         name: 'tenants',
         list: '/tenants',
         create: '/tenants/create',
+        show: '/tenants/show/:id',
+        edit: '/tenants/edit/:id',
         meta: { label: esMessages.nav.tenants, icon: <ClusterOutlined /> },
       },
       {
         name: 'roles',
         list: '/roles',
         create: '/roles/create',
+        show: '/roles/show/:id',
+        edit: '/roles/edit/:id',
         meta: { label: esMessages.nav.roles, icon: <SafetyCertificateOutlined /> },
       },
       {
@@ -235,8 +243,12 @@ function TimciRefineTree() {
               <Route path="/sessions" element={<SessionList />} />
               <Route path="/tenants" element={<TenantList />} />
               <Route path="/tenants/create" element={<TenantCreate />} />
+              <Route path="/tenants/show/:id" element={<TenantShow />} />
+              <Route path="/tenants/edit/:id" element={<TenantEdit />} />
               <Route path="/roles" element={<RoleList />} />
               <Route path="/roles/create" element={<RoleCreate />} />
+              <Route path="/roles/show/:id" element={<RoleShow />} />
+              <Route path="/roles/edit/:id" element={<RoleEdit />} />
               <Route path="/actions" element={<ActionList />} />
               <Route path="/actions/create" element={<ActionCreate />} />
               <Route path="/user-tenant-roles" element={<UserTenantRoleList />} />

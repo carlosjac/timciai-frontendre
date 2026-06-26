@@ -1,6 +1,8 @@
 import { DeleteButton } from '@refinedev/antd';
 import { useMemo } from 'react';
 import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { ROLE_ROOT_ID } from '../../shared/timci/rolesApi.js';
+import { GLOBAL_TENANT_ID } from '../../shared/timci/tenantsApi.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -28,6 +30,10 @@ function shortId(id: unknown): string {
   return `${s.slice(0, 6)}…${s.slice(-4)}`;
 }
 
+function isProtectedRootGlobalAssignment(record: UserTenantRoleRow): boolean {
+  return record.tenantId === GLOBAL_TENANT_ID && record.roleId === ROLE_ROOT_ID;
+}
+
 export function UserTenantRoleList() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
@@ -37,16 +43,19 @@ export function UserTenantRoleList() {
       dataIndex: 'id',
       titleKey: 'table.userTenantRoles.actions',
       width: 72,
-      render: (_, record) => (
-        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-          <DeleteButton
-            resource="userTenantRoles"
-            recordItemId={record.id}
-            hideText
-            confirmTitle={translate('pages.userTenantRoles.deleteConfirmTitle')}
-          />
-        </span>
-      ),
+      render: (_, record) => {
+        if (isProtectedRootGlobalAssignment(record)) return null;
+        return (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <DeleteButton
+              resource="userTenantRoles"
+              recordItemId={record.id}
+              hideText
+              confirmTitle={translate('pages.userTenantRoles.deleteConfirmTitle')}
+            />
+          </span>
+        );
+      },
       exportValue: () => '',
     };
 

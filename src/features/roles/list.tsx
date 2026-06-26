@@ -1,5 +1,8 @@
+import { EditButton } from '@refinedev/antd';
 import { useMemo } from 'react';
-import { type BaseRecord } from '@refinedev/core';
+import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
+import { Tag } from 'antd';
+import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -9,6 +12,7 @@ import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 
 type RoleRow = BaseRecord & {
   name: string;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: TimciAuditUserRef;
@@ -16,15 +20,63 @@ type RoleRow = BaseRecord & {
 };
 
 export function RoleList() {
+  const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
+  const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const canView = permData?.actionCodes?.includes('roles.view') ?? false;
+  const canUpdate = permData?.actionCodes?.includes('roles.update') ?? false;
+
+  const listMeta = useMemo(() => ({ includeInactive: true }), []);
+
+  const getRowShowPath = useMemo(
+    () =>
+      canView
+        ? (record: RoleRow) => `/roles/show/${encodeURIComponent(String(record.id))}`
+        : undefined,
+    [canView],
+  );
+
   const columnDefs = useMemo((): TimciColumnDef<RoleRow>[] => {
-    return [
+    const editColumn: TimciColumnDef<RoleRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.roles.actions',
+      width: 72,
+      render: (_: unknown, record: RoleRow) => (
+        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+          <EditButton
+            resource="roles"
+            recordItemId={record.id}
+            hideText
+            title={translate('table.roles.edit')}
+            aria-label={translate('table.roles.edit')}
+          />
+        </span>
+      ),
+      exportValue: () => '',
+    };
+
+    const cols: TimciColumnDef<RoleRow>[] = [
       {
         key: 'name',
         dataIndex: 'name',
         titleKey: 'table.roles.name',
         sorter: true,
         filter: { kind: 'text' },
+      },
+      {
+        key: 'isActive',
+        dataIndex: 'isActive',
+        titleKey: 'table.roles.active',
+        sorter: true,
+        filter: { kind: 'boolean' },
+        render: (v: unknown) =>
+          v ? (
+            <Tag color="green">{translate('table.users.yes')}</Tag>
+          ) : (
+            <Tag color="red">{translate('table.users.no')}</Tag>
+          ),
+        exportValue: (r) => (r.isActive ? translate('table.users.yes') : translate('table.users.no')),
       },
       {
         key: 'createdAt',
@@ -63,7 +115,9 @@ export function RoleList() {
         defaultVisible: false,
       },
     ];
-  }, [dateFormat, timeZone]);
+
+    return canUpdate ? [editColumn, ...cols] : cols;
+  }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
     <TimciDataList<RoleRow>
@@ -71,7 +125,9 @@ export function RoleList() {
       rowKey="id"
       titleKey="pages.roles.title"
       columnDefs={columnDefs}
+      meta={listMeta}
       pickerDateFormat={dateFormat}
+      getRowShowPath={getRowShowPath}
     />
   );
 }

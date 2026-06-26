@@ -258,6 +258,10 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
     extra.includeInactive = 'true';
   }
 
+  if (input.resource === 'roles' && !('includeInactive' in extra)) {
+    extra.includeInactive = 'true';
+  }
+
   const qs = buildSortRangeParams({
     sorters: input.sorters,
     page: input.page,

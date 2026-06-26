@@ -34,6 +34,14 @@ import {
   buildDocumentTypeUpdateBody,
   getDocumentTypeByIdUrl,
 } from '../shared/timci/documentTypesApi.js';
+import {
+  buildTenantUpdateBody,
+  getTenantByIdUrl,
+} from '../shared/timci/tenantsApi.js';
+import {
+  buildRoleUpdateBody,
+  getRoleByIdUrl,
+} from '../shared/timci/rolesApi.js';
 import { buildUserUpdateBody, getUserByIdUrl } from '../shared/timci/usersApi.js';
 import {
   buildSellableItemCreateBody,
@@ -134,6 +142,14 @@ export function createTimciDataProvider(): DataProvider {
       }
       if (resource === 'users') {
         const { json } = await timciFetch(getUserByIdUrl(String(id)));
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+      }
+      if (resource === 'tenants') {
+        const { json } = await timciFetch(getTenantByIdUrl(String(id)));
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+      }
+      if (resource === 'roles') {
+        const { json } = await timciFetch(getRoleByIdUrl(String(id)));
         return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
       }
       const base = getResourceApiBase(resource);
@@ -296,6 +312,22 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'users') {
         const body = buildUserUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getUserByIdUrl(String(id)), {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
+      if (resource === 'tenants') {
+        const body = buildTenantUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(getTenantByIdUrl(String(id)), {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
+      if (resource === 'roles') {
+        const body = buildRoleUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(getRoleByIdUrl(String(id)), {
           method: 'PATCH',
           body: JSON.stringify(body),
         });

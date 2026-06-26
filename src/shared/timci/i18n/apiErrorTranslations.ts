@@ -13,6 +13,9 @@ export const apiErrorMessagesEs: Record<string, string> = {
   FORBIDDEN: 'No tienes permiso para esta acción',
   FORBIDDEN_ENTITY: 'No tienes permiso para acceder a este recurso en esta entidad',
   FORBIDDEN_GLOBAL_TENANT: 'El tenant global no puede desactivarse',
+  FORBIDDEN_ROOT_ROLE: 'El rol root no puede desactivarse',
+  FORBIDDEN_ROOT_GLOBAL_ASSIGNMENT:
+    'No se puede revocar la asignación del rol root en el tenant global',
   VALIDATION: 'Error de validación. Revisa los datos enviados.',
   CONFLICT_NAME: 'Ya existe un registro con ese nombre',
   CONFLICT_INACTIVE_NAME:

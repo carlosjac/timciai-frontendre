@@ -60,9 +60,9 @@ export function canCreateResource(resource: string | undefined, codes: string[])
     case 'users':
       return has('users.create');
     case 'tenants':
-      return has('tenants.admin');
+      return has('tenants.add');
     case 'roles':
-      return has('roles.admin');
+      return has('roles.add');
     case 'actions':
       return has('actions.admin');
     case 'userTenantRoles':

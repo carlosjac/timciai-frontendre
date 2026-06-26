@@ -1,6 +1,8 @@
+import { EditButton } from '@refinedev/antd';
 import { useMemo } from 'react';
-import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
+import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -26,9 +28,41 @@ function shortId(id: unknown): string {
 export function TenantList() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
+  const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const canView = permData?.actionCodes?.includes('tenants.view') ?? false;
+  const canUpdate = permData?.actionCodes?.includes('tenants.update') ?? false;
+
+  const listMeta = useMemo(() => ({ includeInactive: true }), []);
+
+  const getRowShowPath = useMemo(
+    () =>
+      canView
+        ? (record: TenantRow) => `/tenants/show/${encodeURIComponent(String(record.id))}`
+        : undefined,
+    [canView],
+  );
 
   const columnDefs = useMemo((): TimciColumnDef<TenantRow>[] => {
-    return [
+    const editColumn: TimciColumnDef<TenantRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.tenants.actions',
+      width: 72,
+      render: (_: unknown, record: TenantRow) => (
+        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+          <EditButton
+            resource="tenants"
+            recordItemId={record.id}
+            hideText
+            title={translate('table.tenants.edit')}
+            aria-label={translate('table.tenants.edit')}
+          />
+        </span>
+      ),
+      exportValue: () => '',
+    };
+
+    const cols: TimciColumnDef<TenantRow>[] = [
       {
         key: 'id',
         dataIndex: 'id',
@@ -49,11 +83,12 @@ export function TenantList() {
         dataIndex: 'isActive',
         titleKey: 'table.tenants.active',
         sorter: true,
+        filter: { kind: 'boolean' },
         render: (v: unknown) =>
           v ? (
             <Tag color="green">{translate('table.users.yes')}</Tag>
           ) : (
-            <Tag>{translate('table.users.no')}</Tag>
+            <Tag color="red">{translate('table.users.no')}</Tag>
           ),
         exportValue: (r) => (r.isActive ? translate('table.users.yes') : translate('table.users.no')),
       },
@@ -94,7 +129,9 @@ export function TenantList() {
         defaultVisible: false,
       },
     ];
-  }, [dateFormat, timeZone, translate]);
+
+    return canUpdate ? [editColumn, ...cols] : cols;
+  }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
     <TimciDataList<TenantRow>
@@ -102,7 +139,9 @@ export function TenantList() {
       rowKey="id"
       titleKey="pages.tenants.title"
       columnDefs={columnDefs}
+      meta={listMeta}
       pickerDateFormat={dateFormat}
+      getRowShowPath={getRowShowPath}
     />
   );
 }
