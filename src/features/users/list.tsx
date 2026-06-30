@@ -47,17 +47,18 @@ export function UserList() {
       dataIndex: 'id',
       titleKey: 'table.users.actions',
       width: 72,
-      render: (_: unknown, record: UserRow) => (
-        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-          <EditButton
-            resource="users"
-            recordItemId={record.id}
-            hideText
-            title={translate('table.users.edit')}
-            aria-label={translate('table.users.edit')}
-          />
-        </span>
-      ),
+      render: (_: unknown, record: UserRow) =>
+        record.isActive === false ? null : (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="users"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.users.edit')}
+              aria-label={translate('table.users.edit')}
+            />
+          </span>
+        ),
       exportValue: () => '',
     };
 

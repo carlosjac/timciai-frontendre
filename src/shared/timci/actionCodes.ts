@@ -36,6 +36,11 @@ export async function fetchTimciActionCodes(): Promise<string[]> {
   return inflight;
 }
 
+/** Root users (menu.allEntities) can edit all entity fields; others with entities.update get a limited set. */
+export function canFullyEditEntity(codes: string[]): boolean {
+  return codes.includes('menu.allEntities');
+}
+
 /** Permiso para mostrar la acción Crear (alineado con preHandlers del backend). */
 export function canCreateResource(resource: string | undefined, codes: string[]): boolean {
   if (!resource) return false;

@@ -47,17 +47,18 @@ export function DocumentTypeList() {
       dataIndex: 'id',
       titleKey: 'table.documentTypes.actions',
       width: 72,
-      render: (_: unknown, record: DocTypeRow) => (
-        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-          <EditButton
-            resource="document_types"
-            recordItemId={record.id}
-            hideText
-            title={translate('table.documentTypes.edit')}
-            aria-label={translate('table.documentTypes.edit')}
-          />
-        </span>
-      ),
+      render: (_: unknown, record: DocTypeRow) =>
+        record.isActive === false ? null : (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="document_types"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.documentTypes.edit')}
+              aria-label={translate('table.documentTypes.edit')}
+            />
+          </span>
+        ),
       exportValue: () => '',
     };
 

@@ -12,6 +12,11 @@ export const apiErrorMessagesEs: Record<string, string> = {
   UNAUTHORIZED: 'No autenticado',
   FORBIDDEN: 'No tienes permiso para esta acción',
   FORBIDDEN_ENTITY: 'No tienes permiso para acceder a este recurso en esta entidad',
+  FORBIDDEN_ENTITY_FIELD: 'Solo el usuario root puede modificar este campo de la entidad',
+  FORBIDDEN_PAYMENT_OPTION_REMOVAL:
+    'No se puede quitar un medio de pago guardado; desactívalo en su lugar',
+  PAYMENT_OPTION_IN_USE:
+    'No se puede desactivar el medio de pago porque tiene cobros asociados',
   FORBIDDEN_GLOBAL_TENANT: 'El tenant global no puede desactivarse',
   FORBIDDEN_ROOT_ROLE: 'El rol root no puede desactivarse',
   FORBIDDEN_ROOT_GLOBAL_ASSIGNMENT:
@@ -21,7 +26,7 @@ export const apiErrorMessagesEs: Record<string, string> = {
   VALIDATION: 'Error de validación. Revisa los datos enviados.',
   CONFLICT_NAME: 'Ya existe un registro con ese nombre',
   CONFLICT_INACTIVE_NAME:
-    'Ya existe un país inactivo con ese nombre. Búscalo en el listado (Activo: No) y reactívalo.',
+    'Ya existe un registro inactivo con ese nombre. Búscalo en el listado (Activo: No) y reactívalo.',
   CONFLICT_ISO_CODE: 'Ya existe un país con ese código ISO',
   CONFLICT_INACTIVE_ISO_CODE:
     'Ya existe un país inactivo con ese código ISO. Búscalo en el listado (Activo: No) y reactívalo.',
@@ -44,6 +49,13 @@ export const apiErrorMessagesEs: Record<string, string> = {
   UNKNOWN: 'Error inesperado',
 };
 
+const forbiddenMessagesEs: Record<string, string> = {
+  'You do not have permission for this action': 'No tienes permiso para esta acción',
+  'You can only edit your tenant entity': 'Solo puedes editar la entidad de tu inquilino',
+  'You can only activate your tenant entity': 'Solo puedes activar la entidad de tu inquilino',
+  'You can only deactivate your tenant entity': 'Solo puedes desactivar la entidad de tu inquilino',
+};
+
 const documentValidationMessagesEs: Record<string, string> = {
   'ISO code must be exactly 2 uppercase letters':
     'El código ISO debe tener exactamente 2 letras mayúsculas',
@@ -62,6 +74,12 @@ const documentValidationMessagesEs: Record<string, string> = {
   'Document number is required': 'El número de documento es obligatorio',
   'Document number must not exceed 100 characters':
     'El número de documento no puede superar 100 caracteres',
+  'Cannot deactivate the last active payment option for this entity':
+    'No se puede desactivar el único medio de pago activo',
+  'At least one active payment option is required':
+    'Debe haber al menos un medio de pago activo',
+  'Payment option is already inactive for this entity':
+    'El medio de pago ya está inactivo',
 };
 
 /** Mensajes de validación tipo Fastify/Ajv en inglés → español. */
@@ -97,6 +115,10 @@ export function translateTimciApiErrorMessage(code: string | undefined, message:
       return normalized;
     }
     return apiErrorMessagesEs.VALIDATION;
+  }
+
+  if (c === 'FORBIDDEN' && trimmed && forbiddenMessagesEs[trimmed]) {
+    return forbiddenMessagesEs[trimmed];
   }
 
   if (c && apiErrorMessagesEs[c]) {

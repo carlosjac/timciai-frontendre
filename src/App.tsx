@@ -55,6 +55,8 @@ import { CountryShow } from './features/countries/show.js';
 import { CountryEdit } from './features/countries/edit.js';
 import { EntityList } from './features/entities/list.js';
 import { EntityCreate } from './features/entities/create.js';
+import { EntityShow } from './features/entities/show.js';
+import { EntityEdit } from './features/entities/edit.js';
 import { SellableItemList } from './features/sellable-items/list.js';
 import { SellableItemCreate } from './features/sellable-items/create.js';
 import { SellableItemEdit } from './features/sellable-items/edit.js';
@@ -128,6 +130,8 @@ function TimciRefineTree() {
         name: 'entities',
         list: '/entities',
         create: '/entities/create',
+        show: '/entities/show/:id',
+        edit: '/entities/edit/:id',
         meta: { label: esMessages.nav.entities, icon: <ApartmentOutlined /> },
       },
       {
@@ -261,6 +265,8 @@ function TimciRefineTree() {
               <Route path="/countries/edit/:id" element={<CountryEdit />} />
               <Route path="/entities" element={<EntityList />} />
               <Route path="/entities/create" element={<EntityCreate />} />
+              <Route path="/entities/show/:id" element={<EntityShow />} />
+              <Route path="/entities/edit/:id" element={<EntityEdit />} />
               <Route path="/sellable-items" element={<SellableItemList />} />
               <Route path="/sellable-items/create" element={<SellableItemCreate />} />
               <Route path="/sellable-items/edit/:id" element={<SellableItemEdit />} />

@@ -41,17 +41,18 @@ export function CountryList() {
       dataIndex: 'id',
       titleKey: 'table.countries.actions',
       width: 72,
-      render: (_: unknown, record: CountryRow) => (
-        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-          <EditButton
-            resource="countries"
-            recordItemId={record.id}
-            hideText
-            title={translate('table.countries.edit')}
-            aria-label={translate('table.countries.edit')}
-          />
-        </span>
-      ),
+      render: (_: unknown, record: CountryRow) =>
+        record.isActive === false ? null : (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="countries"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.countries.edit')}
+              aria-label={translate('table.countries.edit')}
+            />
+          </span>
+        ),
       exportValue: () => '',
     };
 

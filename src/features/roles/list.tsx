@@ -42,17 +42,18 @@ export function RoleList() {
       dataIndex: 'id',
       titleKey: 'table.roles.actions',
       width: 72,
-      render: (_: unknown, record: RoleRow) => (
-        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-          <EditButton
-            resource="roles"
-            recordItemId={record.id}
-            hideText
-            title={translate('table.roles.edit')}
-            aria-label={translate('table.roles.edit')}
-          />
-        </span>
-      ),
+      render: (_: unknown, record: RoleRow) =>
+        record.isActive === false ? null : (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="roles"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.roles.edit')}
+              aria-label={translate('table.roles.edit')}
+            />
+          </span>
+        ),
       exportValue: () => '',
     };
 

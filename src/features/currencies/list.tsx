@@ -41,17 +41,18 @@ export function CurrencyList() {
       dataIndex: 'id',
       titleKey: 'table.currencies.actions',
       width: 72,
-      render: (_: unknown, record: CurrencyRow) => (
-        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-          <EditButton
-            resource="currencies"
-            recordItemId={record.id}
-            hideText
-            title={translate('table.currencies.edit')}
-            aria-label={translate('table.currencies.edit')}
-          />
-        </span>
-      ),
+      render: (_: unknown, record: CurrencyRow) =>
+        record.isActive === false ? null : (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="currencies"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.currencies.edit')}
+              aria-label={translate('table.currencies.edit')}
+            />
+          </span>
+        ),
       exportValue: () => '',
     };
 

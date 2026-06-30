@@ -1,5 +1,8 @@
+import { EditButton } from '@refinedev/antd';
+import { Tag } from 'antd';
 import { useMemo } from 'react';
-import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
+import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -17,6 +20,7 @@ type EntityRow = BaseRecord & {
   documentTypeName?: string;
   documentNumber?: string | null;
   personType?: string;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: TimciAuditUserRef;
@@ -26,8 +30,42 @@ type EntityRow = BaseRecord & {
 export function EntityList() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
+  const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const canView = permData?.actionCodes?.includes('entities.view') ?? false;
+  const canUpdate = permData?.actionCodes?.includes('entities.update') ?? false;
+
+  const canOpenShow = canView || canUpdate;
+
+  const getRowShowPath = useMemo(
+    () =>
+      canOpenShow
+        ? (record: EntityRow) => `/entities/show/${encodeURIComponent(String(record.id))}`
+        : undefined,
+    [canOpenShow],
+  );
+
   const columnDefs = useMemo((): TimciColumnDef<EntityRow>[] => {
-    return [
+    const editColumn: TimciColumnDef<EntityRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.entities.actions',
+      width: 72,
+      render: (_: unknown, record: EntityRow) =>
+        record.isActive === false ? null : (
+        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+          <EditButton
+            resource="entities"
+            recordItemId={record.id}
+            hideText
+            title={translate('table.entities.edit')}
+            aria-label={translate('table.entities.edit')}
+          />
+        </span>
+        ),
+      exportValue: () => '',
+    };
+
+    const cols: TimciColumnDef<EntityRow>[] = [
       {
         key: 'name',
         dataIndex: 'name',
@@ -81,6 +119,21 @@ export function EntityList() {
         exportValue: (r) => timciPersonTypeLabel(translate, r.personType),
       },
       {
+        key: 'isActive',
+        dataIndex: 'isActive',
+        titleKey: 'table.entities.active',
+        sorter: true,
+        filter: { kind: 'boolean' },
+        render: (v: unknown) =>
+          v ? (
+            <Tag color="green">{translate('table.entities.yes')}</Tag>
+          ) : (
+            <Tag color="red">{translate('table.entities.no')}</Tag>
+          ),
+        exportValue: (r) =>
+          r.isActive ? translate('table.entities.yes') : translate('table.entities.no'),
+      },
+      {
         key: 'address',
         dataIndex: 'address',
         titleKey: 'table.entities.address',
@@ -121,19 +174,20 @@ export function EntityList() {
         defaultVisible: false,
       },
     ];
-  }, [dateFormat, timeZone, translate]);
 
-  /** Alias evita ambigüedad TSX `<C<T>>` (Vite/esbuild puede romper el módulo y perder exports). */
-  const List = TimciDataList<EntityRow>;
+    return canUpdate ? [editColumn, ...cols] : cols;
+  }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
-    <List
+    <TimciDataList<EntityRow>
       resource="entities"
       rowKey="id"
       titleKey="pages.entities.title"
       columnDefs={columnDefs}
       requiresTenant
+      includeInactive
       pickerDateFormat={dateFormat}
+      getRowShowPath={getRowShowPath}
     />
   );
 }

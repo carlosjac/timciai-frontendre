@@ -1,19 +1,14 @@
 import { Edit, SaveButton, useForm, useSelect } from '@refinedev/antd';
-import { useInvalidate, usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { App, Alert, Button, Form, Input, Modal, Select } from 'antd';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { Alert, Form, Input, Select } from 'antd';
+import { useCallback, useEffect, useMemo } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
-import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
-import {
-  getDocumentTypeActivateUrl,
-  getDocumentTypeDeactivateUrl,
-} from '../../shared/timci/documentTypesApi.js';
-import { timciFetch } from '../../shared/timci/http.js';
 import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCollapse.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
+import { useTimciInactiveEditRedirect } from '../../shared/timci/form/useTimciInactiveEditRedirect.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { documentTypeValidationRulesForCountryIso } from './validationRuleChoices.js';
@@ -38,13 +33,7 @@ type DocumentTypeRecord = {
 export function DocumentTypeEdit() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
-  const { message } = App.useApp();
-  const invalidate = useInvalidate();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
-  const { data: permData } = usePermissions<TimciPermissionsData>({});
-  const codes = permData?.actionCodes ?? [];
-  const canActivate = codes.includes('document_types.activate');
-  const canDeactivate = codes.includes('document_types.deactivate');
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
     resource: 'document_types',
@@ -86,39 +75,17 @@ export function DocumentTypeEdit() {
     if (!stillValid) form?.setFieldValue('validationRuleKey', undefined);
   }, [countryId, validationRuleOptions, form]);
 
-  const [toggleOpen, setToggleOpen] = useState(false);
-  const [toggleLoading, setToggleLoading] = useState(false);
+  const showPathForId = useCallback(
+    (id: string) => `/document-types/show/${encodeURIComponent(id)}`,
+    [],
+  );
 
-  const showToggle =
-    !!record?.id &&
-    ((record.isActive && canDeactivate) || (!record.isActive && canActivate));
-
-  const performActivateDeactivate = useCallback(async () => {
-    if (!tenantId || !record?.id) return;
-    setToggleLoading(true);
-    setToggleOpen(false);
-    try {
-      const url = record.isActive
-        ? getDocumentTypeDeactivateUrl(tenantId, record.id)
-        : getDocumentTypeActivateUrl(tenantId, record.id);
-      await timciFetch(url, { method: 'PATCH' });
-      message.success(
-        record.isActive
-          ? translate('pages.documentTypes.deactivated')
-          : translate('pages.documentTypes.activated'),
-      );
-      await invalidate({
-        resource: 'document_types',
-        invalidates: ['list', 'detail'],
-        id: record.id,
-      });
-      await query?.refetch?.();
-    } catch (e: unknown) {
-      message.error(e instanceof Error ? e.message : translate('pages.documentTypes.toggleError'));
-    } finally {
-      setToggleLoading(false);
-    }
-  }, [tenantId, record?.id, record?.isActive, invalidate, message, query, translate]);
+  const isRedirectingInactive = useTimciInactiveEditRedirect({
+    formLoading,
+    record,
+    showPathForId,
+    warningMessageKey: 'pages.documentTypes.inactiveCannotEdit',
+  });
 
   if (!tenantId) {
     return (
@@ -128,155 +95,106 @@ export function DocumentTypeEdit() {
     );
   }
 
-  const toggleLabel = record?.isActive
-    ? translate('pages.documentTypes.deactivate')
-    : translate('pages.documentTypes.activate');
-  const toggleConfirmTitle = record?.isActive
-    ? translate('pages.documentTypes.confirmDeactivateTitle')
-    : translate('pages.documentTypes.confirmActivateTitle');
-  const toggleConfirmBody = record?.isActive
-    ? translate('pages.documentTypes.confirmDeactivateBody')
-    : translate('pages.documentTypes.confirmActivateBody');
+  if (isRedirectingInactive) {
+    return <Edit title={translate('pages.documentTypes.editTitle')} isLoading />;
+  }
 
   return (
-    <>
-      <Edit
-        title={translate('pages.documentTypes.editTitle')}
-        isLoading={formLoading}
-        saveButtonProps={saveButtonProps}
-        footerButtons={({ saveButtonProps: refineSaveProps }) => (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              width: '100%',
-              columnGap: 24,
-              rowGap: 12,
-            }}
-          >
-            {showToggle && (
-              <Button
-                type={record?.isActive ? 'default' : 'primary'}
-                danger={record?.isActive}
-                loading={toggleLoading}
-                onClick={() => setToggleOpen(true)}
-                style={{ marginRight: 'auto' }}
-              >
-                {toggleLabel}
-              </Button>
-            )}
-            <SaveButton {...refineSaveProps} />
-          </div>
-        )}
+    <Edit
+      title={translate('pages.documentTypes.editTitle')}
+      isLoading={formLoading}
+      saveButtonProps={saveButtonProps}
+      footerButtons={({ saveButtonProps: refineSaveProps }) => (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+          <SaveButton {...refineSaveProps} />
+        </div>
+      )}
+    >
+      <TimciFormServerAlert messages={generalMessages} />
+      <TimciFormInactiveRecordBanner isActive={record?.isActive} />
+      <Form
+        {...formProps}
+        layout="vertical"
+        onFinish={async (values: Record<string, unknown>) => {
+          clearServerErrors(form);
+          const rawRule = values.validationRuleKey;
+          const validationRuleKey =
+            typeof rawRule === 'string' && rawRule.trim() !== '' ? rawRule.trim() : null;
+          try {
+            await submitRecord({
+              ...values,
+              validationRuleKey,
+            });
+          } catch (e) {
+            applyServerError(form, e);
+            throw e;
+          }
+        }}
       >
-        <TimciFormServerAlert messages={generalMessages} />
-        <TimciFormInactiveRecordBanner isActive={record?.isActive} />
-        <Form
-          {...formProps}
-          layout="vertical"
-          onFinish={async (values: Record<string, unknown>) => {
-            clearServerErrors(form);
-            const rawRule = values.validationRuleKey;
-            const validationRuleKey =
-              typeof rawRule === 'string' && rawRule.trim() !== '' ? rawRule.trim() : null;
-            try {
-              await submitRecord({
-                ...values,
-                validationRuleKey,
-              });
-            } catch (e) {
-              applyServerError(form, e);
-              throw e;
-            }
-          }}
+        <Form.Item
+          label={translate('create.documentType.typeName')}
+          name="name"
+          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
         >
-          <Form.Item
-            label={translate('create.documentType.typeName')}
-            name="name"
-            rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-          >
-            <Input maxLength={100} />
-          </Form.Item>
-          <Form.Item
-            label={translate('create.documentType.country')}
-            name="countryId"
-            rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-          >
-            <Select
-              {...countrySelect}
-              showSearch
-              optionFilterProp="label"
-              filterOption={(input, option) => {
-                const label = option?.label;
-                const text = typeof label === 'string' ? label : String(label ?? '');
-                return text.toLowerCase().includes(input.trim().toLowerCase());
-              }}
-            />
-          </Form.Item>
-          <Form.Item
-            label={translate('create.documentType.appliesTo')}
-            name="appliesTo"
-            rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-          >
-            <Select
-              options={[
-                { value: 'physical_person', label: translate('create.documentType.physical') },
-                { value: 'legal_person', label: translate('create.documentType.legal') },
-                { value: 'both', label: translate('create.documentType.both') },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item
-            label={translate('create.documentType.validationRuleNumber')}
-            name="validationRuleKey"
-          >
-            <Select
-              allowClear
-              disabled={!countryId}
-              placeholder={
-                !countryId
-                  ? translate('create.documentType.validationRulePickCountry')
-                  : validationRuleOptions.length === 0
-                    ? translate('create.documentType.validationRuleNoneForCountry')
-                    : translate('create.documentType.validationRulePlaceholder')
-              }
-              options={validationRuleOptions}
-            />
-          </Form.Item>
-        </Form>
-        {record && (
-          <TimciFormAuditCollapse
-            dateFormat={dateFormat}
-            timeZone={timeZone}
-            createdAt={record.createdAt}
-            updatedAt={record.updatedAt}
-            createdBy={record.createdBy}
-            updatedBy={record.updatedBy}
+          <Input maxLength={100} />
+        </Form.Item>
+        <Form.Item
+          label={translate('create.documentType.country')}
+          name="countryId"
+          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+        >
+          <Select
+            {...countrySelect}
+            showSearch
+            optionFilterProp="label"
+            filterOption={(input, option) => {
+              const label = option?.label;
+              const text = typeof label === 'string' ? label : String(label ?? '');
+              return text.toLowerCase().includes(input.trim().toLowerCase());
+            }}
           />
-        )}
-      </Edit>
-      <Modal
-        open={toggleOpen}
-        title={toggleConfirmTitle}
-        okText={toggleLabel}
-        okButtonProps={{ danger: record?.isActive, loading: toggleLoading }}
-        cancelText={translate('buttons.cancel')}
-        onCancel={() => setToggleOpen(false)}
-        onOk={() => void performActivateDeactivate()}
-        destroyOnClose
-      >
-        <p>
-          {record?.name != null && record.name !== '' ? (
-            <>
-              <strong>«{record.name}»</strong>
-              <br />
-            </>
-          ) : null}
-          {toggleConfirmBody}
-        </p>
-      </Modal>
-    </>
+        </Form.Item>
+        <Form.Item
+          label={translate('create.documentType.appliesTo')}
+          name="appliesTo"
+          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+        >
+          <Select
+            options={[
+              { value: 'physical_person', label: translate('create.documentType.physical') },
+              { value: 'legal_person', label: translate('create.documentType.legal') },
+              { value: 'both', label: translate('create.documentType.both') },
+            ]}
+          />
+        </Form.Item>
+        <Form.Item
+          label={translate('create.documentType.validationRuleNumber')}
+          name="validationRuleKey"
+        >
+          <Select
+            allowClear
+            disabled={!countryId}
+            placeholder={
+              !countryId
+                ? translate('create.documentType.validationRulePickCountry')
+                : validationRuleOptions.length === 0
+                  ? translate('create.documentType.validationRuleNoneForCountry')
+                  : translate('create.documentType.validationRulePlaceholder')
+            }
+            options={validationRuleOptions}
+          />
+        </Form.Item>
+      </Form>
+      {record && (
+        <TimciFormAuditCollapse
+          dateFormat={dateFormat}
+          timeZone={timeZone}
+          createdAt={record.createdAt}
+          updatedAt={record.updatedAt}
+          createdBy={record.createdBy}
+          updatedBy={record.updatedBy}
+        />
+      )}
+    </Edit>
   );
 }

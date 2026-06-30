@@ -8,6 +8,10 @@ import {
   fetchOverduePolicyCatalog,
   type OverduePolicyItem,
 } from '../../shared/timci/auxiliaryApi.js';
+import {
+  normalizeRichTextField,
+  TimciRichTextEditor,
+} from '../../shared/timci/form/index.js';
 
 type DocTypeRow = BaseRecord & {
   id: string;
@@ -129,8 +133,7 @@ export function EntityCreate() {
             ordinal: index,
             name:
               typeof row.name === 'string' && row.name.trim() !== '' ? row.name.trim() : 'Principal',
-            details:
-              typeof row.details === 'string' && row.details.trim() !== '' ? row.details.trim() : '-',
+            details: normalizeRichTextField(row.details),
             currencyIds: Array.isArray(row.currencyIds)
               ? row.currencyIds.filter((id) => id != null && String(id).trim() !== '')
               : [],
@@ -403,10 +406,11 @@ export function EntityCreate() {
                       {...restField}
                       name={[rowName, 'details']}
                       label={translate('create.entity.paymentOptionDetails')}
+                      extra={translate('create.entity.paymentOptionDetailsHint')}
                       rules={[{ required: true, message: translate('form.validation.requiredField') }]}
                       style={{ marginBottom: 12 }}
                     >
-                      <Input />
+                      <TimciRichTextEditor minHeight={120} />
                     </Form.Item>
                     <Form.Item
                       {...restField}

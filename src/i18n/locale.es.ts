@@ -34,6 +34,9 @@ export const esMessages = {
   permissions: {
     permissions: 'el permiso',
   },
+  entities: {
+    entities: 'la entidad',
+  },
   form: {
     serverError: {
       title: 'No se pudo guardar',
@@ -41,6 +44,12 @@ export const esMessages = {
     },
     validation: {
       requiredField: 'Este campo es de ingreso obligatorio',
+    },
+    richText: {
+      toolbar: 'Formato de texto',
+      bold: 'Negrita',
+      italic: 'Cursiva',
+      underline: 'Subrayado',
     },
   },
   audit: {
@@ -166,7 +175,10 @@ export const esMessages = {
       confirmActivateTitle: '¿Activar usuario?',
       confirmActivateBody: 'Quedará activo y podrá iniciar sesión.',
       confirmDeactivateTitle: '¿Desactivar usuario?',
-      confirmDeactivateBody: 'Quedará inactivo y no podrá iniciar sesión hasta que se reactive.',
+      confirmDeactivateBody:
+        'Quedará inactivo y no podrá iniciar sesión hasta que se reactive.',
+      inactiveCannotEdit:
+        'No se puede editar un usuario inactivo. Actívalo desde la vista del registro.',
     },
     sessions: {
       title: 'Sesiones',
@@ -191,6 +203,8 @@ export const esMessages = {
       confirmDeactivateTitle: '¿Desactivar inquilino?',
       confirmDeactivateBody:
         'Quedará inactivo y no podrá seleccionarse hasta que se reactive.',
+      inactiveCannotEdit:
+        'No se puede editar un inquilino inactivo. Actívalo desde la vista del registro.',
     },
     roles: {
       title: 'Roles',
@@ -207,6 +221,8 @@ export const esMessages = {
       confirmDeactivateTitle: '¿Desactivar rol?',
       confirmDeactivateBody:
         'Quedará inactivo y sus permisos dejarán de aplicarse hasta que se reactive.',
+      inactiveCannotEdit:
+        'No se puede editar un rol inactivo. Actívalo desde la vista del registro.',
     },
     actions: { title: 'Acciones', create: 'Crear acción' },
     permissions: { title: 'Permisos', create: 'Asignar permiso', deleteConfirmTitle: '¿Quitar este permiso?' },
@@ -230,8 +246,39 @@ export const esMessages = {
       confirmDeactivateTitle: '¿Desactivar país?',
       confirmDeactivateBody:
         'Quedará inactivo y no podrá asignarse hasta que se reactive.',
+      inactiveCannotEdit:
+        'No se puede editar un país inactivo. Actívalo desde la vista del registro.',
     },
-    entities: { title: 'Entidades', create: 'Crear entidad' },
+    entities: {
+      title: 'Entidades',
+      create: 'Crear entidad',
+      showTitle: 'Entidad',
+      editTitle: 'Editar entidad',
+      activate: 'Activar entidad',
+      deactivate: 'Desactivar entidad',
+      activated: 'Entidad activada',
+      deactivated: 'Entidad desactivada',
+      toggleError: 'No se pudo cambiar el estado de la entidad',
+      confirmActivateTitle: '¿Activar entidad?',
+      confirmActivateBody: 'Quedará activa y podrá usarse en operaciones.',
+      confirmDeactivateTitle: '¿Desactivar entidad?',
+      confirmDeactivateBody:
+        'Quedará inactiva hasta que se reactive. No se borran los datos asociados.',
+      inactiveCannotEdit:
+        'No se puede editar una entidad inactiva. Actívala desde la vista del registro.',
+      limitedEditHint:
+        'Como administrador solo puedes modificar dirección, contacto, valores por defecto y políticas de mora.',
+      paymentOptionActivate: 'Activar opción',
+      paymentOptionDeactivate: 'Desactivar opción',
+      paymentOptionActivated: 'Opción de pago activada',
+      paymentOptionDeactivated: 'Opción de pago desactivada',
+      paymentOptionToggleError: 'No se pudo cambiar el estado de la opción de pago',
+      confirmPaymentOptionActivateTitle: '¿Activar opción de pago?',
+      confirmPaymentOptionActivateBody: 'Quedará activa y podrá usarse en operaciones.',
+      confirmPaymentOptionDeactivateTitle: '¿Desactivar opción de pago?',
+      confirmPaymentOptionDeactivateBody:
+        'Quedará inactiva hasta que se reactive. Debe quedar al menos una opción activa.',
+    },
     customers: { title: 'Clientes', create: 'Crear cliente' },
     sellableItems: {
       title: 'Productos y servicios',
@@ -309,6 +356,8 @@ export const esMessages = {
       confirmDeactivateTitle: '¿Desactivar tipo de documento?',
       confirmDeactivateBody:
         'Quedará inactivo y no podrá asignarse hasta que se reactive.',
+      inactiveCannotEdit:
+        'No se puede editar un tipo de documento inactivo. Actívalo desde la vista del registro.',
     },
     currencies: {
       title: 'Monedas',
@@ -325,6 +374,8 @@ export const esMessages = {
       confirmDeactivateTitle: '¿Desactivar moneda?',
       confirmDeactivateBody:
         'Quedará inactiva y no podrá asignarse hasta que se reactive.',
+      inactiveCannotEdit:
+        'No se puede editar una moneda inactiva. Actívala desde la vista del registro.',
     },
     changePassword: {
       title: 'Cambiar contraseña',
@@ -472,6 +523,8 @@ export const esMessages = {
       updatedByName: 'Actualizado por',
     },
     entities: {
+      actions: 'Acciones',
+      edit: 'Editar',
       name: 'Nombre',
       email: 'Correo',
       phone: 'Teléfono',
@@ -480,6 +533,9 @@ export const esMessages = {
       documentType: 'Tipo de documento',
       documentNumber: 'Número de documento',
       personType: 'Tipo de persona',
+      active: 'Activo',
+      yes: 'Sí',
+      no: 'No',
       createdAt: 'Creado',
       updatedAt: 'Actualizado',
       createdByName: 'Creado por',
@@ -613,6 +669,8 @@ export const esMessages = {
       /** Distinto del nombre de la entidad; alineado con el subformulario «Medio de pago» en react-admin. */
       paymentOptionName: 'Medio de pago — nombre',
       paymentOptionDetails: 'Detalle del medio de pago',
+      paymentOptionDetailsHint:
+        'Texto multilínea con formato básico: negrita, cursiva y subrayado.',
       paymentOptionsSection: 'Medios de pago',
       addPaymentOption: 'Añadir medio de pago',
       removePaymentOption: 'Quitar',

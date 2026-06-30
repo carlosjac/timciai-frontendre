@@ -60,6 +60,14 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       if (action === 'edit' && resource === 'roles') {
         return { can: codes.includes('roles.update') };
       }
+      if (action === 'show' && resource === 'entities') {
+        return {
+          can: codes.includes('entities.view') || codes.includes('entities.update'),
+        };
+      }
+      if (action === 'edit' && resource === 'entities') {
+        return { can: codes.includes('entities.update') };
+      }
       if (action === 'delete' && resource === 'sessions') {
         return { can: codes.includes('menu.sessions') };
       }

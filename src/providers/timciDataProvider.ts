@@ -44,6 +44,10 @@ import {
 } from '../shared/timci/rolesApi.js';
 import { buildUserUpdateBody, getUserByIdUrl } from '../shared/timci/usersApi.js';
 import {
+  buildEntityUpdateBody,
+  getEntityByIdUrl,
+} from '../shared/timci/entitiesApi.js';
+import {
   buildSellableItemCreateBody,
   buildSellableItemUpdateBody,
   getSellableItemByIdUrl,
@@ -150,6 +154,14 @@ export function createTimciDataProvider(): DataProvider {
       }
       if (resource === 'roles') {
         const { json } = await timciFetch(getRoleByIdUrl(String(id)));
+        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+      }
+      if (resource === 'entities') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const { json } = await timciFetch(getEntityByIdUrl(tenantId, String(id)));
         return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
       }
       const base = getResourceApiBase(resource);
@@ -328,6 +340,18 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'roles') {
         const body = buildRoleUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getRoleByIdUrl(String(id)), {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
+      if (resource === 'entities') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const body = buildEntityUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(getEntityByIdUrl(tenantId, String(id)), {
           method: 'PATCH',
           body: JSON.stringify(body),
         });

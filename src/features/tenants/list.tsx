@@ -48,17 +48,18 @@ export function TenantList() {
       dataIndex: 'id',
       titleKey: 'table.tenants.actions',
       width: 72,
-      render: (_: unknown, record: TenantRow) => (
-        <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-          <EditButton
-            resource="tenants"
-            recordItemId={record.id}
-            hideText
-            title={translate('table.tenants.edit')}
-            aria-label={translate('table.tenants.edit')}
-          />
-        </span>
-      ),
+      render: (_: unknown, record: TenantRow) =>
+        record.isActive === false ? null : (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="tenants"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.tenants.edit')}
+              aria-label={translate('table.tenants.edit')}
+            />
+          </span>
+        ),
       exportValue: () => '',
     };
 
