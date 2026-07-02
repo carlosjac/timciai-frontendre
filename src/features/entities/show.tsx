@@ -20,6 +20,7 @@ import {
 import { timciPersonTypeLabel } from '../../shared/timci/personTypeLabel.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { EntityAdminRedirect } from './EntityAdminRedirect.js';
 
 type PaymentOptionRow = {
   id?: string;
@@ -164,6 +165,7 @@ export function EntityShow() {
 
   return (
     <>
+      <EntityAdminRedirect />
       <Show
         title={translate('pages.entities.showTitle')}
         isLoading={isLoading}

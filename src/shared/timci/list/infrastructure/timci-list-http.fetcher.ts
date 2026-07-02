@@ -12,12 +12,9 @@ import { getPriceListItemsListUrl } from '../../priceListItemsApi.js';
 import { getPriceListsEntityListUrl } from '../../priceListsApi.js';
 import { getSellableItemsEntityListUrl } from '../../sellableItemsApi.js';
 import { mapTimciListRowsWithAuditFields } from '../../auditUserDisplay.js';
-import { hydrateTimciRowsWithUserDirectory } from '../../userDisplayNameHydration.js';
 
-async function mapHydrateTimciListRows<T>(rows: T[]): Promise<T[]> {
-  const mapped = mapTimciListRowsWithAuditFields(rows);
-  await hydrateTimciRowsWithUserDirectory(mapped as Record<string, unknown>[]);
-  return mapped;
+function mapTimciListRows<T>(rows: T[]): T[] {
+  return mapTimciListRowsWithAuditFields(rows);
 }
 
 export type TimciListFetchInput = {
@@ -152,7 +149,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       filterObj,
     });
     const { json, headers } = await timciFetch(`${listBase}?${qs.toString()}`);
-    const data = await mapHydrateTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
+    const data = mapTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
     const total = parseContentRangeTotal(headers) ?? data.length;
     return { data, total };
   }
@@ -173,7 +170,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       filterObj,
     });
     const { json, headers } = await timciFetch(`${listBase}?${qs.toString()}`);
-    const data = await mapHydrateTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
+    const data = mapTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
     const total = parseContentRangeTotal(headers) ?? data.length;
     return { data, total };
   }
@@ -199,7 +196,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       filterObj,
     });
     const { json, headers } = await timciFetch(`${listBase}?${qs.toString()}`);
-    const data = await mapHydrateTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
+    const data = mapTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
     const total = parseContentRangeTotal(headers) ?? data.length;
     return { data, total };
   }
@@ -271,7 +268,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
   });
 
   const { json, headers } = await timciFetch(`${base}?${qs.toString()}`);
-  const data = await mapHydrateTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
+  const data = mapTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
   const total = parseContentRangeTotal(headers) ?? data.length;
 
   return { data, total };

@@ -41,6 +41,11 @@ export function canFullyEditEntity(codes: string[]): boolean {
   return codes.includes('menu.allEntities');
 }
 
+/** Entity administrators configure the active tenant via /entity-settings (not CRUD list). */
+export function canSeeEntitySettingsMenuItem(codes: string[]): boolean {
+  return codes.includes('entities.update') && !codes.includes('menu.allEntities');
+}
+
 /** Permiso para mostrar la acción Crear (alineado con preHandlers del backend). */
 export function canCreateResource(resource: string | undefined, codes: string[]): boolean {
   if (!resource) return false;
@@ -94,9 +99,9 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
     case 'customers':
       return has('menu.customers');
     case 'entities':
-      return (
-        has('menu.allEntities') || has('entities.list') || has('entities.update')
-      );
+      return has('menu.allEntities');
+    case 'entity_settings':
+      return canSeeEntitySettingsMenuItem(codes);
     case 'sellable_items':
       return has('menu.sellable_items');
     case 'price_lists':
@@ -129,6 +134,7 @@ export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'document_types', path: '/document-types' },
   { name: 'customers', path: '/customers' },
   { name: 'entities', path: '/entities' },
+  { name: 'entity_settings', path: '/entity-settings' },
   { name: 'sellable_items', path: '/sellable-items' },
   { name: 'price_lists', path: '/price-lists' },
   { name: 'users', path: '/users' },

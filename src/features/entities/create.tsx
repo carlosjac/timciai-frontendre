@@ -12,6 +12,7 @@ import {
   normalizeRichTextField,
   TimciRichTextEditor,
 } from '../../shared/timci/form/index.js';
+import { EntityAdminRedirect } from './EntityAdminRedirect.js';
 
 type DocTypeRow = BaseRecord & {
   id: string;
@@ -103,7 +104,9 @@ export function EntityCreate() {
   }
 
   return (
-    <Create title={translate('pages.entities.create')} saveButtonProps={saveButtonProps}>
+    <>
+      <EntityAdminRedirect />
+      <Create title={translate('pages.entities.create')} saveButtonProps={saveButtonProps}>
       <Typography.Paragraph type="secondary">{translate('create.entity.idHint')}</Typography.Paragraph>
       <Form
         {...formProps}
@@ -470,5 +473,6 @@ export function EntityCreate() {
         </Form.List>
       </Form>
     </Create>
+    </>
   );
 }

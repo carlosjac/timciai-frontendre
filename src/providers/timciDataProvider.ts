@@ -54,13 +54,11 @@ import {
   getSellableItemsEntityListUrl,
 } from '../shared/timci/sellableItemsApi.js';
 import { normalizeTimciAuditFieldsInPlace } from '../shared/timci/auditUserDisplay.js';
-import { hydrateTimciRowsWithUserDirectory } from '../shared/timci/userDisplayNameHydration.js';
 
-async function normalizeAndHydrateGetOnePayload<T>(payload: T): Promise<T> {
+function normalizeGetOnePayload<T>(payload: T): T {
   if (payload != null && typeof payload === 'object') {
     const row = payload as Record<string, unknown>;
     normalizeTimciAuditFieldsInPlace(row);
-    await hydrateTimciRowsWithUserDirectory([row]);
   }
   return payload;
 }
@@ -102,7 +100,7 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getSellableItemByIdUrl(tenantId, String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'price_lists') {
         const tenantId = getStoredTenantId();
@@ -110,7 +108,7 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getPriceListByIdUrl(tenantId, String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'price_list_items') {
         const tenantId = getStoredTenantId();
@@ -118,7 +116,7 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getPriceListItemByIdUrl(tenantId, String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'document_types') {
         const tenantId = getStoredTenantId();
@@ -126,7 +124,7 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getDocumentTypeByIdUrl(tenantId, String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'countries') {
         const tenantId = getStoredTenantId();
@@ -134,7 +132,7 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getCountryByIdUrl(tenantId, String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'currencies') {
         const tenantId = getStoredTenantId();
@@ -142,19 +140,19 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getCurrencyByIdUrl(tenantId, String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'users') {
         const { json } = await timciFetch(getUserByIdUrl(String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'tenants') {
         const { json } = await timciFetch(getTenantByIdUrl(String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'roles') {
         const { json } = await timciFetch(getRoleByIdUrl(String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'entities') {
         const tenantId = getStoredTenantId();
@@ -162,14 +160,14 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getEntityByIdUrl(tenantId, String(id)));
-        return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+        return { data: normalizeGetOnePayload(json as TData) };
       }
       const base = getResourceApiBase(resource);
       if (!base) {
         throw toHttpError(400, 'Select a tenant in the header for this resource.');
       }
       const { json } = await timciFetch(`${base}/${id}`);
-      return { data: await normalizeAndHydrateGetOnePayload(json as TData) };
+      return { data: normalizeGetOnePayload(json as TData) };
     },
 
     create: async <TData extends BaseRecord = BaseRecord, TVariables = Record<string, unknown>>({

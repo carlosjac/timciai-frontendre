@@ -22,6 +22,8 @@ export function useTimciActivateDeactivateToggle(options: {
   i18nPrefix: string;
   query?: ToggleQuery;
   toggleEnabled?: boolean;
+  /** HTTP method for activate/deactivate endpoints (default PATCH). */
+  toggleMethod?: 'PATCH' | 'POST';
 }) {
   const {
     resource,
@@ -32,6 +34,7 @@ export function useTimciActivateDeactivateToggle(options: {
     i18nPrefix,
     query,
     toggleEnabled = true,
+    toggleMethod = 'PATCH',
   } = options;
 
   const translate = useTranslate();
@@ -56,7 +59,7 @@ export function useTimciActivateDeactivateToggle(options: {
     try {
       const { activate, deactivate } = resolveToggleUrls(record.id);
       const url = record.isActive ? deactivate : activate;
-      await timciFetch(url, { method: 'PATCH' });
+      await timciFetch(url, { method: toggleMethod });
       message.success(
         record.isActive
           ? translate(`${i18nPrefix}.deactivated`)
@@ -84,6 +87,7 @@ export function useTimciActivateDeactivateToggle(options: {
     record?.isActive,
     resolveToggleUrls,
     resource,
+    toggleMethod,
     translate,
   ]);
 

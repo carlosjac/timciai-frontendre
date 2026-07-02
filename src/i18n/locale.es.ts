@@ -80,6 +80,7 @@ export const esMessages = {
     permissions: 'Permisos',
     countries: 'Países',
     entities: 'Entidades',
+    entitySettings: 'Configuración de entidad',
     customers: 'Clientes',
     documentTypes: 'Tipos de documento',
     currencies: 'Monedas',
@@ -249,6 +250,19 @@ export const esMessages = {
       inactiveCannotEdit:
         'No se puede editar un país inactivo. Actívalo desde la vista del registro.',
     },
+    entitySettings: {
+      title: 'Configuración de entidad',
+      identitySection: 'Datos de identidad',
+      tabsLabel: 'Secciones de configuración de entidad',
+      tabs: {
+        general: 'Datos generales',
+        paymentOptions: 'Medios de pago',
+      },
+      saveGeneral: 'Guardar datos generales',
+      savePaymentOptions: 'Guardar medios de pago',
+      savedGeneral: 'Datos generales guardados',
+      savedPaymentOptions: 'Medios de pago guardados',
+    },
     entities: {
       title: 'Entidades',
       create: 'Crear entidad',
@@ -283,6 +297,7 @@ export const esMessages = {
     sellableItems: {
       title: 'Productos y servicios',
       create: 'Crear producto o servicio',
+      showTitle: 'Producto o servicio',
       editTitle: 'Editar producto o servicio',
       tabData: 'Datos',
       tabPrices: 'Precios',
@@ -307,6 +322,8 @@ export const esMessages = {
       confirmDeactivateTitle: '¿Desactivar producto/servicio?',
       confirmDeactivateBody:
         'Quedará inactivo y no podrá usarse en listas de precios hasta que se reactive.',
+      inactiveCannotEdit:
+        'No se puede editar un producto o servicio inactivo. Actívalo desde la vista del registro.',
     },
     priceLists: {
       title: 'Listas de precios',

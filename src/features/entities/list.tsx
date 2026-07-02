@@ -10,6 +10,7 @@ import { TIMCI_LIST_SORT_BY_AUDIT_USER_NAME } from '../../shared/timci/list/doma
 import { timciPersonTypeLabel } from '../../shared/timci/personTypeLabel.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
+import { EntityAdminRedirect } from './EntityAdminRedirect.js';
 
 type EntityRow = BaseRecord & {
   name: string;
@@ -179,7 +180,9 @@ export function EntityList() {
   }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
-    <TimciDataList<EntityRow>
+    <>
+      <EntityAdminRedirect />
+      <TimciDataList<EntityRow>
       resource="entities"
       rowKey="id"
       titleKey="pages.entities.title"
@@ -189,5 +192,6 @@ export function EntityList() {
       pickerDateFormat={dateFormat}
       getRowShowPath={getRowShowPath}
     />
+    </>
   );
 }

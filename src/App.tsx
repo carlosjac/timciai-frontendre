@@ -57,8 +57,10 @@ import { EntityList } from './features/entities/list.js';
 import { EntityCreate } from './features/entities/create.js';
 import { EntityShow } from './features/entities/show.js';
 import { EntityEdit } from './features/entities/edit.js';
+import { EntitySettingsPage } from './features/entities/settings.js';
 import { SellableItemList } from './features/sellable-items/list.js';
 import { SellableItemCreate } from './features/sellable-items/create.js';
+import { SellableItemShow } from './features/sellable-items/show.js';
 import { SellableItemEdit } from './features/sellable-items/edit.js';
 import { PriceListList } from './features/price-lists/list.js';
 import { PriceListCreate } from './features/price-lists/create.js';
@@ -135,9 +137,15 @@ function TimciRefineTree() {
         meta: { label: esMessages.nav.entities, icon: <ApartmentOutlined /> },
       },
       {
+        name: 'entity_settings',
+        list: '/entity-settings',
+        meta: { label: esMessages.nav.entitySettings, icon: <ApartmentOutlined /> },
+      },
+      {
         name: 'sellable_items',
         list: '/sellable-items',
         create: '/sellable-items/create',
+        show: '/sellable-items/show/:id',
         edit: '/sellable-items/edit/:id',
         meta: { label: esMessages.nav.sellableItems, icon: <ShoppingOutlined /> },
       },
@@ -267,8 +275,10 @@ function TimciRefineTree() {
               <Route path="/entities/create" element={<EntityCreate />} />
               <Route path="/entities/show/:id" element={<EntityShow />} />
               <Route path="/entities/edit/:id" element={<EntityEdit />} />
+              <Route path="/entity-settings" element={<EntitySettingsPage />} />
               <Route path="/sellable-items" element={<SellableItemList />} />
               <Route path="/sellable-items/create" element={<SellableItemCreate />} />
+              <Route path="/sellable-items/show/:id" element={<SellableItemShow />} />
               <Route path="/sellable-items/edit/:id" element={<SellableItemEdit />} />
               <Route path="/price-lists" element={<PriceListList />} />
               <Route path="/price-lists/create" element={<PriceListCreate />} />

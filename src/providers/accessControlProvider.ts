@@ -1,6 +1,7 @@
 import type { AccessControlProvider } from '@refinedev/core';
 import {
   canCreateResource,
+  canSeeEntitySettingsMenuItem,
   canSeeResourceMenuItem,
   fetchTimciActionCodes,
 } from '../shared/timci/actionCodes.js';
@@ -17,6 +18,9 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       }
       if (action === 'edit' && resource === 'sellable_items') {
         return { can: codes.includes('sellable_items.update') };
+      }
+      if (action === 'show' && resource === 'sellable_items') {
+        return { can: codes.includes('sellable_items.view') };
       }
       if (action === 'edit' && resource === 'price_lists') {
         return { can: codes.includes('price_lists.update') };
@@ -67,6 +71,9 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       }
       if (action === 'edit' && resource === 'entities') {
         return { can: codes.includes('entities.update') };
+      }
+      if (resource === 'entity_settings') {
+        return { can: canSeeEntitySettingsMenuItem(codes) };
       }
       if (action === 'delete' && resource === 'sessions') {
         return { can: codes.includes('menu.sessions') };

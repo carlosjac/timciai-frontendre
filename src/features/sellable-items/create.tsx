@@ -2,21 +2,12 @@ import { Create, useForm } from '@refinedev/antd';
 import { useTranslate } from '@refinedev/core';
 import { Alert, Form, Input, Select, Switch } from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
-import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
-import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { SELLABLE_ITEM_KINDS } from './kindChoices.js';
-
-const SELLABLE_FORM_FIELDS = ['kind', 'name', 'code', 'description', 'isActive'] as const;
 
 export function SellableItemCreate() {
   const translate = useTranslate();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
-  const { formProps, saveButtonProps, onFinish: submitRecord, form } = useForm({
-    resource: 'sellable_items',
-  });
-  const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
-    formFieldNames: SELLABLE_FORM_FIELDS,
-  });
+  const { formProps, saveButtonProps, onFinish } = useForm({ resource: 'sellable_items' });
 
   if (!tenantId) {
     return (
@@ -28,28 +19,18 @@ export function SellableItemCreate() {
 
   return (
     <Create title={translate('pages.sellableItems.create')} saveButtonProps={saveButtonProps}>
-      <TimciFormServerAlert messages={generalMessages} />
       <Form
         {...formProps}
         layout="vertical"
         onFinish={async (values: Record<string, unknown>) => {
-          clearServerErrors(form);
-          try {
-            await submitRecord({
-              ...values,
-              entityId: tenantId,
-              kind: values.kind === 'Service' ? 'Service' : 'Product',
-              isActive: values.isActive !== false,
-            });
-          } catch (e) {
-            applyServerError(form, e);
-            throw e;
-          }
+          await onFinish({
+            ...values,
+            entityId: tenantId,
+            kind: values.kind === 'Service' ? 'Service' : 'Product',
+            isActive: values.isActive !== false,
+          });
         }}
       >
-        <Form.Item name="entityId" hidden initialValue={tenantId}>
-          <Input type="hidden" />
-        </Form.Item>
         <Form.Item
           label={translate('table.sellableItems.kind')}
           name="kind"
@@ -77,7 +58,7 @@ export function SellableItemCreate() {
           <Input.TextArea rows={4} />
         </Form.Item>
         <Form.Item
-          label={translate('table.sellableItems.active')}
+          label={translate('table.users.active')}
           name="isActive"
           valuePropName="checked"
           initialValue
