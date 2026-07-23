@@ -1,6 +1,8 @@
+import { EditButton } from '@refinedev/antd';
 import { useMemo } from 'react';
-import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
+import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
 import { TIMCI_LIST_SORT_BY_AUDIT_USER_NAME } from '../../shared/timci/list/domain/timci-audit-list-sort-fields.js';
@@ -27,9 +29,40 @@ type CustomerRow = BaseRecord & {
 export function CustomerList() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
+  const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const canView = permData?.actionCodes?.includes('customers.view') ?? false;
+  const canUpdate = permData?.actionCodes?.includes('customers.update') ?? false;
+
+  const getRowShowPath = useMemo(
+    () =>
+      canView
+        ? (record: CustomerRow) => `/customers/show/${encodeURIComponent(String(record.id))}`
+        : undefined,
+    [canView],
+  );
 
   const columnDefs = useMemo((): TimciColumnDef<CustomerRow>[] => {
-    return [
+    const editColumn: TimciColumnDef<CustomerRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.customers.actions',
+      width: 72,
+      render: (_: unknown, record: CustomerRow) =>
+        record.isActive === false ? null : (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="customers"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.customers.edit')}
+              aria-label={translate('table.customers.edit')}
+            />
+          </span>
+        ),
+      exportValue: () => '',
+    };
+
+    const cols: TimciColumnDef<CustomerRow>[] = [
       {
         key: 'name',
         dataIndex: 'name',
@@ -91,7 +124,7 @@ export function CustomerList() {
           v ? (
             <Tag color="green">{translate('table.users.yes')}</Tag>
           ) : (
-            <Tag>{translate('table.users.no')}</Tag>
+            <Tag color="red">{translate('table.users.no')}</Tag>
           ),
         exportValue: (r) => (r.isActive ? translate('table.users.yes') : translate('table.users.no')),
       },
@@ -128,7 +161,9 @@ export function CustomerList() {
         defaultVisible: false,
       },
     ];
-  }, [dateFormat, timeZone, translate]);
+
+    return canUpdate ? [editColumn, ...cols] : cols;
+  }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
     <TimciDataList<CustomerRow>
@@ -138,6 +173,7 @@ export function CustomerList() {
       columnDefs={columnDefs}
       requiresTenant
       pickerDateFormat={dateFormat}
+      getRowShowPath={getRowShowPath}
     />
   );
 }

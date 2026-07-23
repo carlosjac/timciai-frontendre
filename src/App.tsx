@@ -68,6 +68,8 @@ import { PriceListShow } from './features/price-lists/show.js';
 import { PriceListEdit } from './features/price-lists/edit.js';
 import { CustomerList } from './features/customers/list.js';
 import { CustomerCreate } from './features/customers/create.js';
+import { CustomerShow } from './features/customers/show.js';
+import { CustomerEdit } from './features/customers/edit.js';
 import { DocumentTypeList } from './features/document-types/list.js';
 import { DocumentTypeCreate } from './features/document-types/create.js';
 import { DocumentTypeEdit } from './features/document-types/edit.js';
@@ -127,6 +129,8 @@ function TimciRefineTree() {
         name: 'customers',
         list: '/customers',
         create: '/customers/create',
+        show: '/customers/show/:id',
+        edit: '/customers/edit/:id',
         meta: { label: esMessages.nav.customers, icon: <IdcardOutlined /> },
       },
       {
@@ -288,6 +292,8 @@ function TimciRefineTree() {
               <Route path="/price-lists/edit/:id" element={<PriceListEdit />} />
               <Route path="/customers" element={<CustomerList />} />
               <Route path="/customers/create" element={<CustomerCreate />} />
+              <Route path="/customers/show/:id" element={<CustomerShow />} />
+              <Route path="/customers/edit/:id" element={<CustomerEdit />} />
               <Route path="/document-types" element={<DocumentTypeList />} />
               <Route path="/document-types/create" element={<DocumentTypeCreate />} />
               <Route path="/document-types/show/:id" element={<DocumentTypeShow />} />

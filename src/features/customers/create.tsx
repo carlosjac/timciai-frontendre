@@ -1,7 +1,19 @@
 import { Create, useForm, useSelect } from '@refinedev/antd';
-import { useList, useTranslate, type BaseRecord } from '@refinedev/core';
+import { useList, useOne, useTranslate, type BaseRecord } from '@refinedev/core';
 import { useMemo, useEffect, useState } from 'react';
-import { Alert, Button, Form, Input, InputNumber, Select, Space, Switch, Typography } from 'antd';
+import {
+  Alert,
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Space,
+  Switch,
+  Tabs,
+  Typography,
+  type FormProps,
+} from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import {
@@ -18,16 +30,33 @@ type DocTypeRow = BaseRecord & {
   appliesTo?: string;
 };
 
+type EntityDefaults = {
+  defaultCountryId?: string;
+  defaultCurrencyId?: string;
+};
+
 const emptyContactRow = () => ({
   name: '',
   email: '',
   phone: '',
-  notifySales: false,
-  notifyCreditos: false,
-  notifyDebits: false,
-  notifyCollections: false,
-  notifyOverduePayments: false,
+  notifySales: true,
+  notifyCreditos: true,
+  notifyDebits: true,
+  notifyCollections: true,
+  notifyOverduePayments: true,
 });
+
+function firstErrorTab(
+  errorFields: Array<{ name: (string | number)[] }> | undefined,
+): 'data' | 'contacts' {
+  if (!errorFields?.length) return 'data';
+  const hasContactError = errorFields.some((f) => f.name[0] === 'contacts');
+  return hasContactError ? 'contacts' : 'data';
+}
+
+function isEmptyFieldValue(v: unknown): boolean {
+  return v == null || (typeof v === 'string' && v.trim() === '');
+}
 
 export function CustomerCreate() {
   const translate = useTranslate();
@@ -36,8 +65,16 @@ export function CustomerCreate() {
   const entityId = tenantId;
   const [policies, setPolicies] = useState<OverduePolicyItem[]>([]);
   const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
+  const [activeTab, setActiveTab] = useState('data');
 
   const { formProps, saveButtonProps, onFinish, form } = useForm({ resource: 'customers' });
+
+  const { result: entityRecord } = useOne<EntityDefaults>({
+    resource: 'entities',
+    id: entityId ?? '',
+    queryOptions: { enabled: Boolean(entityId) },
+    errorNotification: false,
+  });
 
   const { selectProps: countrySelect } = useSelect({
     resource: 'countries',
@@ -77,13 +114,35 @@ export function CustomerCreate() {
       setPriceLists(rows);
       const current = form?.getFieldValue('priceListId') as string | undefined;
       if (current && !rows.some((r) => r.id === current)) {
-        form?.setFieldValue('priceListId', rows[0]?.id);
+        form?.setFieldValue('priceListId', rows.length === 1 ? rows[0].id : undefined);
+        return;
+      }
+      if (isEmptyFieldValue(current) && rows.length === 1) {
+        form?.setFieldValue('priceListId', rows[0].id);
       }
     });
     return () => {
       cancelled = true;
     };
   }, [tenantId, entityId, form]);
+
+  useEffect(() => {
+    if (!form || !entityRecord) return;
+    const patch: Record<string, string> = {};
+    const countryId =
+      entityRecord.defaultCountryId != null ? String(entityRecord.defaultCountryId).trim() : '';
+    const currencyId =
+      entityRecord.defaultCurrencyId != null ? String(entityRecord.defaultCurrencyId).trim() : '';
+    if (countryId && isEmptyFieldValue(form.getFieldValue('countryId'))) {
+      patch.countryId = countryId;
+    }
+    if (currencyId && isEmptyFieldValue(form.getFieldValue('defaultCurrencyId'))) {
+      patch.defaultCurrencyId = currencyId;
+    }
+    if (Object.keys(patch).length > 0) {
+      form.setFieldsValue(patch);
+    }
+  }, [entityRecord, form]);
 
   useEffect(() => {
     if (policies.length === 0) return;
@@ -111,6 +170,10 @@ export function CustomerCreate() {
     );
   }
 
+  const onFinishFailed: FormProps['onFinishFailed'] = (info) => {
+    setActiveTab(firstErrorTab(info.errorFields));
+  };
+
   return (
     <Create title={translate('pages.customers.create')} saveButtonProps={saveButtonProps}>
       <Typography.Paragraph type="secondary">
@@ -125,6 +188,7 @@ export function CustomerCreate() {
           isActive: true,
           contacts: [emptyContactRow()],
         }}
+        onFinishFailed={onFinishFailed}
         onFinish={async (values: Record<string, unknown>) => {
           const rawContacts = values.contacts as
             | Array<{
@@ -167,272 +231,308 @@ export function CustomerCreate() {
           });
         }}
       >
-        <Form.Item
-          label={translate('table.customers.name')}
-          name="name"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.address')}
-          name="address"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.country')}
-          name="countryId"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Select {...countrySelect} showSearch optionFilterProp="label" />
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.priceList')}
-          name="priceListId"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Select
-            showSearch
-            optionFilterProp="label"
-            disabled={priceLists.length === 0}
-            options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
-            placeholder={priceLists.length === 0 ? '…' : undefined}
-          />
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.defaultCurrency')}
-          name="defaultCurrencyId"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Select
-            {...currencySelect}
-            showSearch
-            optionFilterProp="label"
-            filterOption={(input, option) => {
-              const label = option?.label;
-              const text = typeof label === 'string' ? label : String(label ?? '');
-              return text.toLowerCase().includes(input.trim().toLowerCase());
-            }}
-          />
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.personType')}
-          name="personType"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Select
-            options={[
-              { value: 'physical_person', label: translate('create.documentType.physical') },
-              { value: 'legal_person', label: translate('create.documentType.legal') },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item noStyle shouldUpdate>
-          {() => {
-            const countryId = form?.getFieldValue('countryId') as string | undefined;
-            const personType = form?.getFieldValue('personType') as string | undefined;
-            const filtered = docTypes.filter((dt) => {
-              if (!countryId) return false;
-              if (dt.countryId != null && dt.countryId !== countryId) return false;
-              if (dt.countryId == null) {
-                const hasSpecific = docTypes.some((x) => x.countryId === countryId);
-                if (hasSpecific) return false;
-              }
-              if (personType === 'physical_person' && dt.appliesTo === 'legal_person') return false;
-              if (personType === 'legal_person' && dt.appliesTo === 'physical_person') return false;
-              return true;
-            });
-            return (
-              <Form.Item
-                label={translate('create.customer.documentType')}
-                name="documentTypeId"
-                rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-              >
-                <Select
-                  showSearch
-                  optionFilterProp="label"
-                  options={filtered.map((d) => ({ value: d.id, label: d.name }))}
-                  disabled={!countryId}
-                />
-              </Form.Item>
-            );
-          }}
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.documentNumber')}
-          name="documentNumber"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.defaultOverduePolicy')}
-          name="defaultOverdueNotificationPolicyKey"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Select showSearch optionFilterProp="label" options={policyOptions} />
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.defaultPaymentTermDays')}
-          name="defaultPaymentTermDays"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <InputNumber min={0} style={{ width: '100%' }} />
-        </Form.Item>
-        <Form.Item
-          label={translate('create.customer.active')}
-          name="isActive"
-          valuePropName="checked"
-        >
-          <Switch />
-        </Form.Item>
-
-        <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
-          {translate('create.customer.contactsSection')}
-        </Typography.Text>
-        <Form.List
-          name="contacts"
-          rules={[
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
             {
-              validator: async (_, value) => {
-                if (!Array.isArray(value) || value.length < 1) {
-                  return Promise.reject(new Error(translate('create.customer.contactsMinOne')));
-                }
-              },
+              key: 'data',
+              label: translate('pages.customers.tabData'),
+              forceRender: true,
+              children: (
+                <>
+                  <Form.Item
+                    label={translate('table.customers.name')}
+                    name="name"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.address')}
+                    name="address"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.country')}
+                    name="countryId"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select {...countrySelect} showSearch optionFilterProp="label" />
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.priceList')}
+                    name="priceListId"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      disabled={priceLists.length === 0}
+                      options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
+                      placeholder={priceLists.length === 0 ? '…' : undefined}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.defaultCurrency')}
+                    name="defaultCurrencyId"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select
+                      {...currencySelect}
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) => {
+                        const label = option?.label;
+                        const text = typeof label === 'string' ? label : String(label ?? '');
+                        return text.toLowerCase().includes(input.trim().toLowerCase());
+                      }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.personType')}
+                    name="personType"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select
+                      options={[
+                        { value: 'physical_person', label: translate('create.documentType.physical') },
+                        { value: 'legal_person', label: translate('create.documentType.legal') },
+                      ]}
+                    />
+                  </Form.Item>
+                  <Form.Item noStyle shouldUpdate>
+                    {() => {
+                      const countryId = form?.getFieldValue('countryId') as string | undefined;
+                      const personType = form?.getFieldValue('personType') as string | undefined;
+                      const filtered = docTypes.filter((dt) => {
+                        if (!countryId) return false;
+                        if (dt.countryId != null && dt.countryId !== countryId) return false;
+                        if (dt.countryId == null) {
+                          const hasSpecific = docTypes.some((x) => x.countryId === countryId);
+                          if (hasSpecific) return false;
+                        }
+                        if (personType === 'physical_person' && dt.appliesTo === 'legal_person')
+                          return false;
+                        if (personType === 'legal_person' && dt.appliesTo === 'physical_person')
+                          return false;
+                        return true;
+                      });
+                      return (
+                        <Form.Item
+                          label={translate('create.customer.documentType')}
+                          name="documentTypeId"
+                          rules={[
+                            { required: true, message: translate('form.validation.requiredField') },
+                          ]}
+                        >
+                          <Select
+                            showSearch
+                            optionFilterProp="label"
+                            options={filtered.map((d) => ({ value: d.id, label: d.name }))}
+                            disabled={!countryId}
+                          />
+                        </Form.Item>
+                      );
+                    }}
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.documentNumber')}
+                    name="documentNumber"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.defaultOverduePolicy')}
+                    name="defaultOverdueNotificationPolicyKey"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select showSearch optionFilterProp="label" options={policyOptions} />
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.defaultPaymentTermDays')}
+                    name="defaultPaymentTermDays"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <InputNumber min={0} style={{ width: '100%' }} />
+                  </Form.Item>
+                  <Form.Item
+                    label={translate('create.customer.active')}
+                    name="isActive"
+                    valuePropName="checked"
+                  >
+                    <Switch />
+                  </Form.Item>
+                </>
+              ),
+            },
+            {
+              key: 'contacts',
+              label: translate('pages.customers.tabContacts'),
+              forceRender: true,
+              children: (
+                <Form.List
+                  name="contacts"
+                  rules={[
+                    {
+                      validator: async (_, value) => {
+                        if (!Array.isArray(value) || value.length < 1) {
+                          return Promise.reject(
+                            new Error(translate('create.customer.contactsMinOne')),
+                          );
+                        }
+                      },
+                    },
+                  ]}
+                >
+                  {(fields, { add, remove, move }, { errors }) => (
+                    <>
+                      {fields.map((field, index) => {
+                        const { key, name: rowName, ...restField } = field;
+                        return (
+                          <div
+                            key={key}
+                            style={{
+                              marginBottom: 16,
+                              padding: 16,
+                              border: '1px solid var(--ant-color-border-secondary, #f0f0f0)',
+                              borderRadius: 8,
+                            }}
+                          >
+                            <Space wrap style={{ marginBottom: 12 }}>
+                              <Button
+                                type="default"
+                                htmlType="button"
+                                disabled={index === 0}
+                                onClick={() => move(index, index - 1)}
+                              >
+                                {translate('create.customer.moveContactUp')}
+                              </Button>
+                              <Button
+                                type="default"
+                                htmlType="button"
+                                disabled={index === fields.length - 1}
+                                onClick={() => move(index, index + 1)}
+                              >
+                                {translate('create.customer.moveContactDown')}
+                              </Button>
+                              <Button
+                                type="default"
+                                htmlType="button"
+                                danger
+                                disabled={fields.length <= 1}
+                                onClick={() => remove(rowName)}
+                              >
+                                {translate('create.customer.removeContact')}
+                              </Button>
+                            </Space>
+                            <Form.Item
+                              {...restField}
+                              name={[rowName, 'name']}
+                              label={translate('create.customer.contactName')}
+                              rules={[
+                                {
+                                  required: true,
+                                  message: translate('form.validation.requiredField'),
+                                },
+                              ]}
+                              style={{ marginBottom: 12 }}
+                            >
+                              <Input maxLength={120} />
+                            </Form.Item>
+                            <Form.Item
+                              {...restField}
+                              name={[rowName, 'email']}
+                              label={translate('create.customer.contactEmail')}
+                              rules={[
+                                {
+                                  required: true,
+                                  message: translate('form.validation.requiredField'),
+                                },
+                                {
+                                  type: 'email',
+                                  message: translate('pages.login.errors.validEmail'),
+                                },
+                              ]}
+                              style={{ marginBottom: 12 }}
+                            >
+                              <Input type="email" autoComplete="off" />
+                            </Form.Item>
+                            <Form.Item
+                              {...restField}
+                              name={[rowName, 'phone']}
+                              label={translate('create.customer.contactPhone')}
+                              style={{ marginBottom: 12 }}
+                            >
+                              <Input />
+                            </Form.Item>
+                            <Form.Item
+                              {...restField}
+                              name={[rowName, 'notifySales']}
+                              label={translate('create.customer.notifySales')}
+                              valuePropName="checked"
+                              style={{ marginBottom: 8 }}
+                            >
+                              <Switch />
+                            </Form.Item>
+                            <Form.Item
+                              {...restField}
+                              name={[rowName, 'notifyCreditos']}
+                              label={translate('create.customer.notifyCreditos')}
+                              valuePropName="checked"
+                              style={{ marginBottom: 8 }}
+                            >
+                              <Switch />
+                            </Form.Item>
+                            <Form.Item
+                              {...restField}
+                              name={[rowName, 'notifyDebits']}
+                              label={translate('create.customer.notifyDebits')}
+                              valuePropName="checked"
+                              style={{ marginBottom: 8 }}
+                            >
+                              <Switch />
+                            </Form.Item>
+                            <Form.Item
+                              {...restField}
+                              name={[rowName, 'notifyCollections']}
+                              label={translate('create.customer.notifyCollections')}
+                              valuePropName="checked"
+                              style={{ marginBottom: 8 }}
+                            >
+                              <Switch />
+                            </Form.Item>
+                            <Form.Item
+                              {...restField}
+                              name={[rowName, 'notifyOverduePayments']}
+                              label={translate('create.customer.notifyOverduePayments')}
+                              valuePropName="checked"
+                            >
+                              <Switch />
+                            </Form.Item>
+                          </div>
+                        );
+                      })}
+                      <Button
+                        type="dashed"
+                        htmlType="button"
+                        onClick={() => add(emptyContactRow())}
+                        block
+                        style={{ marginBottom: 8 }}
+                      >
+                        {translate('create.customer.addContact')}
+                      </Button>
+                      <Form.ErrorList errors={errors} />
+                    </>
+                  )}
+                </Form.List>
+              ),
             },
           ]}
-        >
-          {(fields, { add, remove, move }) => (
-            <>
-              {fields.map((field, index) => {
-                const { key, name: rowName, ...restField } = field;
-                return (
-                  <div
-                    key={key}
-                    style={{
-                      marginBottom: 16,
-                      padding: 16,
-                      border: '1px solid var(--ant-color-border-secondary, #f0f0f0)',
-                      borderRadius: 8,
-                    }}
-                  >
-                    <Space wrap style={{ marginBottom: 12 }}>
-                      <Button
-                        type="default"
-                        htmlType="button"
-                        disabled={index === 0}
-                        onClick={() => move(index, index - 1)}
-                      >
-                        {translate('create.customer.moveContactUp')}
-                      </Button>
-                      <Button
-                        type="default"
-                        htmlType="button"
-                        disabled={index === fields.length - 1}
-                        onClick={() => move(index, index + 1)}
-                      >
-                        {translate('create.customer.moveContactDown')}
-                      </Button>
-                      <Button
-                        type="default"
-                        htmlType="button"
-                        danger
-                        disabled={fields.length <= 1}
-                        onClick={() => remove(rowName)}
-                      >
-                        {translate('create.customer.removeContact')}
-                      </Button>
-                    </Space>
-                    <Form.Item
-                      {...restField}
-                      name={[rowName, 'name']}
-                      label={translate('create.customer.contactName')}
-                      rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-                      style={{ marginBottom: 12 }}
-                    >
-                      <Input maxLength={120} />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[rowName, 'email']}
-                      label={translate('create.customer.contactEmail')}
-                      rules={[
-                        { required: true, message: translate('form.validation.requiredField') },
-                        { type: 'email', message: translate('pages.login.errors.validEmail') },
-                      ]}
-                      style={{ marginBottom: 12 }}
-                    >
-                      <Input type="email" autoComplete="off" />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[rowName, 'phone']}
-                      label={translate('create.customer.contactPhone')}
-                      style={{ marginBottom: 12 }}
-                    >
-                      <Input />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[rowName, 'notifySales']}
-                      label={translate('create.customer.notifySales')}
-                      valuePropName="checked"
-                      style={{ marginBottom: 8 }}
-                    >
-                      <Switch />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[rowName, 'notifyCreditos']}
-                      label={translate('create.customer.notifyCreditos')}
-                      valuePropName="checked"
-                      style={{ marginBottom: 8 }}
-                    >
-                      <Switch />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[rowName, 'notifyDebits']}
-                      label={translate('create.customer.notifyDebits')}
-                      valuePropName="checked"
-                      style={{ marginBottom: 8 }}
-                    >
-                      <Switch />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[rowName, 'notifyCollections']}
-                      label={translate('create.customer.notifyCollections')}
-                      valuePropName="checked"
-                      style={{ marginBottom: 8 }}
-                    >
-                      <Switch />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[rowName, 'notifyOverduePayments']}
-                      label={translate('create.customer.notifyOverduePayments')}
-                      valuePropName="checked"
-                    >
-                      <Switch />
-                    </Form.Item>
-                  </div>
-                );
-              })}
-              <Button
-                type="dashed"
-                htmlType="button"
-                onClick={() => add(emptyContactRow())}
-                block
-                style={{ marginBottom: 8 }}
-              >
-                {translate('create.customer.addContact')}
-              </Button>
-            </>
-          )}
-        </Form.List>
+        />
       </Form>
     </Create>
   );

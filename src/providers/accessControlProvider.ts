@@ -16,6 +16,12 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       if (action === 'create') {
         return { can: canCreateResource(resource, codes) };
       }
+      if (action === 'edit' && resource === 'customers') {
+        return { can: codes.includes('customers.update') };
+      }
+      if (action === 'show' && resource === 'customers') {
+        return { can: codes.includes('customers.view') };
+      }
       if (action === 'edit' && resource === 'sellable_items') {
         return { can: codes.includes('sellable_items.update') };
       }

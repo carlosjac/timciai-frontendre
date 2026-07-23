@@ -37,6 +37,9 @@ export const esMessages = {
   entities: {
     entities: 'la entidad',
   },
+  customers: {
+    customers: 'el cliente',
+  },
   price_list_items: {
     price_list_items: 'el ítem de lista de precios',
   },
@@ -296,7 +299,34 @@ export const esMessages = {
       confirmPaymentOptionDeactivateBody:
         'Quedará inactiva hasta que se reactive. Debe quedar al menos una opción activa.',
     },
-    customers: { title: 'Clientes', create: 'Crear cliente' },
+    customers: {
+      title: 'Clientes',
+      create: 'Crear cliente',
+      showTitle: 'Cliente',
+      editTitle: 'Editar cliente',
+      tabData: 'Datos generales',
+      tabContacts: 'Contactos',
+      contactsEmpty: 'Sin contactos',
+      contactFallback: 'Contacto {{n}}',
+      contactsTabWait: 'Espera a que cargue el cliente para editar sus contactos.',
+      saveContacts: 'Guardar contactos',
+      documentReadonlyHint:
+        'El tipo y número de documento no se pueden cambiar después del alta.',
+      readonlyFieldsHint:
+        'El nombre, el tipo y el número de documento no se pueden cambiar después del alta.',
+      activate: 'Activar',
+      deactivate: 'Desactivar',
+      activated: 'Cliente activado',
+      deactivated: 'Cliente desactivado',
+      toggleError: 'No se pudo cambiar el estado',
+      confirmActivateTitle: '¿Activar cliente?',
+      confirmActivateBody: 'Quedará activo y podrá usarse en operaciones comerciales.',
+      confirmDeactivateTitle: '¿Desactivar cliente?',
+      confirmDeactivateBody:
+        'Quedará inactivo hasta que se reactive. No podrá editarse mientras esté inactivo.',
+      inactiveCannotEdit:
+        'No se puede editar un cliente inactivo. Actívalo desde la vista del registro.',
+    },
     sellableItems: {
       title: 'Productos y servicios',
       create: 'Crear producto o servicio',
@@ -567,6 +597,8 @@ export const esMessages = {
       updatedByName: 'Actualizado por',
     },
     customers: {
+      actions: 'Acciones',
+      edit: 'Editar',
       name: 'Nombre',
       document: 'Documento',
       documentType: 'Tipo de documento',

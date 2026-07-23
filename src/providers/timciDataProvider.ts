@@ -53,6 +53,10 @@ import {
   getSellableItemByIdUrl,
   getSellableItemsEntityListUrl,
 } from '../shared/timci/sellableItemsApi.js';
+import {
+  buildCustomerUpdateBody,
+  getCustomerByIdUrl,
+} from '../shared/timci/customersApi.js';
 import { normalizeTimciAuditFieldsInPlace } from '../shared/timci/auditUserDisplay.js';
 
 function normalizeGetOnePayload<T>(payload: T): T {
@@ -94,6 +98,14 @@ export function createTimciDataProvider(): DataProvider {
     },
 
     getOne: async <TData extends BaseRecord = BaseRecord>({ resource, id }: GetOneParams) => {
+      if (resource === 'customers') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const { json } = await timciFetch(getCustomerByIdUrl(tenantId, String(id)));
+        return { data: normalizeGetOnePayload(json as TData) };
+      }
       if (resource === 'sellable_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
@@ -247,6 +259,18 @@ export function createTimciDataProvider(): DataProvider {
       id,
       variables,
     }: UpdateParams<TVariables>) => {
+      if (resource === 'customers') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const body = buildCustomerUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(getCustomerByIdUrl(tenantId, String(id)), {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
       if (resource === 'sellable_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
