@@ -57,6 +57,14 @@ export function SellableItemPriceDrawer({
     formFieldNames: fieldNames as unknown as readonly string[],
   });
 
+  const { result: entityRecord, query: entityQuery } = useOne<{ defaultCurrencyId?: string }>({
+    resource: 'entities',
+    id: entityId,
+    queryOptions: { enabled: open && Boolean(entityId) && !isEdit },
+    errorNotification: false,
+  });
+  const entityLoading = entityQuery.isFetching;
+
   const { query: currenciesQuery, result: currenciesResult } = useList({
     resource: 'currencies',
     pagination: { currentPage: 1, pageSize: 500 },
@@ -76,6 +84,13 @@ export function SellableItemPriceDrawer({
     [currenciesResult.data],
   );
 
+  const tenantDefaultCurrencyId = useMemo(() => {
+    const id =
+      entityRecord?.defaultCurrencyId != null ? String(entityRecord.defaultCurrencyId).trim() : '';
+    if (!id) return undefined;
+    return currencyOptions.some((o) => o.value === id) ? id : undefined;
+  }, [entityRecord?.defaultCurrencyId, currencyOptions]);
+
   useEffect(() => {
     if (!open) return;
     clearServerErrors(form);
@@ -86,11 +101,20 @@ export function SellableItemPriceDrawer({
         validFrom: record.validFrom ? dayjs(String(record.validFrom).slice(0, 10)) : undefined,
         validTo: record.validTo ? dayjs(String(record.validTo).slice(0, 10)) : undefined,
       });
+      return;
     }
     if (!isEdit) {
       form.resetFields();
     }
   }, [open, isEdit, record, form, clearServerErrors]);
+
+  useEffect(() => {
+    if (!open || isEdit || !tenantDefaultCurrencyId) return;
+    const current = form.getFieldValue('currencyId');
+    if (current == null || current === '') {
+      form.setFieldsValue({ currencyId: tenantDefaultCurrencyId });
+    }
+  }, [open, isEdit, tenantDefaultCurrencyId, form]);
 
   const pickerFormat = useMemo(() => dateFormat.replace(/yyyy/gi, 'YYYY').replace(/dd/gi, 'DD'), [dateFormat]);
 
@@ -144,7 +168,9 @@ export function SellableItemPriceDrawer({
   };
 
   const loading =
-    currenciesQuery.isLoading || currenciesQuery.isFetching || (isEdit ? oneLoading : false);
+    currenciesQuery.isLoading ||
+    currenciesQuery.isFetching ||
+    (isEdit ? oneLoading : entityLoading);
 
   return (
     <Drawer

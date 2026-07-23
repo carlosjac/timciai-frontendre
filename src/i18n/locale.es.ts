@@ -37,6 +37,9 @@ export const esMessages = {
   entities: {
     entities: 'la entidad',
   },
+  price_list_items: {
+    price_list_items: 'el ítem de lista de precios',
+  },
   form: {
     serverError: {
       title: 'No se pudo guardar',
@@ -310,6 +313,8 @@ export const esMessages = {
       pricesInactiveListSuffix: 'inactiva',
       pricesInactiveListReadOnly:
         'Esta lista de precios está inactiva: solo puedes consultar precios; no puedes añadir ni modificar líneas hasta que la reactives en Listas de precios.',
+      pricesShowReadOnlyHint:
+        'Solo consulta. Para añadir o modificar precios, edita el producto o servicio (pestaña Precios).',
       pricesSelectListFirst: 'Elige una lista de precios para cargar sus precios para este ítem.',
       pricesTableTitle: 'Precios en la lista seleccionada',
       activate: 'Activar',
@@ -328,6 +333,7 @@ export const esMessages = {
     priceLists: {
       title: 'Listas de precios',
       create: 'Crear lista de precios',
+      showTitle: 'Lista de precios',
       editTitle: 'Editar lista de precios',
       tabData: 'Datos',
       tabPrices: 'Precios',
@@ -345,6 +351,8 @@ export const esMessages = {
       confirmDeactivateTitle: '¿Desactivar lista de precios?',
       confirmDeactivateBody:
         'Quedará inactiva y no podrá asignarse a nuevos clientes hasta que se reactive.',
+      inactiveCannotEdit:
+        'No se puede editar una lista de precios inactiva. Actívala desde la vista del registro.',
     },
     priceListItems: {
       resourceLabel: 'Ítems de lista de precios',

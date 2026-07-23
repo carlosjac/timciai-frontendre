@@ -28,19 +28,22 @@ export type SellableItemPricesTabProps = {
   entityId: string;
   sellableItemId: string;
   sellableName?: string;
+  /** Vista show: solo consulta, sin alta ni edición de precios. */
+  readOnly?: boolean;
 };
 
 export function SellableItemPricesTab({
   entityId,
   sellableItemId,
   sellableName,
+  readOnly = false,
 }: SellableItemPricesTabProps) {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const codes = permData?.actionCodes ?? [];
-  const canUpdate = codes.includes('price_list_items.update');
-  const canAdd = codes.includes('price_list_items.add');
+  const canUpdate = !readOnly && codes.includes('price_list_items.update');
+  const canAdd = !readOnly && codes.includes('price_list_items.add');
 
   const { query: listsQuery, result: listsResult } = useList<PriceListRow>({
     resource: 'price_lists',
@@ -221,6 +224,14 @@ export function SellableItemPricesTab({
         <Alert type="info" showIcon message={translate('pages.sellableItems.pricesSelectListFirst')} />
       ) : (
         <>
+          {readOnly && (
+            <Alert
+              type="info"
+              showIcon
+              message={translate('pages.sellableItems.pricesShowReadOnlyHint')}
+              style={{ marginBottom: 16 }}
+            />
+          )}
           <TimciFormInactiveRecordBanner
             messageKey="pages.sellableItems.pricesInactiveListReadOnly"
             isActive={!priceListId || selectedPriceList?.isActive !== false}
@@ -253,7 +264,7 @@ export function SellableItemPricesTab({
         </>
       )}
 
-      {priceListId && (
+      {priceListId && !readOnly && (
         <SellableItemPriceDrawer
           open={drawerOpen}
           onClose={() => {

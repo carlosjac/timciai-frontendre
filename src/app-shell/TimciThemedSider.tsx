@@ -13,6 +13,10 @@ import {
   type TimciPermissionsData,
 } from '../shared/timci/actionCodes.js';
 
+/** Ancho del menú lateral expandido (desktop y drawer móvil). */
+const SIDER_WIDTH = 280;
+const SIDER_COLLAPSED_WIDTH = 80;
+
 const DRAWER_MENU_BUTTON_STYLE: CSSProperties = {
   borderStartStartRadius: 0,
   borderEndStartRadius: 0,
@@ -182,7 +186,7 @@ export function TimciThemedSider({
         onClose={() => setMobileSiderOpen(false)}
         placement={direction === 'rtl' ? 'right' : 'left'}
         closable={false}
-        width={200}
+        width={SIDER_WIDTH}
         styles={{
           body: {
             padding: 0,
@@ -192,6 +196,7 @@ export function TimciThemedSider({
       >
         <Layout>
           <Layout.Sider
+            width={SIDER_WIDTH}
             style={{
               height: '100vh',
               backgroundColor: token.colorBgContainer,
@@ -200,7 +205,7 @@ export function TimciThemedSider({
           >
             <div
               style={{
-                width: '200px',
+                width: SIDER_WIDTH,
                 padding: '0 16px',
                 display: 'flex',
                 justifyContent: 'flex-start',
@@ -250,13 +255,14 @@ export function TimciThemedSider({
       {fixed ? (
         <div
           style={{
-            width: siderCollapsed ? '80px' : '200px',
+            width: siderCollapsed ? SIDER_COLLAPSED_WIDTH : SIDER_WIDTH,
             transition: 'all 0.2s',
           }}
         />
       ) : null}
       <Layout.Sider
         style={siderStyles}
+        width={SIDER_WIDTH}
         collapsible
         collapsed={siderCollapsed}
         onCollapse={(collapsed, type) => {
@@ -264,7 +270,7 @@ export function TimciThemedSider({
             setSiderCollapsed(collapsed);
           }
         }}
-        collapsedWidth={80}
+        collapsedWidth={SIDER_COLLAPSED_WIDTH}
         breakpoint="lg"
         trigger={
           <Button
@@ -282,7 +288,7 @@ export function TimciThemedSider({
       >
         <div
           style={{
-            width: siderCollapsed ? '80px' : '200px',
+            width: siderCollapsed ? SIDER_COLLAPSED_WIDTH : SIDER_WIDTH,
             padding: siderCollapsed ? '0' : '0 16px',
             display: 'flex',
             justifyContent: siderCollapsed ? 'center' : 'flex-start',

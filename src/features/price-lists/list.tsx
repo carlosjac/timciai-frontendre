@@ -1,7 +1,7 @@
+import { EditButton } from '@refinedev/antd';
 import { useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { Link } from 'react-router';
-import { Button, Tag } from 'antd';
+import { Tag } from 'antd';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -25,6 +25,7 @@ export function PriceListList() {
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
+  const canView = permData?.actionCodes?.includes('price_lists.view') ?? false;
   const canUpdate = permData?.actionCodes?.includes('price_lists.update') ?? false;
 
   const listMeta = useMemo(
@@ -32,27 +33,37 @@ export function PriceListList() {
     [tenantId],
   );
 
+  const getRowShowPath = useMemo(
+    () =>
+      canView
+        ? (record: PriceListRow) =>
+            `/price-lists/show/${encodeURIComponent(String(record.id))}`
+        : undefined,
+    [canView],
+  );
+
   const columnDefs = useMemo((): TimciColumnDef<PriceListRow>[] => {
-    const cols: TimciColumnDef<PriceListRow>[] = [];
-
-    if (canUpdate) {
-      cols.push({
-        key: 'actions',
-        dataIndex: 'id',
-        titleKey: 'table.priceLists.actions',
-        width: 100,
-        render: (_: unknown, record: PriceListRow) => (
-          <Link to={`/price-lists/edit/${encodeURIComponent(String(record.id))}`}>
-            <Button type="link" size="small">
-              {translate('table.priceLists.edit')}
-            </Button>
-          </Link>
+    const editColumn: TimciColumnDef<PriceListRow> = {
+      key: 'actions',
+      dataIndex: 'id',
+      titleKey: 'table.priceLists.actions',
+      width: 72,
+      render: (_: unknown, record: PriceListRow) =>
+        record.isActive === false ? null : (
+          <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
+            <EditButton
+              resource="price_lists"
+              recordItemId={record.id}
+              hideText
+              title={translate('table.priceLists.edit')}
+              aria-label={translate('table.priceLists.edit')}
+            />
+          </span>
         ),
-        exportValue: () => '',
-      });
-    }
+      exportValue: () => '',
+    };
 
-    cols.push(
+    const cols: TimciColumnDef<PriceListRow>[] = [
       {
         key: 'name',
         dataIndex: 'name',
@@ -70,7 +81,7 @@ export function PriceListList() {
           v ? (
             <Tag color="green">{translate('table.users.yes')}</Tag>
           ) : (
-            <Tag>{translate('table.users.no')}</Tag>
+            <Tag color="red">{translate('table.users.no')}</Tag>
           ),
         exportValue: (r) => (r.isActive ? translate('table.users.yes') : translate('table.users.no')),
       },
@@ -108,9 +119,9 @@ export function PriceListList() {
         sorter: true,
         defaultVisible: false,
       },
-    );
+    ];
 
-    return cols;
+    return canUpdate ? [editColumn, ...cols] : cols;
   }, [canUpdate, dateFormat, timeZone, translate]);
 
   return (
@@ -122,6 +133,7 @@ export function PriceListList() {
       requiresTenant
       meta={listMeta}
       pickerDateFormat={dateFormat}
+      getRowShowPath={getRowShowPath}
     />
   );
 }

@@ -80,6 +80,13 @@ const documentValidationMessagesEs: Record<string, string> = {
     'Debe haber al menos un medio de pago activo',
   'Payment option is already inactive for this entity':
     'El medio de pago ya está inactivo',
+  'Validity period overlaps an existing price for this price list, sellable item and currency':
+    'El período de vigencia se solapa con un precio existente para esta lista de precios, ítem vendible y moneda',
+  'Valid from must be on or before valid to (null valid to means no end date)':
+    'La fecha «válido desde» debe ser anterior o igual a «válido hasta» (si «válido hasta» está vacío, no hay fecha de fin)',
+  'Currency is required': 'La moneda es obligatoria',
+  'Price list not found': 'Lista de precios no encontrada',
+  'Sellable item not found': 'Ítem vendible no encontrado',
 };
 
 /** Mensajes de validación tipo Fastify/Ajv en inglés → español. */

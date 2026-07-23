@@ -64,6 +64,7 @@ import { SellableItemShow } from './features/sellable-items/show.js';
 import { SellableItemEdit } from './features/sellable-items/edit.js';
 import { PriceListList } from './features/price-lists/list.js';
 import { PriceListCreate } from './features/price-lists/create.js';
+import { PriceListShow } from './features/price-lists/show.js';
 import { PriceListEdit } from './features/price-lists/edit.js';
 import { CustomerList } from './features/customers/list.js';
 import { CustomerCreate } from './features/customers/create.js';
@@ -153,6 +154,7 @@ function TimciRefineTree() {
         name: 'price_lists',
         list: '/price-lists',
         create: '/price-lists/create',
+        show: '/price-lists/show/:id',
         edit: '/price-lists/edit/:id',
         meta: { label: esMessages.nav.priceLists, icon: <UnorderedListOutlined /> },
       },
@@ -282,6 +284,7 @@ function TimciRefineTree() {
               <Route path="/sellable-items/edit/:id" element={<SellableItemEdit />} />
               <Route path="/price-lists" element={<PriceListList />} />
               <Route path="/price-lists/create" element={<PriceListCreate />} />
+              <Route path="/price-lists/show/:id" element={<PriceListShow />} />
               <Route path="/price-lists/edit/:id" element={<PriceListEdit />} />
               <Route path="/customers" element={<CustomerList />} />
               <Route path="/customers/create" element={<CustomerCreate />} />
