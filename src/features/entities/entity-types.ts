@@ -32,6 +32,7 @@ export type EntityRecord = {
   documentTypeName?: string;
   defaultOverdueNotificationPolicyKey?: string;
   defaultPaymentTermDays?: number;
+  defaultMonetaryPolicyId?: string | null;
   availableOverduePolicyKeys?: string[];
   addAdvertisement?: boolean;
   fantasyName?: string | null;
@@ -61,6 +62,7 @@ export const ENTITY_GENERAL_SETTINGS_FIELD_NAMES = [
   'defaultCurrencyId',
   'defaultOverdueNotificationPolicyKey',
   'defaultPaymentTermDays',
+  'defaultMonetaryPolicyId',
   'availableOverduePolicyKeys',
 ] as const;
 

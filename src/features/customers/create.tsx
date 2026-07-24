@@ -22,6 +22,7 @@ import {
   type OverduePolicyItem,
   type PriceListRow,
 } from '../../shared/timci/auxiliaryApi.js';
+import { MonetaryPolicyDefaultSelect } from '../monetary-policies/MonetaryPolicyDefaultSelect.js';
 
 type DocTypeRow = BaseRecord & {
   id: string;
@@ -33,6 +34,7 @@ type DocTypeRow = BaseRecord & {
 type EntityDefaults = {
   defaultCountryId?: string;
   defaultCurrencyId?: string;
+  defaultMonetaryPolicyId?: string | null;
 };
 
 const emptyContactRow = () => ({
@@ -133,11 +135,18 @@ export function CustomerCreate() {
       entityRecord.defaultCountryId != null ? String(entityRecord.defaultCountryId).trim() : '';
     const currencyId =
       entityRecord.defaultCurrencyId != null ? String(entityRecord.defaultCurrencyId).trim() : '';
+    const monetaryPolicyId =
+      entityRecord.defaultMonetaryPolicyId != null
+        ? String(entityRecord.defaultMonetaryPolicyId).trim()
+        : '';
     if (countryId && isEmptyFieldValue(form.getFieldValue('countryId'))) {
       patch.countryId = countryId;
     }
     if (currencyId && isEmptyFieldValue(form.getFieldValue('defaultCurrencyId'))) {
       patch.defaultCurrencyId = currencyId;
+    }
+    if (monetaryPolicyId && isEmptyFieldValue(form.getFieldValue('defaultMonetaryPolicyId'))) {
+      patch.defaultMonetaryPolicyId = monetaryPolicyId;
     }
     if (Object.keys(patch).length > 0) {
       form.setFieldsValue(patch);
@@ -226,6 +235,7 @@ export function CustomerCreate() {
             documentNumber: values.documentNumber,
             defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
             defaultPaymentTermDays: values.defaultPaymentTermDays,
+            defaultMonetaryPolicyId: values.defaultMonetaryPolicyId || undefined,
             isActive: values.isActive !== false,
             contacts,
           });
@@ -359,6 +369,14 @@ export function CustomerCreate() {
                   >
                     <InputNumber min={0} style={{ width: '100%' }} />
                   </Form.Item>
+                  {tenantId && entityId ? (
+                    <MonetaryPolicyDefaultSelect
+                      tenantId={tenantId}
+                      entityId={entityId}
+                      required={false}
+                      labelKey="create.customer.defaultMonetaryPolicy"
+                    />
+                  ) : null}
                   <Form.Item
                     label={translate('create.customer.active')}
                     name="isActive"

@@ -25,6 +25,12 @@ import {
   getPriceListByIdUrl,
   getPriceListsEntityListUrl,
 } from '../shared/timci/priceListsApi.js';
+import {
+  buildMonetaryPolicyCreateBody,
+  buildMonetaryPolicyUpdateBody,
+  getMonetaryPoliciesEntityListUrl,
+  getMonetaryPolicyByIdUrl,
+} from '../shared/timci/monetaryPoliciesApi.js';
 import { buildCountryUpdateBody, getCountryByIdUrl } from '../shared/timci/countriesApi.js';
 import {
   buildCurrencyUpdateBody,
@@ -120,6 +126,17 @@ export function createTimciDataProvider(): DataProvider {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
         const { json } = await timciFetch(getPriceListByIdUrl(tenantId, String(id)));
+        return { data: normalizeGetOnePayload(json as TData) };
+      }
+      if (resource === 'monetary_policies') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const entityId = tenantId;
+        const { json } = await timciFetch(
+          getMonetaryPolicyByIdUrl(tenantId, entityId, String(id)),
+        );
         return { data: normalizeGetOnePayload(json as TData) };
       }
       if (resource === 'price_list_items') {
@@ -222,6 +239,24 @@ export function createTimciDataProvider(): DataProvider {
         });
         return { data: json as TData };
       }
+      if (resource === 'monetary_policies') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for tenant-scoped resources.');
+        }
+        const vars = variables as Record<string, unknown>;
+        const entityId = String(vars.entityId ?? '');
+        if (!entityId) {
+          throw toHttpError(400, 'entityId is required to create a monetary policy.');
+        }
+        const url = getMonetaryPoliciesEntityListUrl(tenantId, entityId);
+        const body = buildMonetaryPolicyCreateBody(vars);
+        const { json } = await timciFetch(url, {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+        return { data: json as TData };
+      }
       if (resource === 'price_list_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
@@ -293,6 +328,22 @@ export function createTimciDataProvider(): DataProvider {
           method: 'PUT',
           body: JSON.stringify(body),
         });
+        return { data: { ...(json as object), id } as TData };
+      }
+      if (resource === 'monetary_policies') {
+        const tenantId = getStoredTenantId();
+        if (!tenantId) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const entityId = tenantId;
+        const body = buildMonetaryPolicyUpdateBody(variables as Record<string, unknown>);
+        const { json } = await timciFetch(
+          getMonetaryPolicyByIdUrl(tenantId, entityId, String(id)),
+          {
+            method: 'PATCH',
+            body: JSON.stringify(body),
+          },
+        );
         return { data: { ...(json as object), id } as TData };
       }
       if (resource === 'price_list_items') {

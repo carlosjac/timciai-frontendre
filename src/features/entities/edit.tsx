@@ -149,6 +149,7 @@ export function EntityEdit() {
                   documentNumber: values.documentNumber,
                   defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
                   defaultPaymentTermDays: values.defaultPaymentTermDays,
+                  defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
                   availableOverduePolicyKeys: values.availableOverduePolicyKeys,
                   addAdvertisement: values.addAdvertisement,
                   fantasyName,
@@ -171,6 +172,7 @@ export function EntityEdit() {
                 defaultCurrencyId: values.defaultCurrencyId,
                 defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
                 defaultPaymentTermDays: values.defaultPaymentTermDays,
+                defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
                 availableOverduePolicyKeys: values.availableOverduePolicyKeys,
                 paymentOptions,
               });
@@ -193,6 +195,8 @@ export function EntityEdit() {
             currencySelect={currencySelect}
             policyOptions={policyOptions}
             sections={['contact']}
+            tenantId={tenantId}
+            entityId={record?.id ?? tenantId}
           />
           <EntityIdentityFields
             form={form}
@@ -207,6 +211,8 @@ export function EntityEdit() {
             currencySelect={currencySelect}
             policyOptions={policyOptions}
             sections={['policies']}
+            tenantId={tenantId}
+            entityId={record?.id ?? tenantId}
           />
           {canFullEditEntity ? (
             <EntityIdentityFields

@@ -43,6 +43,9 @@ export function buildCustomerUpdateBody(variables: Record<string, unknown>): Rec
   if (variables.defaultPaymentTermDays !== undefined) {
     payload.defaultPaymentTermDays = variables.defaultPaymentTermDays;
   }
+  if (variables.defaultMonetaryPolicyId !== undefined) {
+    payload.defaultMonetaryPolicyId = variables.defaultMonetaryPolicyId;
+  }
   return payload;
 }
 

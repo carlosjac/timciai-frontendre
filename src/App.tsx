@@ -11,6 +11,7 @@ import {
   GlobalOutlined,
   IdcardOutlined,
   KeyOutlined,
+  PercentageOutlined,
   SafetyCertificateOutlined,
   ShoppingOutlined,
   UnorderedListOutlined,
@@ -66,6 +67,10 @@ import { PriceListList } from './features/price-lists/list.js';
 import { PriceListCreate } from './features/price-lists/create.js';
 import { PriceListShow } from './features/price-lists/show.js';
 import { PriceListEdit } from './features/price-lists/edit.js';
+import { MonetaryPolicyList } from './features/monetary-policies/list.js';
+import { MonetaryPolicyCreate } from './features/monetary-policies/create.js';
+import { MonetaryPolicyShow } from './features/monetary-policies/show.js';
+import { MonetaryPolicyEdit } from './features/monetary-policies/edit.js';
 import { CustomerList } from './features/customers/list.js';
 import { CustomerCreate } from './features/customers/create.js';
 import { CustomerShow } from './features/customers/show.js';
@@ -161,6 +166,14 @@ function TimciRefineTree() {
         show: '/price-lists/show/:id',
         edit: '/price-lists/edit/:id',
         meta: { label: esMessages.nav.priceLists, icon: <UnorderedListOutlined /> },
+      },
+      {
+        name: 'monetary_policies',
+        list: '/monetary-policies',
+        create: '/monetary-policies/create',
+        show: '/monetary-policies/show/:id',
+        edit: '/monetary-policies/edit/:id',
+        meta: { label: esMessages.nav.monetaryPolicies, icon: <PercentageOutlined /> },
       },
       {
         name: 'price_list_items',
@@ -290,6 +303,10 @@ function TimciRefineTree() {
               <Route path="/price-lists/create" element={<PriceListCreate />} />
               <Route path="/price-lists/show/:id" element={<PriceListShow />} />
               <Route path="/price-lists/edit/:id" element={<PriceListEdit />} />
+              <Route path="/monetary-policies" element={<MonetaryPolicyList />} />
+              <Route path="/monetary-policies/create" element={<MonetaryPolicyCreate />} />
+              <Route path="/monetary-policies/show/:id" element={<MonetaryPolicyShow />} />
+              <Route path="/monetary-policies/edit/:id" element={<MonetaryPolicyEdit />} />
               <Route path="/customers" element={<CustomerList />} />
               <Route path="/customers/create" element={<CustomerCreate />} />
               <Route path="/customers/show/:id" element={<CustomerShow />} />

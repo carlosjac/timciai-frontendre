@@ -239,6 +239,9 @@ export function EntityShow() {
         <Descriptions.Item label={translate('create.entity.defaultPaymentTermDays')}>
           {record?.defaultPaymentTermDays ?? '—'}
         </Descriptions.Item>
+        <Descriptions.Item label={translate('create.entity.defaultMonetaryPolicy')}>
+          {record?.defaultMonetaryPolicyId ?? '—'}
+        </Descriptions.Item>
         <Descriptions.Item label={translate('create.entity.addAdvertisement')}>
           {boolTag(translate, record?.addAdvertisement)}
         </Descriptions.Item>

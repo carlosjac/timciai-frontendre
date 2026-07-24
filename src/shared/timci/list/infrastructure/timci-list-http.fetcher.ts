@@ -10,6 +10,7 @@ import {
 import { timciFetch, toHttpError } from '../../http.js';
 import { getPriceListItemsListUrl } from '../../priceListItemsApi.js';
 import { getPriceListsEntityListUrl } from '../../priceListsApi.js';
+import { getMonetaryPoliciesEntityListUrl } from '../../monetaryPoliciesApi.js';
 import { getSellableItemsEntityListUrl } from '../../sellableItemsApi.js';
 import { mapTimciListRowsWithAuditFields } from '../../auditUserDisplay.js';
 
@@ -162,6 +163,27 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       return { data: [], total: 0 };
     }
     const listBase = getPriceListsEntityListUrl(tenantId, entityId);
+    const filterObj = buildTimciFilter(input.filters);
+    const qs = buildSortRangeParams({
+      sorters: input.sorters,
+      page: input.page,
+      pageSize: input.pageSize,
+      filterObj,
+    });
+    const { json, headers } = await timciFetch(`${listBase}?${qs.toString()}`);
+    const data = mapTimciListRows(Array.isArray(json) ? (json as TData[]) : []);
+    const total = parseContentRangeTotal(headers) ?? data.length;
+    return { data, total };
+  }
+
+  if (input.resource === 'monetary_policies') {
+    const tenantId = getStoredTenantId();
+    const entityId =
+      (input.meta?.entityId as string | undefined) ?? (tenantId ?? undefined) ?? '';
+    if (!tenantId || !entityId) {
+      return { data: [], total: 0 };
+    }
+    const listBase = getMonetaryPoliciesEntityListUrl(tenantId, entityId);
     const filterObj = buildTimciFilter(input.filters);
     const qs = buildSortRangeParams({
       sorters: input.sorters,

@@ -65,6 +65,8 @@ export function canCreateResource(resource: string | undefined, codes: string[])
       return has('sellable_items.add');
     case 'price_lists':
       return has('price_lists.add');
+    case 'monetary_policies':
+      return has('monetary_policies.add');
     case 'price_list_items':
       return has('price_list_items.add');
     case 'users':
@@ -106,6 +108,8 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
       return has('menu.sellable_items');
     case 'price_lists':
       return has('menu.price_lists');
+    case 'monetary_policies':
+      return has('menu.monetary_policies');
     case 'users':
       return has('menu.users');
     case 'tenants':
@@ -137,6 +141,7 @@ export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'entity_settings', path: '/entity-settings' },
   { name: 'sellable_items', path: '/sellable-items' },
   { name: 'price_lists', path: '/price-lists' },
+  { name: 'monetary_policies', path: '/monetary-policies' },
   { name: 'users', path: '/users' },
   { name: 'sessions', path: '/sessions' },
   { name: 'tenants', path: '/tenants' },

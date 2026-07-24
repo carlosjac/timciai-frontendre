@@ -1,6 +1,7 @@
 import { Form, Input, InputNumber, Select } from 'antd';
 import { useTranslate } from '@refinedev/core';
 import type { FormInstance, SelectProps } from 'antd';
+import { MonetaryPolicyDefaultSelect } from '../monetary-policies/MonetaryPolicyDefaultSelect.js';
 
 export type EntityGeneralSettingsSection = 'contact' | 'policies';
 
@@ -10,6 +11,9 @@ type EntityGeneralSettingsFieldsProps = {
   currencySelect: SelectProps;
   policyOptions: Array<{ value: string; label: string }>;
   sections?: EntityGeneralSettingsSection[];
+  /** Required to load monetary policy options for default select. */
+  tenantId?: string | null;
+  entityId?: string | null;
 };
 
 export function EntityGeneralSettingsFields({
@@ -18,6 +22,8 @@ export function EntityGeneralSettingsFields({
   currencySelect,
   policyOptions,
   sections = ['contact', 'policies'],
+  tenantId,
+  entityId,
 }: EntityGeneralSettingsFieldsProps) {
   const translate = useTranslate();
   const show = (section: EntityGeneralSettingsSection) => sections.includes(section);
@@ -110,6 +116,9 @@ export function EntityGeneralSettingsFields({
           >
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
+          {tenantId && entityId ? (
+            <MonetaryPolicyDefaultSelect tenantId={tenantId} entityId={entityId} />
+          ) : null}
         </>
       ) : null}
     </>

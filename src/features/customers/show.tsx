@@ -38,6 +38,7 @@ type CustomerRecord = {
   documentNumber?: string;
   defaultOverdueNotificationPolicyKey?: string;
   defaultPaymentTermDays?: number;
+  defaultMonetaryPolicyId?: string | null;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -172,6 +173,9 @@ export function CustomerShow() {
                     </Descriptions.Item>
                     <Descriptions.Item label={translate('create.customer.defaultPaymentTermDays')}>
                       {record?.defaultPaymentTermDays ?? '—'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={translate('create.customer.defaultMonetaryPolicy')}>
+                      {record?.defaultMonetaryPolicyId ?? '—'}
                     </Descriptions.Item>
                     <Descriptions.Item label={translate('table.customers.active')}>
                       {record?.isActive ? (

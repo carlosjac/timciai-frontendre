@@ -34,6 +34,12 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       if (action === 'show' && resource === 'price_lists') {
         return { can: codes.includes('price_lists.view') };
       }
+      if (action === 'edit' && resource === 'monetary_policies') {
+        return { can: codes.includes('monetary_policies.update') };
+      }
+      if (action === 'show' && resource === 'monetary_policies') {
+        return { can: codes.includes('monetary_policies.view') };
+      }
       if (action === 'edit' && resource === 'price_list_items') {
         return { can: codes.includes('price_list_items.update') };
       }

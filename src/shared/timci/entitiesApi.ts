@@ -79,6 +79,9 @@ export function buildEntityUpdateBody(variables: Record<string, unknown>): Recor
   if (variables.defaultPaymentTermDays !== undefined) {
     payload.defaultPaymentTermDays = variables.defaultPaymentTermDays;
   }
+  if (variables.defaultMonetaryPolicyId !== undefined) {
+    payload.defaultMonetaryPolicyId = variables.defaultMonetaryPolicyId;
+  }
   if (variables.availableOverduePolicyKeys !== undefined) {
     payload.availableOverduePolicyKeys = variables.availableOverduePolicyKeys;
   }

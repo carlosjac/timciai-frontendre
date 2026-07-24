@@ -109,6 +109,7 @@ export function EntitySettingsPage() {
         defaultCurrencyId: string;
         defaultOverdueNotificationPolicyKey: string;
         defaultPaymentTermDays: number;
+        defaultMonetaryPolicyId: string;
         availableOverduePolicyKeys: string[];
       };
       await submitRecord({
@@ -119,6 +120,7 @@ export function EntitySettingsPage() {
         defaultCurrencyId: values.defaultCurrencyId,
         defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
         defaultPaymentTermDays: values.defaultPaymentTermDays,
+        defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
         availableOverduePolicyKeys: values.availableOverduePolicyKeys,
       });
       message.success(translate('pages.entitySettings.savedGeneral'));
@@ -166,6 +168,8 @@ export function EntitySettingsPage() {
                       countrySelect={countrySelect}
                       currencySelect={currencySelect}
                       policyOptions={policyOptions}
+                      tenantId={tenantId}
+                      entityId={tenantId}
                     />
                     <Button type="primary" htmlType="button" onClick={() => void saveGeneral()}>
                       {translate('pages.entitySettings.saveGeneral')}

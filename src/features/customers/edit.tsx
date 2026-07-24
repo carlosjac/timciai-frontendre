@@ -17,6 +17,7 @@ import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormSe
 import { useTimciInactiveEditRedirect } from '../../shared/timci/form/useTimciInactiveEditRedirect.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { MonetaryPolicyDefaultSelect } from '../monetary-policies/MonetaryPolicyDefaultSelect.js';
 import { CustomerContactsEditor } from './CustomerContactsEditor.js';
 import type { CustomerContactView } from './CustomerContactsReadonlyTab.js';
 
@@ -28,6 +29,7 @@ const CUSTOMER_EDIT_FIELDS = [
   'personType',
   'defaultOverdueNotificationPolicyKey',
   'defaultPaymentTermDays',
+  'defaultMonetaryPolicyId',
 ] as const;
 
 type DocTypeRow = BaseRecord & {
@@ -194,6 +196,7 @@ export function CustomerEdit() {
                         defaultOverdueNotificationPolicyKey:
                           values.defaultOverdueNotificationPolicyKey,
                         defaultPaymentTermDays: values.defaultPaymentTermDays,
+                        defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
                       });
                     } catch (e) {
                       applyServerError(form, e);
@@ -281,6 +284,13 @@ export function CustomerEdit() {
                   >
                     <InputNumber min={0} style={{ width: '100%' }} />
                   </Form.Item>
+                  {tenantId && entityId ? (
+                    <MonetaryPolicyDefaultSelect
+                      tenantId={tenantId}
+                      entityId={record?.entityId ?? entityId}
+                      labelKey="create.customer.defaultMonetaryPolicy"
+                    />
+                  ) : null}
                 </Form>
                 {record && (
                   <TimciFormAuditCollapse
