@@ -190,6 +190,9 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
       page: input.page,
       pageSize: input.pageSize,
       filterObj,
+      extraQuery: shouldIncludeInactiveInList(input)
+        ? { includeInactive: 'true' }
+        : undefined,
     });
     const { json, headers } = await timciFetch(`${listBase}?${qs.toString()}`);
     const data = mapTimciListRows(Array.isArray(json) ? (json as TData[]) : []);

@@ -74,14 +74,11 @@ export function MonetaryPolicyLiveSummary() {
       style={{ marginTop: 16 }}
       message={translate('pages.monetaryPolicies.summaryTitle')}
       description={
-        <div>
-          <div>{content.anchorLine}</div>
-          <ul style={{ margin: '8px 0 0', paddingLeft: 20 }}>
-            {content.bandLines.map((line, idx) => (
-              <li key={idx}>{line}</li>
-            ))}
-          </ul>
-        </div>
+        <ul style={{ margin: 0, paddingLeft: 20 }}>
+          {content.bandLines.map((line, idx) => (
+            <li key={idx}>{line}</li>
+          ))}
+        </ul>
       }
     />
   );

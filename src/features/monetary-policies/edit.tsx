@@ -1,6 +1,6 @@
 import { Edit, useForm } from '@refinedev/antd';
 import { useTranslate } from '@refinedev/core';
-import { Alert, Form, Input } from 'antd';
+import { Alert, Form } from 'antd';
 import { useCallback, useEffect } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCollapse.js';
@@ -15,6 +15,7 @@ import {
   MonetaryPolicyParamsFields,
   normalizeMonetaryPolicyParams,
 } from './MonetaryPolicyParamsFields.js';
+import { MonetaryPolicyNameField } from './MonetaryPolicyNameField.js';
 
 const EDIT_FIELDS = ['name', 'params'] as const;
 
@@ -78,13 +79,6 @@ export function MonetaryPolicyEdit() {
     return <Edit title={translate('pages.monetaryPolicies.editTitle')} isLoading />;
   }
 
-  const kindLabel =
-    kind === 'none'
-      ? translate('pages.monetaryPolicies.kindLabels.none')
-      : kind === 'relative_bands'
-        ? translate('pages.monetaryPolicies.kindLabels.relative_bands')
-        : (kind ?? '—');
-
   return (
     <Edit
       title={translate('pages.monetaryPolicies.editTitle')}
@@ -112,17 +106,8 @@ export function MonetaryPolicyEdit() {
           }
         }}
       >
-        <Form.Item label={translate('table.monetaryPolicies.kind')}>
-          <Input value={kindLabel} disabled />
-        </Form.Item>
-        <Form.Item
-          label={translate('table.monetaryPolicies.name')}
-          name="name"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Input.TextArea rows={4} maxLength={2000} showCount />
-        </Form.Item>
         <MonetaryPolicyParamsFields kind={kind} disabled={kind === 'none'} />
+        <MonetaryPolicyNameField kind={kind} disabled={kind === 'none'} />
       </Form>
       {record && (
         <TimciFormAuditCollapse

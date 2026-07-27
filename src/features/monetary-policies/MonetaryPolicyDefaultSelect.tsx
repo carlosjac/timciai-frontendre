@@ -65,7 +65,7 @@ export function MonetaryPolicyDefaultSelect({
         allowClear={!required}
         options={options.map((p) => ({
           value: p.id,
-          label: `${p.name.replace(/\s+/g, ' ').trim()} (${p.kind})`,
+          label: p.name.replace(/\s+/g, ' ').trim(),
         }))}
         placeholder={translate('create.entity.defaultMonetaryPolicyPlaceholder')}
       />

@@ -154,6 +154,7 @@ export function MonetaryPolicyList() {
       titleKey="pages.monetaryPolicies.title"
       columnDefs={columnDefs}
       requiresTenant
+      includeInactive
       meta={listMeta}
       pickerDateFormat={dateFormat}
       getRowShowPath={getRowShowPath}

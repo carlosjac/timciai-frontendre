@@ -3,6 +3,10 @@ import { useTranslate } from '@refinedev/core';
 import { Alert, Button, Form, InputNumber, Radio, Select, Space, Typography } from 'antd';
 import { useEffect } from 'react';
 import { MonetaryPolicyLiveSummary } from './MonetaryPolicyLiveSummary.js';
+import {
+  validateRelativeBandsCoverageForForm,
+  type CoverageBound,
+} from './relativeBandsCoverage.js';
 
 const EFFECT_OPTIONS = ['discount', 'surcharge', 'none'] as const;
 const CHARGE_MODES = ['flat_percent', 'daily_rate'] as const;
@@ -68,15 +72,30 @@ type BoundFieldProps = {
 
 /** Bound editor: mode selector (number/end-of-month/start-of-next-month/open) + number input. */
 function BoundField({ field, bound, unit, disabled, label, tooltip, t }: BoundFieldProps) {
+  const translate = useTranslate();
   const form = Form.useFormInstance();
   const modeName = `${bound}Mode`;
   const valueName = `${bound}Value`;
   const modePath = ['params', 'bands', field.name, modeName];
   const mode = Form.useWatch(modePath, form) as BoundMode | undefined;
+  const anchor = Form.useWatch(['params', 'anchor'], form) as string | undefined;
   const allowSymbol = unit !== 'months';
 
+  const unitFragment = translate(
+    `pages.monetaryPolicies.params.boundMode.numberUnit.${unit === 'months' ? 'months' : 'days'}`,
+  );
+  const anchorFragment = translate(
+    `pages.monetaryPolicies.params.boundMode.numberAnchor.${
+      anchor === 'document_date' ? 'document_date' : 'due_date'
+    }`,
+  );
+  const numberLabel = translate('pages.monetaryPolicies.params.boundMode.number', {
+    unit: unitFragment,
+    anchor: anchorFragment,
+  });
+
   const modeOptions: Array<{ value: BoundMode; label: string }> = [
-    { value: 'number', label: t('boundMode.number') },
+    { value: 'number', label: numberLabel },
     ...(allowSymbol
       ? [
           { value: 'eom' as const, label: t('boundMode.eom') },
@@ -89,14 +108,14 @@ function BoundField({ field, bound, unit, disabled, label, tooltip, t }: BoundFi
   return (
     <Form.Item label={label} tooltip={tooltip} style={{ marginBottom: 0 }}>
       <Space.Compact>
-        <Form.Item {...field} name={[field.name, modeName]} noStyle>
-          <Select disabled={disabled} style={{ width: 190 }} options={modeOptions} />
-        </Form.Item>
         {mode === 'number' && (
           <Form.Item {...field} name={[field.name, valueName]} noStyle>
             <InputNumber disabled={disabled} precision={0} style={{ width: 90 }} />
           </Form.Item>
         )}
+        <Form.Item {...field} name={[field.name, modeName]} noStyle>
+          <Select disabled={disabled} style={{ width: 300 }} options={modeOptions} />
+        </Form.Item>
       </Space.Compact>
     </Form.Item>
   );
@@ -183,9 +202,35 @@ export function MonetaryPolicyParamsFields({ disabled, kind }: Props) {
         rules={[
           {
             validator: async (_, bands) => {
-              if (!bands || bands.length < 1) {
-                return Promise.reject(new Error(t('bandsRequired')));
-              }
+              const unit = form.getFieldValue(['params', 'unit']) === 'months' ? 'months' : 'days';
+              const raw = Array.isArray(bands) ? bands : [];
+              const normalized = raw.map((band) => {
+                if (!band || typeof band !== 'object') {
+                  return { from: null as CoverageBound, to: null as CoverageBound };
+                }
+                const b = band as Record<string, unknown>;
+                let from = modeToBound(b.fromMode, b.fromValue) as CoverageBound;
+                let to = modeToBound(b.toMode, b.toValue) as CoverageBound;
+                if (unit === 'months') {
+                  if (typeof from !== 'number') from = null;
+                  if (typeof to !== 'number') to = null;
+                }
+                return { from, to };
+              });
+              const coverageErrors = validateRelativeBandsCoverageForForm(normalized);
+              if (coverageErrors.length === 0) return;
+
+              const messages = coverageErrors.map((err) => {
+                if (err.code === 'bandsRequired') return t('bandsRequired');
+                if (err.code === 'openFromRequired') return t('coverageOpenFrom');
+                if (err.code === 'openToRequired') return t('coverageOpenTo');
+                return translate('pages.monetaryPolicies.params.coverageOverlapOrGap', {
+                  a: String(err.a ?? ''),
+                  b: String(err.b ?? ''),
+                });
+              });
+
+              return Promise.reject(messages);
             },
           },
         ]}
@@ -236,22 +281,36 @@ export function MonetaryPolicyParamsFields({ disabled, kind }: Props) {
                       }))}
                     />
                   </Form.Item>
-                  <Form.Item
-                    {...field}
-                    label={t('chargeMode')}
-                    name={[field.name, 'chargeMode']}
-                    rules={required}
-                    extra={unit === 'months' ? t('dailyRateRequiresDays') : undefined}
-                  >
-                    <Select
-                      disabled={disabled || unit === 'months'}
-                      style={{ width: 160 }}
-                      options={CHARGE_MODES.map((v) => ({
-                        value: v,
-                        label: t(`chargeModeOptions.${v}`),
-                        disabled: v === 'daily_rate' && unit === 'months',
-                      }))}
-                    />
+                  <Form.Item noStyle shouldUpdate>
+                    {() => {
+                      const effect = form.getFieldValue([
+                        'params',
+                        'bands',
+                        field.name,
+                        'effect',
+                      ]);
+                      if (effect === 'none') return null;
+
+                      return (
+                        <Form.Item
+                          {...field}
+                          label={t('chargeMode')}
+                          name={[field.name, 'chargeMode']}
+                          rules={required}
+                          extra={unit === 'months' ? t('dailyRateRequiresDays') : undefined}
+                        >
+                          <Select
+                            disabled={disabled || unit === 'months'}
+                            style={{ width: 160 }}
+                            options={CHARGE_MODES.map((v) => ({
+                              value: v,
+                              label: t(`chargeModeOptions.${v}`),
+                              disabled: v === 'daily_rate' && unit === 'months',
+                            }))}
+                          />
+                        </Form.Item>
+                      );
+                    }}
                   </Form.Item>
                   <Form.Item noStyle shouldUpdate>
                     {() => {
@@ -261,19 +320,22 @@ export function MonetaryPolicyParamsFields({ disabled, kind }: Props) {
                         field.name,
                         'effect',
                       ]);
+                      if (effect === 'none') return null;
+
                       const chargeMode = form.getFieldValue([
                         'params',
                         'bands',
                         field.name,
                         'chargeMode',
                       ]);
-                      if (effect === 'none') return null;
 
                       return (
                         <Form.Item
                           {...field}
                           label={
-                            chargeMode === 'daily_rate' ? t('rateDailyPercent') : t('ratePercent')
+                            chargeMode === 'daily_rate'
+                              ? t('rateDailyPercent')
+                              : t('ratePercent')
                           }
                           name={[field.name, 'ratePercent']}
                           rules={required}

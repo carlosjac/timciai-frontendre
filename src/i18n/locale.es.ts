@@ -425,18 +425,53 @@ export const esMessages = {
       summaryIncomplete: 'Completa la fecha base, la unidad y al menos una franja para ver el resumen.',
       summaryAnchor: 'Fecha base: {{anchor}}',
       summaryBand:
-        'Franja {{n}}: de {{from}} a {{to}} — {{effect}}, {{mode}}, {{rate}} %',
-      summaryBandNone: 'Franja {{n}}: de {{from}} a {{to}} — Neutro',
+        'Franja {{n}}: desde {{from}} a {{to}} — {{effect}}, {{mode}}, {{rate}} %',
+      summaryBandNone: 'Franja {{n}}: desde {{from}} a {{to}} — Neutro',
+      summaryBoundNumber: '{{n}} {{unit}} pasada la fecha de {{anchor}}',
+      summaryBoundEom: 'último día del mes de la fecha de {{anchor}}',
+      summaryBoundStartNextMonth: 'primer día del mes siguiente a la fecha de {{anchor}}',
+      nameAutoHint:
+        'Se sugiere un nombre corto según las franjas (útil en listas y formularios). Puedes editarlo.',
+      nameRegenerate: 'Regenerar nombre',
+      shortName: {
+        prefixDocument: 'Fecha de emisión',
+        prefixDue: 'Fecha de vencimiento',
+        header: '{{prefix}} - {{bands}}',
+        sep: ', ',
+        discount: '-{{rate}}%',
+        surcharge: '+{{rate}}%',
+        none: 'neutro',
+        dailyDiscount: '-{{rate}}%/día',
+        dailySurcharge: '+{{rate}}%/día',
+        unitDays: 'd',
+        unitMonths: 'm',
+        boundEom: 'fin de mes',
+        boundStartNext: 'mes siguiente',
+        rangeHasta: 'hasta {{to}}',
+        rangeFrom: 'a partir de {{from}}',
+        rangeStartNext: 'a partir de mes siguiente',
+        rangeBoth: '{{from}}-{{to}}',
+        band: '{{range}}: {{effect}}',
+        bandNoRange: '{{effect}}',
+      },
       params: {
         from: 'Desde',
         to: 'Hasta',
         fromHint:
-          'Inicio de la franja respecto de la fecha base (cantidad de días/meses, fin de mes, primer día del mes siguiente o sin límite).',
+          'Inicio de la franja respecto de la fecha base (días/meses desde la fecha base, fin de mes, primer día del mes siguiente o sin límite).',
         toHint:
-          'Fin de la franja respecto de la fecha base (cantidad de días/meses, fin de mes, primer día del mes siguiente o sin límite).',
+          'Fin de la franja respecto de la fecha base (días/meses desde la fecha base, fin de mes, primer día del mes siguiente o sin límite).',
         openEnded: 'sin límite',
         boundMode: {
-          number: 'Cantidad',
+          number: '{{unit}} desde fecha de {{anchor}}',
+          numberUnit: {
+            days: 'días',
+            months: 'meses',
+          },
+          numberAnchor: {
+            due_date: 'vencimiento',
+            document_date: 'emisión',
+          },
           eom: 'Último día del mes',
           start_next_month: 'Primer día del mes siguiente',
           open: 'Sin límite',
@@ -458,6 +493,12 @@ export const esMessages = {
         addBand: 'Añadir franja',
         removeBand: 'Quitar franja',
         bandsRequired: 'Agrega al menos una franja',
+        coverageOpenFrom:
+          'La primera franja (en el tiempo) debe empezar con «Desde: Sin límite» para cubrir pagos adelantados.',
+        coverageOpenTo:
+          'La última franja (en el tiempo) debe terminar con «Hasta: Sin límite» para cubrir pagos muy atrasados.',
+        coverageOverlapOrGap:
+          'Las franjas {{a}} y {{b}} se solapan o dejan un hueco. Deben ser consecutivas sin solaparse.',
       },
     },
     priceListItems: {

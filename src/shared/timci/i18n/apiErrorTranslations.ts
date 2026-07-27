@@ -87,6 +87,10 @@ const documentValidationMessagesEs: Record<string, string> = {
   'Currency is required': 'La moneda es obligatoria',
   'Price list not found': 'Lista de precios no encontrada',
   'Sellable item not found': 'Ítem vendible no encontrado',
+  'bands must start with an open from (−∞)':
+    'La primera franja debe empezar con «Desde: Sin límite» para cubrir pagos adelantados.',
+  'bands must end with an open to (+∞)':
+    'La última franja debe terminar con «Hasta: Sin límite» para cubrir pagos muy atrasados.',
 };
 
 /** Mensajes de validación tipo Fastify/Ajv en inglés → español. */
@@ -113,10 +117,18 @@ export function translateTimciApiErrorMessage(code: string | undefined, message:
   const trimmed = message.trim();
   const c = code?.trim() ?? '';
 
+  const overlapMatch = trimmed.match(
+    /^bands\[(\d+)\] and bands\[(\d+)\] overlap or leave a gap$/,
+  );
+  if (overlapMatch) {
+    return `Las franjas ${Number(overlapMatch[1]) + 1} y ${Number(overlapMatch[2]) + 1} se solapan o dejan un hueco. Deben ser consecutivas sin solaparse.`;
+  }
+
+  if (trimmed && documentValidationMessagesEs[trimmed]) {
+    return documentValidationMessagesEs[trimmed];
+  }
+
   if (c === 'VALIDATION') {
-    if (trimmed && documentValidationMessagesEs[trimmed]) {
-      return documentValidationMessagesEs[trimmed];
-    }
     if (trimmed) {
       const normalized = normalizeValidationMessage(trimmed);
       return normalized;

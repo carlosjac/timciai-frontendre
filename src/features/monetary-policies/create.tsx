@@ -1,6 +1,6 @@
 import { Create, useForm } from '@refinedev/antd';
 import { useTranslate } from '@refinedev/core';
-import { Alert, Form, Input } from 'antd';
+import { Alert, Form } from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
@@ -8,6 +8,7 @@ import {
   MonetaryPolicyParamsFields,
   normalizeMonetaryPolicyParams,
 } from './MonetaryPolicyParamsFields.js';
+import { MonetaryPolicyNameField } from './MonetaryPolicyNameField.js';
 
 const CREATE_KIND = 'relative_bands';
 const CREATE_FIELDS = ['name', 'params'] as const;
@@ -42,13 +43,12 @@ export function MonetaryPolicyCreate() {
             unit: 'days',
             bands: [
               {
-                fromMode: 'number',
-                fromValue: 0,
+                fromMode: 'open',
+                fromValue: null,
                 toMode: 'open',
                 toValue: null,
-                effect: 'discount',
+                effect: 'none',
                 chargeMode: 'flat_percent',
-                ratePercent: 10,
               },
             ],
           },
@@ -71,14 +71,8 @@ export function MonetaryPolicyCreate() {
           }
         }}
       >
-        <Form.Item
-          label={translate('table.monetaryPolicies.name')}
-          name="name"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Input.TextArea rows={4} maxLength={2000} showCount />
-        </Form.Item>
         <MonetaryPolicyParamsFields kind={CREATE_KIND} />
+        <MonetaryPolicyNameField kind={CREATE_KIND} />
       </Form>
     </Create>
   );
