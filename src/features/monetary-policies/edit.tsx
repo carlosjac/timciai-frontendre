@@ -1,7 +1,11 @@
 import { Edit, useForm } from '@refinedev/antd';
-import { useTranslate } from '@refinedev/core';
-import { Alert, Form } from 'antd';
+import { usePermissions, useTranslate } from '@refinedev/core';
+import { Alert, Form, Input } from 'antd';
 import { useCallback, useEffect } from 'react';
+import {
+  canManageAllEntities,
+  type TimciPermissionsData,
+} from '../../shared/timci/actionCodes.js';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCollapse.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
@@ -23,6 +27,8 @@ type MonetaryPolicyRecord = {
   id?: string;
   name?: string;
   kind?: string;
+  entityId?: string;
+  entityName?: string | null;
   params?: Record<string, unknown>;
   isActive?: boolean;
   createdAt?: string;
@@ -34,6 +40,8 @@ type MonetaryPolicyRecord = {
 export function MonetaryPolicyEdit() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
+  const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const showOrg = canManageAllEntities(permData?.actionCodes ?? []);
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } =
@@ -47,6 +55,10 @@ export function MonetaryPolicyEdit() {
 
   const record = query?.data?.data as MonetaryPolicyRecord | undefined;
   const kind = record?.kind;
+  const organizationLabel =
+    record?.entityName != null && String(record.entityName).trim() !== ''
+      ? String(record.entityName)
+      : (record?.entityId ?? '—');
 
   const showPathForId = useCallback(
     (id: string) => `/monetary-policies/show/${encodeURIComponent(id)}`,
@@ -106,6 +118,16 @@ export function MonetaryPolicyEdit() {
           }
         }}
       >
+        {showOrg ? (
+          <Form.Item label={translate('pages.monetaryPolicies.organization')}>
+            <Input
+              value={organizationLabel}
+              disabled
+              readOnly
+              aria-label={translate('pages.monetaryPolicies.organization')}
+            />
+          </Form.Item>
+        ) : null}
         <MonetaryPolicyParamsFields kind={kind} disabled={kind === 'none'} />
         <MonetaryPolicyNameField kind={kind} disabled={kind === 'none'} />
       </Form>

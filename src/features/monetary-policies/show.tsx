@@ -3,7 +3,10 @@ import { usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, Descriptions, Tag } from 'antd';
 import { useCallback } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
-import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
+import {
+  canManageAllEntities,
+  type TimciPermissionsData,
+} from '../../shared/timci/actionCodes.js';
 import {
   getMonetaryPolicyActivateUrl,
   getMonetaryPolicyDeactivateUrl,
@@ -23,6 +26,8 @@ type MonetaryPolicyRecord = {
   id?: string;
   name?: string;
   kind?: string;
+  entityId?: string;
+  entityName?: string | null;
   params?: Record<string, unknown>;
   isActive?: boolean;
   createdAt?: string;
@@ -36,21 +41,30 @@ export function MonetaryPolicyShow() {
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { data: permData } = usePermissions<TimciPermissionsData>({});
-  const canUpdate = permData?.actionCodes?.includes('monetary_policies.update') ?? false;
-  const canActivate = permData?.actionCodes?.includes('monetary_policies.activate') ?? false;
-  const canDeactivate = permData?.actionCodes?.includes('monetary_policies.deactivate') ?? false;
+  const codes = permData?.actionCodes ?? [];
+  const showOrg = canManageAllEntities(codes);
+  const canUpdate = codes.includes('monetary_policies.update');
+  const canActivate = codes.includes('monetary_policies.activate');
+  const canDeactivate = codes.includes('monetary_policies.deactivate');
 
   const { query } = useShow<MonetaryPolicyRecord>({ resource: 'monetary_policies' });
   const record = query?.data?.data;
   const isLoading = query?.isLoading ?? false;
   const canEditRecord = canUpdate && record?.isActive !== false;
+  const organizationLabel =
+    record?.entityName != null && String(record.entityName).trim() !== ''
+      ? String(record.entityName)
+      : (record?.entityId ?? '—');
 
   const resolveToggleUrls = useCallback(
-    (id: string) => ({
-      activate: getMonetaryPolicyActivateUrl(tenantId!, tenantId!, id),
-      deactivate: getMonetaryPolicyDeactivateUrl(tenantId!, tenantId!, id),
-    }),
-    [tenantId],
+    (id: string) => {
+      const scopeId = record?.entityId ?? tenantId!;
+      return {
+        activate: getMonetaryPolicyActivateUrl(scopeId, scopeId, id),
+        deactivate: getMonetaryPolicyDeactivateUrl(scopeId, scopeId, id),
+      };
+    },
+    [record?.entityId, tenantId],
   );
 
   const toggle = useTimciActivateDeactivateToggle({
@@ -101,6 +115,11 @@ export function MonetaryPolicyShow() {
           size="middle"
           styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
         >
+          {showOrg ? (
+            <Descriptions.Item label={translate('table.monetaryPolicies.organization')}>
+              <span style={{ whiteSpace: 'pre-wrap' }}>{organizationLabel}</span>
+            </Descriptions.Item>
+          ) : null}
           <Descriptions.Item label={translate('table.monetaryPolicies.name')}>
             <span style={{ whiteSpace: 'pre-wrap' }}>{record?.name ?? '—'}</span>
           </Descriptions.Item>

@@ -41,6 +41,11 @@ export function canFullyEditEntity(codes: string[]): boolean {
   return codes.includes('menu.allEntities');
 }
 
+/** Cross-entity / cross-tenant scope (root): list and manage resources across organizations. */
+export function canManageAllEntities(codes: string[]): boolean {
+  return codes.includes('menu.allEntities');
+}
+
 /** Entity administrators configure the active tenant via /entity-settings (not CRUD list). */
 export function canSeeEntitySettingsMenuItem(codes: string[]): boolean {
   return codes.includes('entities.update') && !codes.includes('menu.allEntities');

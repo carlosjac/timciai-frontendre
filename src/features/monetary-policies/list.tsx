@@ -8,12 +8,17 @@ import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column
 import { TIMCI_LIST_SORT_BY_AUDIT_USER_NAME } from '../../shared/timci/list/domain/timci-audit-list-sort-fields.js';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
-import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
+import {
+  canManageAllEntities,
+  type TimciPermissionsData,
+} from '../../shared/timci/actionCodes.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 
 type MonetaryPolicyRow = BaseRecord & {
   name: string;
   kind?: string;
+  entityId?: string;
+  entityName?: string | null;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -25,9 +30,11 @@ export function MonetaryPolicyList() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const codes = permData?.actionCodes ?? [];
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
-  const canView = permData?.actionCodes?.includes('monetary_policies.view') ?? false;
-  const canUpdate = permData?.actionCodes?.includes('monetary_policies.update') ?? false;
+  const canView = codes.includes('monetary_policies.view');
+  const canUpdate = codes.includes('monetary_policies.update');
+  const showAllOrgs = canManageAllEntities(codes);
 
   const listMeta = useMemo(
     () => (tenantId ? { entityId: tenantId } : undefined),
@@ -64,7 +71,29 @@ export function MonetaryPolicyList() {
       exportValue: () => '',
     };
 
+    const orgColumn: TimciColumnDef<MonetaryPolicyRow> = {
+      key: 'entityName',
+      dataIndex: 'entityName',
+      titleKey: 'table.monetaryPolicies.organization',
+      sorter: true,
+      filter: { kind: 'text' },
+      render: (v: unknown, record) => {
+        const label =
+          v != null && String(v).trim() !== ''
+            ? String(v)
+            : record.entityId
+              ? String(record.entityId)
+              : '—';
+        return <span style={{ whiteSpace: 'pre-wrap' }}>{label}</span>;
+      },
+      exportValue: (r) =>
+        r.entityName != null && String(r.entityName).trim() !== ''
+          ? String(r.entityName)
+          : (r.entityId ?? ''),
+    };
+
     const cols: TimciColumnDef<MonetaryPolicyRow>[] = [
+      ...(showAllOrgs ? [orgColumn] : []),
       {
         key: 'name',
         dataIndex: 'name',
@@ -145,7 +174,7 @@ export function MonetaryPolicyList() {
     ];
 
     return canUpdate ? [editColumn, ...cols] : cols;
-  }, [canUpdate, dateFormat, timeZone, translate]);
+  }, [canUpdate, dateFormat, showAllOrgs, timeZone, translate]);
 
   return (
     <TimciDataList<MonetaryPolicyRow>

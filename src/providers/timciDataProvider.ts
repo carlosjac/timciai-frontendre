@@ -240,16 +240,13 @@ export function createTimciDataProvider(): DataProvider {
         return { data: json as TData };
       }
       if (resource === 'monetary_policies') {
-        const tenantId = getStoredTenantId();
-        if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for tenant-scoped resources.');
-        }
         const vars = variables as Record<string, unknown>;
-        const entityId = String(vars.entityId ?? '');
+        const entityId = String(vars.entityId ?? '').trim();
         if (!entityId) {
           throw toHttpError(400, 'entityId is required to create a monetary policy.');
         }
-        const url = getMonetaryPoliciesEntityListUrl(tenantId, entityId);
+        // Entity id === tenant id (1:1); use the target org, not only the header tenant.
+        const url = getMonetaryPoliciesEntityListUrl(entityId, entityId);
         const body = buildMonetaryPolicyCreateBody(vars);
         const { json } = await timciFetch(url, {
           method: 'POST',

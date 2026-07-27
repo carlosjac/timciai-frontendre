@@ -390,6 +390,9 @@ export const esMessages = {
       create: 'Crear política monetaria',
       showTitle: 'Política monetaria',
       editTitle: 'Editar política monetaria',
+      organization: 'Organización',
+      organizationPlaceholder: 'Elegí una organización',
+      organizationRequired: 'Elegí la organización a la que aplica la política',
       activate: 'Activar',
       deactivate: 'Desactivar',
       activated: 'Política monetaria activada',
@@ -757,6 +760,7 @@ export const esMessages = {
     monetaryPolicies: {
       actions: 'Acciones',
       edit: 'Editar',
+      organization: 'Organización',
       name: 'Nombre',
       kind: 'Tipo de regla',
       params: 'Parámetros',

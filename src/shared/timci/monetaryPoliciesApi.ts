@@ -10,6 +10,7 @@ export type MonetaryPolicyKindItem = {
 export type MonetaryPolicyListItem = {
   id: string;
   entityId: string;
+  entityName?: string | null;
   kind: string;
   name: string;
   params: Record<string, unknown>;
