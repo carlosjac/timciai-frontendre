@@ -68,6 +68,7 @@ export function buildEntityUpdateBody(variables: Record<string, unknown>): Recor
   if (variables.phone !== undefined) payload.phone = String(variables.phone).trim();
   if (variables.defaultCountryId !== undefined) payload.defaultCountryId = variables.defaultCountryId;
   if (variables.defaultCurrencyId !== undefined) payload.defaultCurrencyId = variables.defaultCurrencyId;
+  if (variables.baseCurrencyId !== undefined) payload.baseCurrencyId = variables.baseCurrencyId;
   if (variables.personType !== undefined) payload.personType = variables.personType;
   if (variables.documentTypeId !== undefined) payload.documentTypeId = variables.documentTypeId;
   if (variables.documentNumber !== undefined) {

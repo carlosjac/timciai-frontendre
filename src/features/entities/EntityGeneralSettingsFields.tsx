@@ -79,6 +79,22 @@ export function EntityGeneralSettingsFields({
               }}
             />
           </Form.Item>
+          <Form.Item
+            label={translate('create.entity.baseCurrency')}
+            name="baseCurrencyId"
+            rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+          >
+            <Select
+              {...currencySelect}
+              showSearch
+              optionFilterProp="label"
+              filterOption={(input, option) => {
+                const label = option?.label;
+                const text = typeof label === 'string' ? label : String(label ?? '');
+                return text.toLowerCase().includes(input.trim().toLowerCase());
+              }}
+            />
+          </Form.Item>
         </>
       ) : null}
       {show('policies') ? (

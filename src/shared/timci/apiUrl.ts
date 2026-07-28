@@ -8,6 +8,7 @@ const GLOBAL_LIST: Record<string, string> = {
   actions: 'authorization/actions',
   permissions: 'authorization/permissions',
   userTenantRoles: 'authorization/user-tenant-roles',
+  rateSnapshots: 'currency-conversion/rate-snapshots',
 };
 
 /** Path segment under /tenants/:id/ */

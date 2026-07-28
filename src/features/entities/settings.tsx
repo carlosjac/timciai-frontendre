@@ -107,6 +107,7 @@ export function EntitySettingsPage() {
         phone: string;
         defaultCountryId: string;
         defaultCurrencyId: string;
+        baseCurrencyId: string;
         defaultOverdueNotificationPolicyKey: string;
         defaultPaymentTermDays: number;
         defaultMonetaryPolicyId: string;
@@ -118,6 +119,7 @@ export function EntitySettingsPage() {
         phone: values.phone,
         defaultCountryId: values.defaultCountryId,
         defaultCurrencyId: values.defaultCurrencyId,
+        baseCurrencyId: values.baseCurrencyId,
         defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
         defaultPaymentTermDays: values.defaultPaymentTermDays,
         defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,

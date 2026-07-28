@@ -26,6 +26,7 @@ export type EntityRecord = {
   phone?: string;
   defaultCountryId?: string;
   defaultCurrencyId?: string;
+  baseCurrencyId?: string;
   personType?: string;
   documentTypeId?: string;
   documentNumber?: string;
@@ -60,6 +61,7 @@ export const ENTITY_GENERAL_SETTINGS_FIELD_NAMES = [
   'phone',
   'defaultCountryId',
   'defaultCurrencyId',
+  'baseCurrencyId',
   'defaultOverdueNotificationPolicyKey',
   'defaultPaymentTermDays',
   'defaultMonetaryPolicyId',

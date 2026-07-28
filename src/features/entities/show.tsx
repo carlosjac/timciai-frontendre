@@ -40,12 +40,15 @@ type EntityRecord = {
   phone?: string;
   defaultCountryId?: string;
   defaultCurrencyId?: string;
+  baseCurrencyId?: string;
   personType?: string;
   documentTypeId?: string;
   documentNumber?: string;
   documentTypeName?: string;
   defaultOverdueNotificationPolicyKey?: string;
   defaultPaymentTermDays?: number;
+  defaultMonetaryPolicyId?: string | null;
+  defaultMonetaryPolicyName?: string;
   availableOverduePolicyKeys?: string[];
   addAdvertisement?: boolean;
   fantasyName?: string | null;
@@ -221,6 +224,11 @@ export function EntityShow() {
             ? (currencyLabelById.get(record.defaultCurrencyId) ?? record.defaultCurrencyId)
             : '—'}
         </Descriptions.Item>
+        <Descriptions.Item label={translate('create.entity.baseCurrency')}>
+          {record?.baseCurrencyId != null
+            ? (currencyLabelById.get(record.baseCurrencyId) ?? record.baseCurrencyId)
+            : '—'}
+        </Descriptions.Item>
         <Descriptions.Item label={translate('table.entities.personType')}>
           {timciPersonTypeLabel(translate, record?.personType)}
         </Descriptions.Item>
@@ -240,7 +248,9 @@ export function EntityShow() {
           {record?.defaultPaymentTermDays ?? '—'}
         </Descriptions.Item>
         <Descriptions.Item label={translate('create.entity.defaultMonetaryPolicy')}>
-          {record?.defaultMonetaryPolicyId ?? '—'}
+          {record?.defaultMonetaryPolicyName?.trim() ||
+            record?.defaultMonetaryPolicyId ||
+            '—'}
         </Descriptions.Item>
         <Descriptions.Item label={translate('create.entity.addAdvertisement')}>
           {boolTag(translate, record?.addAdvertisement)}

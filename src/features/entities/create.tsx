@@ -152,6 +152,7 @@ export function EntityCreate() {
             phone: values.phone,
             defaultCountryId: values.defaultCountryId,
             defaultCurrencyId: values.defaultCurrencyId,
+            baseCurrencyId: values.baseCurrencyId,
             personType: values.personType,
             documentTypeId: values.documentTypeId,
             documentNumber: values.documentNumber,
@@ -219,6 +220,22 @@ export function EntityCreate() {
         <Form.Item
           label={translate('create.entity.defaultCurrency')}
           name="defaultCurrencyId"
+          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+        >
+          <Select
+            {...currencySelect}
+            showSearch
+            optionFilterProp="label"
+            filterOption={(input, option) => {
+              const label = option?.label;
+              const text = typeof label === 'string' ? label : String(label ?? '');
+              return text.toLowerCase().includes(input.trim().toLowerCase());
+            }}
+          />
+        </Form.Item>
+        <Form.Item
+          label={translate('create.entity.baseCurrency')}
+          name="baseCurrencyId"
           rules={[{ required: true, message: translate('form.validation.requiredField') }]}
         >
           <Select

@@ -129,6 +129,8 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
       return has('menu.assignments');
     case 'sessions':
       return has('menu.sessions');
+    case 'rateSnapshots':
+      return has('menu.rate_snapshots');
     default:
       return false;
   }
@@ -140,6 +142,7 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
 export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'countries', path: '/countries' },
   { name: 'currencies', path: '/currencies' },
+  { name: 'rateSnapshots', path: '/rate-snapshots' },
   { name: 'document_types', path: '/document-types' },
   { name: 'customers', path: '/customers' },
   { name: 'entities', path: '/entities' },

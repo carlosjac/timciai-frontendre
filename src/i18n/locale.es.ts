@@ -90,6 +90,7 @@ export const esMessages = {
     customers: 'Clientes',
     documentTypes: 'Tipos de documento',
     currencies: 'Monedas',
+    rateSnapshots: 'Cotizaciones FX',
     sellableItems: 'Productos y servicios',
     priceLists: 'Listas de precios',
     monetaryPolicies: 'Políticas monetarias',
@@ -233,6 +234,10 @@ export const esMessages = {
         'No se puede editar un rol inactivo. Actívalo desde la vista del registro.',
     },
     actions: { title: 'Acciones', create: 'Crear acción' },
+    rateSnapshots: {
+      title: 'Cotizaciones FX',
+      showTitle: 'Snapshot de cotizaciones',
+    },
     permissions: { title: 'Permisos', create: 'Asignar permiso', deleteConfirmTitle: '¿Quitar este permiso?' },
     userTenantRoles: {
       title: 'Asignaciones',
@@ -661,6 +666,15 @@ export const esMessages = {
       createdByName: 'Creado por',
       updatedByName: 'Actualizado por',
     },
+    rateSnapshots: {
+      provider: 'Proveedor',
+      providerBaseCode: 'Moneda base del proveedor',
+      asOf: 'Fecha de cotización',
+      fetchedAt: 'Obtenido',
+      rateCount: 'Cantidad de monedas',
+      currencyCode: 'Moneda',
+      rate: 'Cotización',
+    },
     permissions: {
       actions: 'Acciones',
       delete: 'Eliminar',
@@ -848,6 +862,7 @@ export const esMessages = {
       phone: 'Teléfono',
       defaultCountry: 'País por defecto',
       defaultCurrency: 'Moneda por defecto',
+      baseCurrency: 'Moneda base',
       personType: 'Tipo de persona',
       documentType: 'Tipo de documento',
       documentNumber: 'Número de documento',

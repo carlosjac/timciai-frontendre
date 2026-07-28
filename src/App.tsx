@@ -16,6 +16,7 @@ import {
   ShoppingOutlined,
   UnorderedListOutlined,
   TeamOutlined,
+  LineChartOutlined,
   ThunderboltOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons';
@@ -48,6 +49,8 @@ import { RoleShow } from './features/roles/show.js';
 import { RoleEdit } from './features/roles/edit.js';
 import { ActionList } from './features/actions/list.js';
 import { ActionCreate } from './features/actions/create.js';
+import { RateSnapshotList } from './features/rate-snapshots/list.js';
+import { RateSnapshotShow } from './features/rate-snapshots/show.js';
 import { UserTenantRoleList } from './features/user-tenant-roles/list.js';
 import { UserTenantRoleCreate } from './features/user-tenant-roles/create.js';
 import { CountryList } from './features/countries/list.js';
@@ -121,6 +124,12 @@ function TimciRefineTree() {
         show: '/currencies/show/:id',
         edit: '/currencies/edit/:id',
         meta: { label: esMessages.nav.currencies, icon: <DollarOutlined /> },
+      },
+      {
+        name: 'rateSnapshots',
+        list: '/rate-snapshots',
+        show: '/rate-snapshots/show/:id',
+        meta: { label: esMessages.nav.rateSnapshots, icon: <LineChartOutlined /> },
       },
       {
         name: 'document_types',
@@ -319,6 +328,8 @@ function TimciRefineTree() {
               <Route path="/currencies/create" element={<CurrencyCreate />} />
               <Route path="/currencies/show/:id" element={<CurrencyShow />} />
               <Route path="/currencies/edit/:id" element={<CurrencyEdit />} />
+              <Route path="/rate-snapshots" element={<RateSnapshotList />} />
+              <Route path="/rate-snapshots/show/:id" element={<RateSnapshotShow />} />
               <Route path="/preferences" element={<PreferencesPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />
               <Route path="*" element={<NavigateToFirstAccessibleList />} />
