@@ -1,7 +1,8 @@
 import { Show } from '@refinedev/antd';
 import { useList, usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, Descriptions, Tabs, Tag } from 'antd';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import {
@@ -22,6 +23,9 @@ import {
   CustomerContactsReadonlyTab,
   type CustomerContactView,
 } from './CustomerContactsReadonlyTab.js';
+import { CustomerCurrentAccountTab } from './CustomerCurrentAccountTab.js';
+import { CustomerAllocationsTab } from './CustomerAllocationsTab.js';
+import { CustomerSettlementTab } from './CustomerSettlementTab.js';
 
 type CustomerRecord = {
   id?: string;
@@ -56,12 +60,29 @@ export function CustomerShow() {
   const canUpdate = permData?.actionCodes?.includes('customers.update') ?? false;
   const canActivate = permData?.actionCodes?.includes('customers.activate') ?? false;
   const canDeactivate = permData?.actionCodes?.includes('customers.deactivate') ?? false;
+  const canViewCurrentAccount =
+    permData?.actionCodes?.includes('customers.currentAccounts.view') ?? false;
 
   const { query } = useShow<CustomerRecord>({ resource: 'customers' });
   const record = query?.data?.data;
   const isLoading = query?.isLoading ?? false;
   const canEditRecord = canUpdate && record?.isActive !== false;
-  const [activeTab, setActiveTab] = useState('data');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') ?? 'data';
+  const setActiveTab = useCallback(
+    (key: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (key === 'data') next.delete('tab');
+          else next.set('tab', key);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const { result: currenciesResult } = useList({
     resource: 'currencies',
@@ -206,6 +227,31 @@ export function CustomerShow() {
               label: translate('pages.customers.tabContacts'),
               children: <CustomerContactsReadonlyTab contacts={record?.contacts} />,
             },
+            ...(canViewCurrentAccount
+              ? [
+                  {
+                    key: 'current-account',
+                    label: translate('pages.customers.tabCurrentAccount'),
+                    children: record?.id ? (
+                      <CustomerCurrentAccountTab customerId={String(record.id)} />
+                    ) : null,
+                  },
+                  {
+                    key: 'settlement',
+                    label: translate('pages.customers.tabSettlement'),
+                    children: record?.id ? (
+                      <CustomerSettlementTab customerId={String(record.id)} />
+                    ) : null,
+                  },
+                  {
+                    key: 'allocations',
+                    label: translate('pages.customers.tabAllocations'),
+                    children: record?.id ? (
+                      <CustomerAllocationsTab customerId={String(record.id)} />
+                    ) : null,
+                  },
+                ]
+              : []),
           ]}
         />
       </Show>

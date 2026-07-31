@@ -19,6 +19,10 @@ import {
   LineChartOutlined,
   ThunderboltOutlined,
   UserSwitchOutlined,
+  ShoppingCartOutlined,
+  FallOutlined,
+  RiseOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 import { App as AntdApp, ConfigProvider, theme as antdTheme } from 'antd';
 import esES from 'antd/locale/es_ES';
@@ -78,6 +82,22 @@ import { CustomerList } from './features/customers/list.js';
 import { CustomerCreate } from './features/customers/create.js';
 import { CustomerShow } from './features/customers/show.js';
 import { CustomerEdit } from './features/customers/edit.js';
+import { SaleList } from './features/sales/list.js';
+import { SaleCreate } from './features/sales/create.js';
+import { SaleShow } from './features/sales/show.js';
+import { SaleEdit } from './features/sales/edit.js';
+import { DebitList } from './features/debits/list.js';
+import { DebitCreate } from './features/debits/create.js';
+import { DebitShow } from './features/debits/show.js';
+import { DebitEdit } from './features/debits/edit.js';
+import { CreditList } from './features/credits/list.js';
+import { CreditCreate } from './features/credits/create.js';
+import { CreditShow } from './features/credits/show.js';
+import { CreditEdit } from './features/credits/edit.js';
+import { CollectionList } from './features/collections/list.js';
+import { CollectionCreate } from './features/collections/create.js';
+import { CollectionShow } from './features/collections/show.js';
+import { CollectionEdit } from './features/collections/edit.js';
 import { DocumentTypeList } from './features/document-types/list.js';
 import { DocumentTypeCreate } from './features/document-types/create.js';
 import { DocumentTypeEdit } from './features/document-types/edit.js';
@@ -183,6 +203,38 @@ function TimciRefineTree() {
         show: '/monetary-policies/show/:id',
         edit: '/monetary-policies/edit/:id',
         meta: { label: esMessages.nav.monetaryPolicies, icon: <PercentageOutlined /> },
+      },
+      {
+        name: 'sales',
+        list: '/sales',
+        create: '/sales/create',
+        show: '/sales/show/:id',
+        edit: '/sales/edit/:id',
+        meta: { label: esMessages.nav.sales, icon: <ShoppingCartOutlined /> },
+      },
+      {
+        name: 'debits',
+        list: '/debits',
+        create: '/debits/create',
+        show: '/debits/show/:id',
+        edit: '/debits/edit/:id',
+        meta: { label: esMessages.nav.debits, icon: <RiseOutlined /> },
+      },
+      {
+        name: 'credits',
+        list: '/credits',
+        create: '/credits/create',
+        show: '/credits/show/:id',
+        edit: '/credits/edit/:id',
+        meta: { label: esMessages.nav.credits, icon: <FallOutlined /> },
+      },
+      {
+        name: 'collections',
+        list: '/collections',
+        create: '/collections/create',
+        show: '/collections/show/:id',
+        edit: '/collections/edit/:id',
+        meta: { label: esMessages.nav.collections, icon: <WalletOutlined /> },
       },
       {
         name: 'price_list_items',
@@ -320,6 +372,22 @@ function TimciRefineTree() {
               <Route path="/customers/create" element={<CustomerCreate />} />
               <Route path="/customers/show/:id" element={<CustomerShow />} />
               <Route path="/customers/edit/:id" element={<CustomerEdit />} />
+              <Route path="/sales" element={<SaleList />} />
+              <Route path="/sales/create" element={<SaleCreate />} />
+              <Route path="/sales/show/:id" element={<SaleShow />} />
+              <Route path="/sales/edit/:id" element={<SaleEdit />} />
+              <Route path="/debits" element={<DebitList />} />
+              <Route path="/debits/create" element={<DebitCreate />} />
+              <Route path="/debits/show/:id" element={<DebitShow />} />
+              <Route path="/debits/edit/:id" element={<DebitEdit />} />
+              <Route path="/credits" element={<CreditList />} />
+              <Route path="/credits/create" element={<CreditCreate />} />
+              <Route path="/credits/show/:id" element={<CreditShow />} />
+              <Route path="/credits/edit/:id" element={<CreditEdit />} />
+              <Route path="/collections" element={<CollectionList />} />
+              <Route path="/collections/create" element={<CollectionCreate />} />
+              <Route path="/collections/show/:id" element={<CollectionShow />} />
+              <Route path="/collections/edit/:id" element={<CollectionEdit />} />
               <Route path="/document-types" element={<DocumentTypeList />} />
               <Route path="/document-types/create" element={<DocumentTypeCreate />} />
               <Route path="/document-types/show/:id" element={<DocumentTypeShow />} />

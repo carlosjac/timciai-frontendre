@@ -60,7 +60,8 @@ export function createTimciAuthProvider(): AuthProvider {
 
     onError: async (error: unknown) => {
       const err = error as HttpError;
-      if (err?.statusCode === 401 || err?.statusCode === 403) {
+      // Only unauthenticated (401) ends the session. 403 is permission denied and must not logout.
+      if (err?.statusCode === 401) {
         invalidateTimciActionCodes();
         return { logout: true, redirectTo: '/login', error: err };
       }

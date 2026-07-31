@@ -63,6 +63,10 @@ import {
   buildCustomerUpdateBody,
   getCustomerByIdUrl,
 } from '../shared/timci/customersApi.js';
+import {
+  buildCommercialTransactionWriteBody,
+  isCommercialTransactionResource,
+} from '../shared/timci/commercialTransactionsApi.js';
 import { normalizeTimciAuditFieldsInPlace } from '../shared/timci/auditUserDisplay.js';
 
 function normalizeGetOnePayload<T>(payload: T): T {
@@ -279,9 +283,14 @@ export function createTimciDataProvider(): DataProvider {
           'Select a tenant in the header for tenant-scoped resources.',
         );
       }
+      const body = isCommercialTransactionResource(resource)
+        ? buildCommercialTransactionWriteBody(variables as Record<string, unknown>, {
+            includeCustomerId: true,
+          })
+        : variables;
       const { json } = await timciFetch(base, {
         method: 'POST',
-        body: JSON.stringify(variables),
+        body: JSON.stringify(body),
       });
       return { data: json as TData };
     },
@@ -427,6 +436,18 @@ export function createTimciDataProvider(): DataProvider {
         });
         return { data: { ...(json as object), id } as TData };
       }
+      if (isCommercialTransactionResource(resource)) {
+        const base = getResourceApiBase(resource);
+        if (!base) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        const body = buildCommercialTransactionWriteBody(variables as Record<string, unknown>);
+        await timciFetch(`${base}/${encodeURIComponent(String(id))}`, {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        return { data: { ...body, id } as TData };
+      }
       throw toHttpError(501, 'Update is not wired for this resource.');
     },
 
@@ -434,7 +455,7 @@ export function createTimciDataProvider(): DataProvider {
       params: DeleteOneParams<TVariables>,
     ): Promise<DeleteOneResponse<TData>> => {
       const { resource, id } = params;
-      if (resource === 'sessions') {
+      if (resource === 'sessions' || isCommercialTransactionResource(resource)) {
         const base = getResourceApiBase(resource);
         if (!base) {
           throw toHttpError(400, 'Invalid resource for delete.');

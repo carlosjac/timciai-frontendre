@@ -91,6 +91,10 @@ const documentValidationMessagesEs: Record<string, string> = {
     'La primera franja debe empezar con «Desde: Sin límite» para cubrir pagos adelantados.',
   'bands must end with an open to (+∞)':
     'La última franja debe terminar con «Hasta: Sin límite» para cubrir pagos muy atrasados.',
+  'Cannot void: transaction has active incoming allocations; void those first':
+    'No se puede anular esta transacción porque tiene cobros o créditos imputados. Para poder anularla tenés que, en cada cobro o crédito vinculado: (1) anularlo, o (2) corregir sus imputaciones y quitar el enlace a esta venta o débito. Cuando ya no queden imputaciones activas, volvé a intentar anular.',
+  'Only registered transactions can be voided':
+    'Solo se pueden anular transacciones registradas',
 };
 
 /** Mensajes de validación tipo Fastify/Ajv en inglés → español. */

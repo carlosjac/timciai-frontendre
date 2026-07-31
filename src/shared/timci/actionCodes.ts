@@ -74,6 +74,14 @@ export function canCreateResource(resource: string | undefined, codes: string[])
       return has('monetary_policies.add');
     case 'price_list_items':
       return has('price_list_items.add');
+    case 'sales':
+      return has('sales.add');
+    case 'debits':
+      return has('debits.add');
+    case 'credits':
+      return has('credits.add');
+    case 'collections':
+      return has('collections.add');
     case 'users':
       return has('users.create');
     case 'tenants':
@@ -115,6 +123,14 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
       return has('menu.price_lists');
     case 'monetary_policies':
       return has('menu.monetary_policies');
+    case 'sales':
+      return has('menu.sales');
+    case 'debits':
+      return has('menu.debits');
+    case 'credits':
+      return has('menu.credits');
+    case 'collections':
+      return has('menu.collections');
     case 'users':
       return has('menu.users');
     case 'tenants':
@@ -150,6 +166,10 @@ export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'sellable_items', path: '/sellable-items' },
   { name: 'price_lists', path: '/price-lists' },
   { name: 'monetary_policies', path: '/monetary-policies' },
+  { name: 'sales', path: '/sales' },
+  { name: 'debits', path: '/debits' },
+  { name: 'credits', path: '/credits' },
+  { name: 'collections', path: '/collections' },
   { name: 'users', path: '/users' },
   { name: 'sessions', path: '/sessions' },
   { name: 'tenants', path: '/tenants' },

@@ -35,10 +35,12 @@ export function createTimciI18nProvider(): I18nProvider {
       if (typeof options === 'string') {
         resolvedDefault = options;
       } else if (options != null && typeof options === 'object' && !Array.isArray(options)) {
-        const entries = Object.entries(options as Record<string, unknown>).filter(
-          (e): e is [string, string] => typeof e[1] === 'string',
-        );
-        if (entries.length > 0) params = Object.fromEntries(entries);
+        const paramsAcc: Record<string, string> = {};
+        for (const [k, v] of Object.entries(options as Record<string, unknown>)) {
+          if (typeof v === 'string') paramsAcc[k] = v;
+          else if (typeof v === 'number' || typeof v === 'boolean') paramsAcc[k] = String(v);
+        }
+        if (Object.keys(paramsAcc).length > 0) params = paramsAcc;
       }
 
       let text = translateEs(key, resolvedDefault);

@@ -18,6 +18,10 @@ const TENANT_RESOURCE_PATH: Record<string, string> = {
   customers: 'customers',
   document_types: 'document-types',
   currencies: 'currencies',
+  sales: 'sales',
+  debits: 'debits',
+  credits: 'credits',
+  collections: 'collections',
 };
 
 export function getStoredTenantId(): string | null {

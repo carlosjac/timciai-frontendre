@@ -1,7 +1,96 @@
 import { getV1Base } from '../../config.js';
+import { timciFetch } from './http.js';
 
 export function getPriceListItemsListUrl(tenantId: string, priceListId: string): string {
   return `${getV1Base()}/tenants/${tenantId}/price-lists/${encodeURIComponent(priceListId)}/items`;
+}
+
+export type PriceListUnitPriceRow = {
+  id: string;
+  sellableItemId?: string;
+  currencyId?: string;
+  unitPriceAmount?: string;
+};
+
+async function listPriceListItemRows(params: {
+  tenantId: string;
+  priceListId: string;
+  sellableItemId?: string;
+  currencyId?: string;
+  validAt?: string;
+  take?: number;
+}): Promise<PriceListUnitPriceRow[]> {
+  const filter: Record<string, unknown> = {};
+  if (params.sellableItemId) {
+    filter.sellableItemId = { operator: 'eq', value: params.sellableItemId };
+  }
+  if (params.currencyId) {
+    filter.currencyId = { operator: 'eq', value: params.currencyId };
+  }
+  if (params.validAt) {
+    filter.validAt = String(params.validAt).slice(0, 10);
+  }
+  const take = params.take ?? 50;
+  const qs = new URLSearchParams({
+    sort: JSON.stringify(['validFrom', 'DESC']),
+    range: JSON.stringify([0, take - 1]),
+    filter: JSON.stringify(filter),
+  });
+  const { json } = await timciFetch(
+    `${getPriceListItemsListUrl(params.tenantId, params.priceListId)}?${qs}`,
+  );
+  return Array.isArray(json) ? (json as PriceListUnitPriceRow[]) : [];
+}
+
+/**
+ * Precio unitario vigente en la lista para producto + moneda (y fecha de validez).
+ * Devuelve null si no hay ítem coincidente.
+ */
+export async function fetchUnitPriceFromPriceList(params: {
+  tenantId: string;
+  priceListId: string;
+  sellableItemId: string;
+  currencyId: string;
+  validAt?: string;
+}): Promise<string | null> {
+  const pickAmount = (rows: PriceListUnitPriceRow[]): string | null => {
+    const match =
+      rows.find((r) => String(r.currencyId ?? '') === String(params.currencyId)) ??
+      (rows.length === 1 ? rows[0] : undefined);
+    const amount = match?.unitPriceAmount;
+    return amount != null && String(amount).trim() !== '' ? String(amount).trim() : null;
+  };
+
+  let rows = await listPriceListItemRows({
+    tenantId: params.tenantId,
+    priceListId: params.priceListId,
+    sellableItemId: params.sellableItemId,
+    currencyId: params.currencyId,
+    validAt: params.validAt,
+    take: 5,
+  });
+  let amount = pickAmount(rows);
+  if (amount != null) return amount;
+
+  if (params.validAt) {
+    rows = await listPriceListItemRows({
+      tenantId: params.tenantId,
+      priceListId: params.priceListId,
+      sellableItemId: params.sellableItemId,
+      currencyId: params.currencyId,
+      take: 5,
+    });
+    amount = pickAmount(rows);
+    if (amount != null) return amount;
+  }
+
+  rows = await listPriceListItemRows({
+    tenantId: params.tenantId,
+    priceListId: params.priceListId,
+    sellableItemId: params.sellableItemId,
+    take: 5,
+  });
+  return pickAmount(rows);
 }
 
 export function getPriceListItemByIdUrl(tenantId: string, itemId: string): string {
