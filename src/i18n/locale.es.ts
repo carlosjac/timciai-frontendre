@@ -656,6 +656,7 @@ export const esMessages = {
         addItem: 'Añadir ítem',
         removeItem: 'Quitar ítem',
         itemsMinOne: 'Agregá al menos un ítem.',
+        itemsNone: 'Sin ítems.',
         sellableItem: 'Producto / servicio',
         sellableItemPlaceholder: 'Buscar o escribir…',
         description: 'Descripción',

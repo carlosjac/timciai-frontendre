@@ -12,7 +12,6 @@ import {
   Radio,
   Space,
   Switch,
-  Table,
   Tag,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -44,6 +43,7 @@ import { COMMERCIAL_TX_CONFIG, type CommercialTransactionRecord } from './types.
 import { commercialStatusTagColor, commercialStatusTitleKey } from './statusLabel.js';
 import { CommercialTransactionAllocationsPanel } from './CommercialTransactionAllocationsPanel.js';
 import { CommercialTransactionIncomingAllocationsPanel } from './CommercialTransactionIncomingAllocationsPanel.js';
+import { CommercialTransactionItemsPanel } from './CommercialTransactionItemsPanel.js';
 import { ReplaceAllocationsDrawer } from './ReplaceAllocationsDrawer.js';
 import { commercialResourceCanHaveAllocations } from './CommercialTransactionAllocationsPanel.js';
 import { unallocatedAmount } from './unallocatedAmount.js';
@@ -565,47 +565,10 @@ export function CommercialTransactionShow({ resource }: Props) {
           ) : null}
         </Descriptions>
 
-        {record?.items && record.items.length > 0 ? (
-          <Table
-            style={{ marginTop: 16 }}
-            size="small"
-            pagination={false}
-            rowKey={(r) => String(r.id ?? r.ordinal)}
-            dataSource={record.items}
-            title={() => translate('pages.commercialTransactions.fields.items')}
-            columns={[
-              {
-                title: translate('pages.commercialTransactions.fields.description'),
-                dataIndex: 'description',
-              },
-              {
-                title: translate('pages.commercialTransactions.fields.quantity'),
-                dataIndex: 'quantity',
-                render: (v: unknown) => formatTimciMoney(v),
-              },
-              {
-                title: translate('pages.commercialTransactions.fields.unitPrice'),
-                dataIndex: 'unitPriceAmount',
-                render: (v: unknown) => formatTimciMoney(v),
-              },
-              {
-                title: translate('pages.commercialTransactions.fields.discountPercent'),
-                dataIndex: 'discountPercent',
-                render: (v: unknown) => formatTimciMoney(v),
-              },
-              {
-                title: translate('pages.commercialTransactions.fields.discountAmount'),
-                dataIndex: 'discountAmount',
-                render: (v: unknown) => formatTimciMoney(v),
-              },
-              {
-                title: translate('pages.commercialTransactions.fields.subtotal'),
-                dataIndex: 'subtotal',
-                render: (v: unknown) => formatTimciMoney(v),
-              },
-            ]}
-          />
-        ) : null}
+        <CommercialTransactionItemsPanel
+          resource={resource}
+          items={Array.isArray(record?.items) ? record.items : []}
+        />
 
         <CommercialTransactionIncomingAllocationsPanel
           resource={resource}
