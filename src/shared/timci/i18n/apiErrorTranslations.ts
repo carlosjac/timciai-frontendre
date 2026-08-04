@@ -21,9 +21,13 @@ export const apiErrorMessagesEs: Record<string, string> = {
   FORBIDDEN_ROOT_ROLE: 'El rol root no puede desactivarse',
   FORBIDDEN_ROOT_GLOBAL_ASSIGNMENT:
     'No se puede revocar la asignación del rol root en el tenant global',
-  FORBIDDEN_ROOT_GLOBAL_PERMISSION:
-    'No se puede quitar un permiso del rol root en el tenant global',
-  VALIDATION: 'Error de validación. Revisa los datos enviados.',
+  FORBIDDEN_IMPERSONATE: 'Solo el usuario root puede impersonar a otro usuario',
+  FORBIDDEN_IMPERSONATE_SELF: 'No puedes impersonarte a ti mismo',
+  FORBIDDEN_IMPERSONATE_NESTED: 'Ya estás impersonando; primero deja de impersonar',
+  FORBIDDEN_IMPERSONATE_ROOT: 'No se puede impersonar a un usuario root',
+  FORBIDDEN_IMPERSONATE_INACTIVE: 'No se puede impersonar a un usuario inactivo',
+  NOT_IMPERSONATING: 'La sesión actual no es una impersonación',
+  IMPERSONATOR_UNAVAILABLE: 'El usuario impersonador no está disponible',
   CONFLICT_NAME: 'Ya existe un registro con ese nombre',
   CONFLICT_INACTIVE_NAME:
     'Ya existe un registro inactivo con ese nombre. Búscalo en el listado (Activo: No) y reactívalo.',

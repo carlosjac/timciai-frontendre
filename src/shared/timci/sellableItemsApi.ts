@@ -32,6 +32,9 @@ export function buildSellableItemCreateBody(
         ? String(variables.description).trim()
         : null,
     isActive: variables.isActive !== false,
+    ...(variables.taxCategoryKey != null && String(variables.taxCategoryKey).trim() !== ''
+      ? { taxCategoryKey: String(variables.taxCategoryKey).trim() }
+      : {}),
   };
 }
 
@@ -53,6 +56,12 @@ export function buildSellableItemUpdateBody(
     payload.description =
       variables.description != null && String(variables.description).trim() !== ''
         ? String(variables.description).trim()
+        : null;
+  }
+  if (variables.taxCategoryKey !== undefined) {
+    payload.taxCategoryKey =
+      variables.taxCategoryKey != null && String(variables.taxCategoryKey).trim() !== ''
+        ? String(variables.taxCategoryKey).trim()
         : null;
   }
   return payload;

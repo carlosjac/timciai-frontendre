@@ -70,11 +70,21 @@ export function createTimciAuthProvider(): AuthProvider {
 
     getIdentity: async () => {
       const { json } = await timciFetch(`${base()}/auth/me`);
-      const u = json as { id: string; email: string; name?: string };
+      const u = json as {
+        id: string;
+        email: string;
+        name?: string;
+        impersonation?: {
+          active: boolean;
+          actor: { id: string; email: string; name: string };
+          target: { id: string; email: string; name: string };
+        } | null;
+      };
       return {
         id: u.id,
         name: u.name ?? u.email,
         email: u.email,
+        impersonation: u.impersonation ?? null,
       };
     },
 

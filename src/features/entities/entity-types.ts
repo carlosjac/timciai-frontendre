@@ -37,6 +37,8 @@ export type EntityRecord = {
   availableOverduePolicyKeys?: string[];
   addAdvertisement?: boolean;
   fantasyName?: string | null;
+  taxManagementEnabled?: boolean;
+  taxProfile?: Record<string, string> | null;
   isActive?: boolean;
   paymentOptions?: PaymentOptionRow[];
   createdAt?: string;
@@ -53,6 +55,8 @@ export const ENTITY_IDENTITY_FIELD_NAMES = [
   'documentNumber',
   'addAdvertisement',
   'fantasyName',
+  'taxManagementEnabled',
+  'taxProfile',
 ] as const;
 
 export const ENTITY_GENERAL_SETTINGS_FIELD_NAMES = [

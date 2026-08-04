@@ -20,6 +20,9 @@ import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { MonetaryPolicyDefaultSelect } from '../monetary-policies/MonetaryPolicyDefaultSelect.js';
 import { CustomerContactsEditor } from './CustomerContactsEditor.js';
 import type { CustomerContactView } from './CustomerContactsReadonlyTab.js';
+import { CustomerTaxProfileFields } from './CustomerTaxProfileFields.js';
+import { normalizeTaxProfile } from '../../shared/timci/taxesApi.js';
+import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 
 const CUSTOMER_EDIT_FIELDS = [
   'address',
@@ -30,6 +33,7 @@ const CUSTOMER_EDIT_FIELDS = [
   'defaultOverdueNotificationPolicyKey',
   'defaultPaymentTermDays',
   'defaultMonetaryPolicyId',
+  'taxProfile',
 ] as const;
 
 type DocTypeRow = BaseRecord & {
@@ -45,6 +49,7 @@ type CustomerRecord = {
   documentTypeName?: string;
   documentNumber?: string;
   entityId?: string;
+  taxProfile?: Record<string, string> | null;
   contacts?: CustomerContactView[];
   createdAt?: string;
   updatedAt?: string;
@@ -57,6 +62,7 @@ export function CustomerEdit() {
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const entityId = tenantId;
+  const { taxManagementEnabled } = useEntityTaxContext(tenantId, entityId);
   const [policies, setPolicies] = useState<OverduePolicyItem[]>([]);
   const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
   const [activeTab, setActiveTab] = useState('data');
@@ -197,6 +203,9 @@ export function CustomerEdit() {
                           values.defaultOverdueNotificationPolicyKey,
                         defaultPaymentTermDays: values.defaultPaymentTermDays,
                         defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
+                        ...(taxManagementEnabled
+                          ? { taxProfile: normalizeTaxProfile(values.taxProfile) ?? {} }
+                          : {}),
                       });
                     } catch (e) {
                       applyServerError(form, e);
@@ -291,6 +300,10 @@ export function CustomerEdit() {
                       labelKey="create.customer.defaultMonetaryPolicy"
                     />
                   ) : null}
+                  <CustomerTaxProfileFields
+                    tenantId={tenantId}
+                    entityId={record?.entityId ?? entityId}
+                  />
                 </Form>
                 {record && (
                   <TimciFormAuditCollapse

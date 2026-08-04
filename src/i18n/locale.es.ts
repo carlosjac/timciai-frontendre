@@ -72,6 +72,22 @@ export const esMessages = {
       underline: 'Subrayado',
     },
   },
+  tax: {
+    sectionTitle: 'Impuestos',
+    category: 'Categoría impositiva',
+    categoryPlaceholder: 'Elegí una categoría…',
+    net: 'Neto',
+    taxAmount: 'IVA',
+    gross: 'Bruto',
+    profile: {
+      selectPlaceholder: 'Elegí una opción…',
+    },
+    pickCountryFirst: 'Elegí el país de la entidad para configurar el perfil impositivo.',
+    countryIsoMissing:
+      'El país seleccionado no tiene código ISO. Completalo en Países para cargar el esquema fiscal.',
+    entityCountryIsoMissing:
+      'La entidad no tiene un país con código ISO. No se puede cargar el perfil impositivo.',
+  },
   audit: {
     sectionTitle: 'Auditoría',
     createdAt: 'Creado',
@@ -124,6 +140,10 @@ export const esMessages = {
     logout: 'Cerrar sesión',
     openNavigation: 'Abrir menú de navegación',
     accountMenu: 'Menú de cuenta',
+    impersonation: {
+      banner: 'Actuando como {{target}} (iniciado por {{actor}})',
+      stop: 'Dejar de impersonar',
+    },
   },
   list: {
     /** Texto de la tabla Ant Design cuando no hay filas (sustituye el “No data” en inglés). */
@@ -206,6 +226,11 @@ export const esMessages = {
         'Quedará inactivo y no podrá iniciar sesión hasta que se reactive.',
       inactiveCannotEdit:
         'No se puede editar un usuario inactivo. Actívalo desde la vista del registro.',
+      impersonate: 'Impersonar',
+      impersonateError: 'No se pudo iniciar la impersonación',
+      confirmImpersonateTitle: '¿Impersonar este usuario?',
+      confirmImpersonateBody:
+        'Pasarás a operar con los permisos y menús de este usuario. Podrás volver con «Dejar de impersonar».',
     },
     sessions: {
       title: 'Sesiones',
@@ -666,6 +691,11 @@ export const esMessages = {
         discountAmount: 'Monto descuento',
         subtotal: 'Subtotal',
         total: 'Total',
+        taxCategory: 'Categoría impositiva',
+        net: 'Neto',
+        taxAmount: 'IVA',
+        gross: 'Bruto',
+        amountNet: 'Importe neto',
         allocations: 'Imputaciones',
         allocationsIncoming: 'Imputaciones recibidas',
         addAllocation: 'Añadir imputación',
@@ -931,6 +961,7 @@ export const esMessages = {
       kindService: 'Servicio',
       code: 'Código',
       description: 'Descripción',
+      taxCategory: 'Categoría impositiva',
       active: 'Activo',
       createdAt: 'Creado',
       updatedAt: 'Actualizado',
@@ -1081,6 +1112,9 @@ export const esMessages = {
       paymentOptionCurrenciesMinOne: 'Selecciona al menos una moneda para este medio.',
       defaultPolicyMustBeInAvailable:
         'La política por defecto debe estar incluida en las políticas disponibles.',
+      taxManagementEnabled: 'Gestionar impuestos',
+      taxManagementEnabledHelp:
+        'Si está activo, la entidad exige perfil impositivo y aplica impuestos en ventas, débitos y créditos.',
     },
     customer: {
       address: 'Dirección',
@@ -1111,6 +1145,7 @@ export const esMessages = {
       notifyCollections: 'Notif. cobranzas',
       notifyOverduePayments: 'Notif. pagos vencidos',
       contactsMinOne: 'Debe existir al menos un contacto.',
+      taxProfile: 'Perfil impositivo',
     },
   },
 } as const;

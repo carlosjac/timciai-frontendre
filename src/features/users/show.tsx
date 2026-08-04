@@ -1,12 +1,24 @@
 import { Show } from '@refinedev/antd';
-import { usePermissions, useShow, useTranslate } from '@refinedev/core';
-import { Descriptions, Tag } from 'antd';
-import { useCallback } from 'react';
-import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
+import {
+  useGetIdentity,
+  useNotification,
+  usePermissions,
+  useShow,
+  useTranslate,
+} from '@refinedev/core';
+import { Button, Descriptions, Modal, Tag } from 'antd';
+import { UserSwitchOutlined } from '@ant-design/icons';
+import { useCallback, useState } from 'react';
+import {
+  canManageAllEntities,
+  invalidateTimciActionCodes,
+  type TimciPermissionsData,
+} from '../../shared/timci/actionCodes.js';
 import {
   getUserActivateUrl,
   getUserDeactivateUrl,
 } from '../../shared/timci/usersApi.js';
+import { startImpersonation } from '../../shared/timci/impersonationApi.js';
 import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCollapse.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import {
@@ -17,6 +29,7 @@ import {
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { translateUserDateFormat, translateUserTheme } from './userPreferenceLabels.js';
+import type { TimciIdentity } from '../../app-shell/ImpersonationBanner.js';
 
 type UserRecord = {
   id?: string;
@@ -34,16 +47,29 @@ type UserRecord = {
 
 export function UserShow() {
   const translate = useTranslate();
+  const { open: openNotification } = useNotification();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
+  const { data: identity } = useGetIdentity<TimciIdentity>();
   const canUpdate = permData?.actionCodes?.includes('users.update') ?? false;
   const canActivate = permData?.actionCodes?.includes('users.activate') ?? false;
   const canDeactivate = permData?.actionCodes?.includes('users.deactivate') ?? false;
+  const isPlatformRoot =
+    canManageAllEntities(permData?.actionCodes ?? []) && !identity?.impersonation?.active;
 
   const { query } = useShow<UserRecord>({ resource: 'users' });
   const record = query?.data?.data;
   const isLoading = query?.isLoading ?? false;
   const canEditRecord = canUpdate && record?.isActive !== false;
+
+  const [impersonateOpen, setImpersonateOpen] = useState(false);
+  const [impersonateLoading, setImpersonateLoading] = useState(false);
+
+  const canImpersonate =
+    isPlatformRoot &&
+    !!record?.id &&
+    record.isActive !== false &&
+    String(record.id) !== String(identity?.id);
 
   const resolveToggleUrls = useCallback(
     (id: string) => ({
@@ -63,6 +89,26 @@ export function UserShow() {
     query,
   });
 
+  const performImpersonate = async () => {
+    if (!record?.id) return;
+    setImpersonateLoading(true);
+    try {
+      await startImpersonation(String(record.id));
+      invalidateTimciActionCodes();
+      window.location.assign('/');
+    } catch (e: unknown) {
+      setImpersonateLoading(false);
+      setImpersonateOpen(false);
+      const message =
+        e instanceof Error ? e.message : translate('pages.users.impersonateError');
+      openNotification?.({
+        type: 'error',
+        message: translate('pages.users.impersonateError'),
+        description: message,
+      });
+    }
+  };
+
   return (
     <>
       <Show
@@ -71,17 +117,28 @@ export function UserShow() {
         canEdit={canEditRecord}
         canDelete={false}
         headerButtons={({ listButtonProps, editButtonProps, refreshButtonProps }) => (
-          <TimciShowActivateHeaderButtons
-            listButtonProps={listButtonProps}
-            editButtonProps={editButtonProps}
-            refreshButtonProps={refreshButtonProps}
-            showToggle={toggle.showToggle}
-            isActive={toggle.isActive}
-            toggleLoading={toggle.toggleLoading}
-            toggleLabel={toggle.toggleLabel}
-            onToggleClick={() => toggle.setToggleOpen(true)}
-            toggleButtonKey="user-activate-toggle"
-          />
+          <>
+            {canImpersonate ? (
+              <Button
+                icon={<UserSwitchOutlined />}
+                onClick={() => setImpersonateOpen(true)}
+                aria-label={translate('pages.users.impersonate')}
+              >
+                {translate('pages.users.impersonate')}
+              </Button>
+            ) : null}
+            <TimciShowActivateHeaderButtons
+              listButtonProps={listButtonProps}
+              editButtonProps={editButtonProps}
+              refreshButtonProps={refreshButtonProps}
+              showToggle={toggle.showToggle}
+              isActive={toggle.isActive}
+              toggleLoading={toggle.toggleLoading}
+              toggleLabel={toggle.toggleLabel}
+              onToggleClick={() => toggle.setToggleOpen(true)}
+              toggleButtonKey="user-activate-toggle"
+            />
+          </>
         )}
       >
         <TimciFormInactiveRecordBanner isActive={record?.isActive} />
@@ -136,6 +193,20 @@ export function UserShow() {
         onCancel={() => toggle.setToggleOpen(false)}
         onConfirm={() => void toggle.performActivateDeactivate()}
       />
+      <Modal
+        open={impersonateOpen}
+        title={translate('pages.users.confirmImpersonateTitle')}
+        okText={translate('pages.users.impersonate')}
+        cancelText={translate('buttons.cancel')}
+        confirmLoading={impersonateLoading}
+        onCancel={() => setImpersonateOpen(false)}
+        onOk={() => void performImpersonate()}
+      >
+        <p>{translate('pages.users.confirmImpersonateBody')}</p>
+        <p>
+          <strong>{record?.name ?? record?.email}</strong>
+        </p>
+      </Modal>
     </>
   );
 }

@@ -23,7 +23,9 @@ import {
   type PriceListRow,
 } from '../../shared/timci/auxiliaryApi.js';
 import { MonetaryPolicyDefaultSelect } from '../monetary-policies/MonetaryPolicyDefaultSelect.js';
-
+import { CustomerTaxProfileFields } from './CustomerTaxProfileFields.js';
+import { normalizeTaxProfile } from '../../shared/timci/taxesApi.js';
+import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 type DocTypeRow = BaseRecord & {
   id: string;
   name: string;
@@ -70,6 +72,7 @@ export function CustomerCreate() {
   const [activeTab, setActiveTab] = useState('data');
 
   const { formProps, saveButtonProps, onFinish, form } = useForm({ resource: 'customers' });
+  const { taxManagementEnabled } = useEntityTaxContext(tenantId, entityId);
 
   const { result: entityRecord } = useOne<EntityDefaults>({
     resource: 'entities',
@@ -237,6 +240,9 @@ export function CustomerCreate() {
             defaultPaymentTermDays: values.defaultPaymentTermDays,
             defaultMonetaryPolicyId: values.defaultMonetaryPolicyId || undefined,
             isActive: values.isActive !== false,
+            ...(taxManagementEnabled
+              ? { taxProfile: normalizeTaxProfile(values.taxProfile) ?? {} }
+              : {}),
             contacts,
           });
         }}
@@ -377,6 +383,7 @@ export function CustomerCreate() {
                       labelKey="create.customer.defaultMonetaryPolicy"
                     />
                   ) : null}
+                  <CustomerTaxProfileFields tenantId={tenantId} entityId={entityId} />
                   <Form.Item
                     label={translate('create.customer.active')}
                     name="isActive"

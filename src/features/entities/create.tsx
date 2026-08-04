@@ -13,7 +13,10 @@ import {
   TimciRichTextEditor,
 } from '../../shared/timci/form/index.js';
 import { EntityAdminRedirect } from './EntityAdminRedirect.js';
-
+import { EntityTaxManagementFields } from './EntityTaxManagementFields.js';
+import {
+  normalizeTaxProfile,
+} from '../../shared/timci/taxesApi.js';
 type DocTypeRow = BaseRecord & {
   id: string;
   name: string;
@@ -116,6 +119,7 @@ export function EntityCreate() {
           personType: 'physical_person',
           defaultPaymentTermDays: 30,
           addAdvertisement: false,
+          taxManagementEnabled: false,
           paymentOptions: [{ name: 'Principal', details: '-', currencyIds: [] as string[], isActive: true }],
         }}
         onFinish={async (values: Record<string, unknown>) => {
@@ -161,6 +165,11 @@ export function EntityCreate() {
             availableOverduePolicyKeys: values.availableOverduePolicyKeys,
             addAdvertisement: values.addAdvertisement,
             fantasyName,
+            taxManagementEnabled: values.taxManagementEnabled === true,
+            taxProfile:
+              values.taxManagementEnabled === true
+                ? (normalizeTaxProfile(values.taxProfile) ?? {})
+                : null,
             paymentOptions,
           });
         }}
@@ -299,6 +308,7 @@ export function EntityCreate() {
         >
           <Input />
         </Form.Item>
+        <EntityTaxManagementFields form={form} tenantId={tenantId} />
         <Form.Item
           label={translate('create.entity.defaultOverduePolicy')}
           name="defaultOverdueNotificationPolicyKey"

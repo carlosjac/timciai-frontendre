@@ -46,7 +46,21 @@ export function buildCustomerUpdateBody(variables: Record<string, unknown>): Rec
   if (variables.defaultMonetaryPolicyId !== undefined) {
     payload.defaultMonetaryPolicyId = variables.defaultMonetaryPolicyId;
   }
+  if (variables.taxProfile !== undefined) {
+    payload.taxProfile = mapTaxProfile(variables.taxProfile);
+  }
   return payload;
+}
+
+function mapTaxProfile(raw: unknown): Record<string, string> | null {
+  if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (value == null) continue;
+    const s = String(value).trim();
+    if (s !== '') out[key] = s;
+  }
+  return Object.keys(out).length > 0 ? out : {};
 }
 
 export function mapContactsForReplace(raw: unknown): CustomerContactInput[] {

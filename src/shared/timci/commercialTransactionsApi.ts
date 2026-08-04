@@ -277,6 +277,12 @@ export function buildCommercialTransactionWriteBody(
         ? String(variables.monetaryPolicyId)
         : null;
   }
+  if (variables.taxCategoryKey !== undefined) {
+    payload.taxCategoryKey =
+      variables.taxCategoryKey != null && String(variables.taxCategoryKey).trim() !== ''
+        ? String(variables.taxCategoryKey).trim()
+        : null;
+  }
   if (variables.items !== undefined) {
     payload.items = mapSaleItems(variables.items);
   }
@@ -291,7 +297,7 @@ function mapSaleItems(raw: unknown): Record<string, unknown>[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((row) => {
     const r = row as Record<string, unknown>;
-    return {
+    const item: Record<string, unknown> = {
       sellableItemId:
         r.sellableItemId != null && String(r.sellableItemId).trim() !== ''
           ? String(r.sellableItemId)
@@ -304,6 +310,10 @@ function mapSaleItems(raw: unknown): Record<string, unknown>[] {
           ? String(r.discountPercent)
           : '0',
     };
+    if (r.taxCategoryKey != null && String(r.taxCategoryKey).trim() !== '') {
+      item.taxCategoryKey = String(r.taxCategoryKey).trim();
+    }
+    return item;
   });
 }
 

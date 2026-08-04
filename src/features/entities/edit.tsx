@@ -15,6 +15,7 @@ import { EntityAdminRedirect } from './EntityAdminRedirect.js';
 import { EntityGeneralSettingsFields } from './EntityGeneralSettingsFields.js';
 import { EntityIdentityFields } from './EntityIdentityFields.js';
 import { EntityPaymentOptionsFields } from './EntityPaymentOptionsFields.js';
+import { EntityTaxManagementFields } from './EntityTaxManagementFields.js';
 import { mapPaymentOptionsForSubmit } from './entity-payment-options-utils.js';
 import {
   ENTITY_EDIT_FIELD_NAMES,
@@ -23,7 +24,7 @@ import {
 } from './entity-types.js';
 import { useEntityFormResources } from './useEntityFormResources.js';
 import { useEntityPaymentOptionToggle } from './useEntityPaymentOptionToggle.js';
-
+import { normalizeTaxProfile } from '../../shared/timci/taxesApi.js';
 export function EntityEdit() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
@@ -154,6 +155,11 @@ export function EntityEdit() {
                   availableOverduePolicyKeys: values.availableOverduePolicyKeys,
                   addAdvertisement: values.addAdvertisement,
                   fantasyName,
+                  taxManagementEnabled: values.taxManagementEnabled === true,
+                  taxProfile:
+                    values.taxManagementEnabled === true
+                      ? (normalizeTaxProfile(values.taxProfile) ?? {})
+                      : null,
                   paymentOptions,
                 });
               } catch (e) {
@@ -207,6 +213,9 @@ export function EntityEdit() {
             disabled={!canFullEditEntity}
             sections={['personDocument']}
           />
+          {canFullEditEntity ? (
+            <EntityTaxManagementFields form={form} tenantId={tenantId} />
+          ) : null}
           <EntityGeneralSettingsFields
             form={form}
             countrySelect={countrySelect}

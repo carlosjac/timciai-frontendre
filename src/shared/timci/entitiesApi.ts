@@ -92,8 +92,26 @@ export function buildEntityUpdateBody(variables: Record<string, unknown>): Recor
     payload.fantasyName =
       typeof fantasyRaw === 'string' && fantasyRaw.trim() !== '' ? fantasyRaw.trim() : null;
   }
+  if (variables.taxManagementEnabled !== undefined) {
+    payload.taxManagementEnabled = variables.taxManagementEnabled === true;
+  }
+  if (variables.taxProfile !== undefined) {
+    payload.taxProfile = mapTaxProfile(variables.taxProfile, variables.taxManagementEnabled === true);
+  }
   if (variables.paymentOptions !== undefined) {
     payload.paymentOptions = mapPaymentOptions(variables.paymentOptions);
   }
   return payload;
+}
+
+function mapTaxProfile(raw: unknown, enabled: boolean): Record<string, string> | null {
+  if (!enabled) return null;
+  if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (value == null) continue;
+    const s = String(value).trim();
+    if (s !== '') out[key] = s;
+  }
+  return Object.keys(out).length > 0 ? out : {};
 }

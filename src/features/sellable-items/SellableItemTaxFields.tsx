@@ -1,0 +1,36 @@
+import { useTranslate } from '@refinedev/core';
+import { Typography } from 'antd';
+import { TaxCategorySelect } from '../../shared/timci/tax/TaxCategorySelect.js';
+import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
+
+type Props = {
+  tenantId: string;
+  entityId: string;
+  disabled?: boolean;
+};
+
+/** Sellable item tax category when entity tax management is on. */
+export function SellableItemTaxFields({ tenantId, entityId, disabled = false }: Props) {
+  const translate = useTranslate();
+  const { taxManagementEnabled, schema, schemaLoading, entityLoading } = useEntityTaxContext(
+    tenantId,
+    entityId,
+  );
+
+  if (entityLoading || !taxManagementEnabled) return null;
+
+  return (
+    <>
+      <Typography.Text strong style={{ display: 'block', marginBottom: 8, marginTop: 8 }}>
+        {translate('tax.sectionTitle')}
+      </Typography.Text>
+      <TaxCategorySelect
+        schema={schema}
+        name="taxCategoryKey"
+        required
+        disabled={disabled || schemaLoading}
+        labelKey="table.sellableItems.taxCategory"
+      />
+    </>
+  );
+}

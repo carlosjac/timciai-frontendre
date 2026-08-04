@@ -12,13 +12,16 @@ import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { SELLABLE_ITEM_KINDS } from './kindChoices.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { SellableItemPricesTab } from './SellableItemPricesTab.js';
+import { SellableItemTaxFields } from './SellableItemTaxFields.js';
+import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 
-const SELLABLE_EDIT_FIELDS = ['kind', 'name', 'code', 'description'] as const;
+const SELLABLE_EDIT_FIELDS = ['kind', 'name', 'code', 'description', 'taxCategoryKey'] as const;
 
 type SellableRecord = {
   id?: string;
   name?: string;
   kind?: string;
+  taxCategoryKey?: string | null;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -30,6 +33,7 @@ export function SellableItemEdit() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
+  const { taxManagementEnabled } = useEntityTaxContext(tenantId, tenantId);
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
     resource: 'sellable_items',
@@ -101,6 +105,15 @@ export function SellableItemEdit() {
                       await submitRecord({
                         ...values,
                         kind: values.kind === 'Service' ? 'Service' : 'Product',
+                        ...(taxManagementEnabled
+                          ? {
+                              taxCategoryKey:
+                                values.taxCategoryKey != null &&
+                                String(values.taxCategoryKey).trim() !== ''
+                                  ? String(values.taxCategoryKey).trim()
+                                  : null,
+                            }
+                          : {}),
                       });
                     } catch (e) {
                       applyServerError(form, e);
@@ -137,6 +150,9 @@ export function SellableItemEdit() {
                   <Form.Item label={translate('table.sellableItems.description')} name="description">
                     <Input.TextArea rows={4} />
                   </Form.Item>
+                  {tenantId ? (
+                    <SellableItemTaxFields tenantId={tenantId} entityId={tenantId} />
+                  ) : null}
                 </Form>
                 {record && (
                   <TimciFormAuditCollapse

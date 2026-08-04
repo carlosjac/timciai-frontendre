@@ -3,12 +3,14 @@ import { useTranslate } from '@refinedev/core';
 import { Alert, Form, Input, Select, Switch } from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { SELLABLE_ITEM_KINDS } from './kindChoices.js';
+import { SellableItemTaxFields } from './SellableItemTaxFields.js';
+import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 
 export function SellableItemCreate() {
   const translate = useTranslate();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { formProps, saveButtonProps, onFinish } = useForm({ resource: 'sellable_items' });
-
+  const { taxManagementEnabled } = useEntityTaxContext(tenantId, tenantId);
   if (!tenantId) {
     return (
       <Create title={translate('pages.sellableItems.create')}>
@@ -28,6 +30,14 @@ export function SellableItemCreate() {
             entityId: tenantId,
             kind: values.kind === 'Service' ? 'Service' : 'Product',
             isActive: values.isActive !== false,
+            ...(taxManagementEnabled
+              ? {
+                  taxCategoryKey:
+                    values.taxCategoryKey != null && String(values.taxCategoryKey).trim() !== ''
+                      ? String(values.taxCategoryKey).trim()
+                      : undefined,
+                }
+              : {}),
           });
         }}
       >
@@ -57,6 +67,7 @@ export function SellableItemCreate() {
         <Form.Item label={translate('table.sellableItems.description')} name="description">
           <Input.TextArea rows={4} />
         </Form.Item>
+        {tenantId ? <SellableItemTaxFields tenantId={tenantId} entityId={tenantId} /> : null}
         <Form.Item
           label={translate('table.users.active')}
           name="isActive"

@@ -15,6 +15,7 @@ export type SaleItemFormRow = {
   quantity?: string | number;
   unitPriceAmount?: string | number;
   discountPercent?: string | number;
+  taxCategoryKey?: string | null;
 };
 
 export type AllocationFormRow = {
@@ -46,6 +47,10 @@ export type CommercialTransactionRecord = {
   priceListId?: string | null;
   paymentOptionId?: string | null;
   monetaryPolicyId?: string | null;
+  taxCategoryKey?: string | null;
+  netAmount?: string | null;
+  taxAmount?: string | null;
+  grossAmount?: string | null;
   reversesTransactionId?: string | null;
   reversesEntityTxnNumber?: number | null;
   reversesTransactionType?: string | null;
@@ -64,6 +69,10 @@ export type CommercialTransactionRecord = {
     discountPercent?: string;
     discountAmount?: string;
     subtotal?: string;
+    taxCategoryKey?: string | null;
+    netAmount?: string | null;
+    taxAmount?: string | null;
+    grossAmount?: string | null;
   }>;
   allocations?: Array<{
     id?: string;
