@@ -382,6 +382,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     setFiltersAndResetPage,
     sorters,
     token.colorPrimary,
+    token.colorTextSecondary,
     translate,
     visibleKeys,
   ]);

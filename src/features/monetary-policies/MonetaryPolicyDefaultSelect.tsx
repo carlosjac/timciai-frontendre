@@ -26,27 +26,26 @@ export function MonetaryPolicyDefaultSelect({
   labelKey = 'create.entity.defaultMonetaryPolicy',
 }: Props) {
   const translate = useTranslate();
+  const enabled = Boolean(tenantId && entityId);
   const [options, setOptions] = useState<MonetaryPolicyListItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!tenantId || !entityId) {
-      setOptions([]);
-      return;
-    }
+    if (!enabled) return;
     let cancelled = false;
-    setLoading(true);
-    void fetchActiveMonetaryPolicies(tenantId, entityId)
-      .then((items) => {
+    void (async () => {
+      setLoading(true);
+      try {
+        const items = await fetchActiveMonetaryPolicies(tenantId, entityId);
         if (!cancelled) setOptions(items);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [tenantId, entityId]);
+  }, [enabled, tenantId, entityId]);
 
   return (
     <Form.Item
@@ -60,10 +59,10 @@ export function MonetaryPolicyDefaultSelect({
     >
       <Select
         showSearch
-        loading={loading}
+        loading={enabled && loading}
         optionFilterProp="label"
         allowClear={!required}
-        options={options.map((p) => ({
+        options={(enabled ? options : []).map((p) => ({
           value: p.id,
           label: p.name.replace(/\s+/g, ' ').trim(),
         }))}

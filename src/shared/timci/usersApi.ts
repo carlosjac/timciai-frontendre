@@ -1,15 +1,16 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 
 export function getUserByIdUrl(id: string): string {
-  return `${getV1Base()}/authentication/users/${encodeURIComponent(id)}`;
+  return `${getV1Base()}/authentication/users/${requireTimciPathSegment(id)}`;
 }
 
 export function getUserActivateUrl(id: string): string {
-  return `${getV1Base()}/authentication/users/${encodeURIComponent(id)}/activate`;
+  return `${getV1Base()}/authentication/users/${requireTimciPathSegment(id)}/activate`;
 }
 
 export function getUserDeactivateUrl(id: string): string {
-  return `${getV1Base()}/authentication/users/${encodeURIComponent(id)}/deactivate`;
+  return `${getV1Base()}/authentication/users/${requireTimciPathSegment(id)}/deactivate`;
 }
 
 export function buildUserUpdateBody(variables: Record<string, unknown>): Record<string, unknown> {

@@ -32,10 +32,8 @@ import {
   fetchUnitPriceFromPriceList,
 } from '../../shared/timci/priceListItemsApi.js';
 import { timciFetch } from '../../shared/timci/http.js';
-import {
-  CollectionAllocationsTable,
-  type AllocationCandidateRow,
-} from './CollectionAllocationsTable.js';
+import { type AllocationCandidateRow } from './collectionAllocations.js';
+import { CollectionAllocationsTable } from './CollectionAllocationsTable.js';
 import { computeSaleLineAmounts, computeSaleItemsTotal } from './saleLineAmounts.js';
 import { formatTimciMoneyOrEmpty } from '../../shared/timci/formatMoney.js';
 import {
@@ -483,20 +481,15 @@ export function CommercialTransactionFormFields({
     [applyListPriceToItem, form, sellableByLabel, taxesOn],
   );
 
+  const taxesEnabled = Boolean(
+    taxesOn && tenantId && entityTax.countryCode &&
+      transactionDate != null && String(transactionDate).trim() !== '',
+  );
+
   /** Recalculate taxes for sale lines or debit/credit net amount. */
   useEffect(() => {
-    if (!taxesOn || !tenantId || !entityTax.countryCode) {
-      setTaxResult(null);
-      return;
-    }
-    const documentDate =
-      transactionDate != null && String(transactionDate).trim() !== ''
-        ? String(transactionDate).slice(0, 10)
-        : undefined;
-    if (!documentDate) {
-      setTaxResult(null);
-      return;
-    }
+    if (!taxesEnabled || !tenantId || !entityTax.countryCode) return;
+    const documentDate = String(transactionDate).slice(0, 10);
 
     const issuerTaxProfile = entityTax.taxProfile ?? {};
     const recipientTaxProfile =
@@ -587,7 +580,7 @@ export function CommercialTransactionFormFields({
     isSale,
     itemsWatch,
     taxCategoryKeyWatch,
-    taxesOn,
+    taxesEnabled,
     tenantId,
     transactionDate,
   ]);
@@ -617,22 +610,24 @@ export function CommercialTransactionFormFields({
   >(() => new Map());
   const [settlementLoading, setSettlementLoading] = useState(false);
 
+  const settlementQueryEnabled = Boolean(
+    (isCollection || isCredit) && tenantId && customerId && currencyId,
+  );
+
   /** Settlement as-of date (discounts/surcharges) for allocation candidates (cobro/crédito). */
   useEffect(() => {
-    if ((!isCollection && !isCredit) || !tenantId || !customerId || !currencyId) {
-      setSettlementByTargetId(new Map());
-      return;
-    }
+    if (!settlementQueryEnabled || !tenantId || !customerId || !currencyId) return;
     const asOf =
       transactionDate != null && String(transactionDate).trim() !== ''
         ? String(transactionDate).slice(0, 10)
         : dayjs().format('YYYY-MM-DD');
     let cancelled = false;
-    setSettlementLoading(true);
-    void timciFetch(
-      getCustomerCurrentAccountSettlementUrl(tenantId, customerId, currencyId, asOf),
-    )
-      .then(({ json }) => {
+    void (async () => {
+      setSettlementLoading(true);
+      try {
+        const { json } = await timciFetch(
+          getCustomerCurrentAccountSettlementUrl(tenantId, customerId, currencyId, asOf),
+        );
         if (cancelled) return;
         const lines = (json as { lines?: CurrentAccountSettlementLine[] })?.lines ?? [];
         const map = new Map<string, CurrentAccountSettlementLine>();
@@ -640,17 +635,16 @@ export function CommercialTransactionFormFields({
           if (line?.id) map.set(String(line.id), line);
         }
         setSettlementByTargetId(map);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setSettlementByTargetId(new Map());
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setSettlementLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [currencyId, customerId, isCollection, isCredit, tenantId, transactionDate]);
+  }, [settlementQueryEnabled, currencyId, customerId, isCollection, isCredit, tenantId, transactionDate]);
 
   /** Registered sales/debits of the customer with open balance (same currency when set). */
   const allocationCandidates = useMemo((): AllocationCandidateRow[] => {

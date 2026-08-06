@@ -1,19 +1,20 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 
 export function getSellableItemsEntityListUrl(tenantId: string, entityId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/entities/${entityId}/sellable-items`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(entityId)}/sellable-items`;
 }
 
 export function getSellableItemByIdUrl(tenantId: string, itemId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/sellable-items/${encodeURIComponent(itemId)}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/sellable-items/${requireTimciPathSegment(itemId)}`;
 }
 
 export function getSellableItemActivateUrl(tenantId: string, itemId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/sellable-items/${encodeURIComponent(itemId)}/activate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/sellable-items/${requireTimciPathSegment(itemId)}/activate`;
 }
 
 export function getSellableItemDeactivateUrl(tenantId: string, itemId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/sellable-items/${encodeURIComponent(itemId)}/deactivate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/sellable-items/${requireTimciPathSegment(itemId)}/deactivate`;
 }
 
 export function buildSellableItemCreateBody(

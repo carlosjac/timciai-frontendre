@@ -6,24 +6,16 @@ import { formatTimciMoney, formatTimciMoneyOrEmpty } from '../../shared/timci/fo
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import type { AllocationFormRow } from './types.js';
+import {
+  buildFifoAllocations,
+  parseMoneyNumber,
+  parsePositiveAmount,
+  type AllocationCandidateRow,
+} from './collectionAllocations.js';
 import { useNavigate } from 'react-router';
 import { App, Button, Form, InputNumber, Space, Table, Typography } from 'antd';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslate } from '@refinedev/core';
-
-export type AllocationCandidateRow = {
-  id: string;
-  entityTxnNumber?: number | null;
-  type: string;
-  transactionDate?: string;
-  amount?: string;
-  openAmount?: string;
-  concept?: string | null;
-  /** Full-open policy adjustment (signed) as of collection date. */
-  adjustmentAmount?: string;
-  /** Cash to settle full open as of collection date. */
-  settlementAmount?: string;
-};
 
 type Props = {
   candidates: AllocationCandidateRow[];
@@ -37,51 +29,6 @@ type Props = {
   value?: AllocationFormRow[];
   onChange?: (next: AllocationFormRow[]) => void;
 };
-
-function parsePositiveAmount(raw: unknown): string | null {
-  const formatted = formatTimciMoneyOrEmpty(raw);
-  if (!formatted) return null;
-  const n = Number(formatted);
-  return n > 0 ? formatted : null;
-}
-
-function parseMoneyNumber(raw: unknown): number | null {
-  if (raw === null || raw === undefined || raw === '') return null;
-  const n = typeof raw === 'number' ? raw : Number(String(raw).trim().replace(',', '.'));
-  return Number.isFinite(n) ? n : null;
-}
-
-function roundMoney2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
-
-function formatMoney2(n: number): string {
-  return formatTimciMoneyOrEmpty(n) || '0.00';
-}
-
-/** FIFO on cash (settlement); stores nominal open tranche in allocation.amount. */
-export function buildFifoAllocations(
-  collectionAmount: number,
-  candidates: AllocationCandidateRow[],
-): AllocationFormRow[] {
-  let remaining = roundMoney2(collectionAmount);
-  if (remaining <= 0) return [];
-
-  const out: AllocationFormRow[] = [];
-  for (const row of candidates) {
-    if (remaining <= 0) break;
-    const open = roundMoney2(parseMoneyNumber(row.openAmount ?? row.amount) ?? 0);
-    if (open <= 0) continue;
-    const settlement = roundMoney2(parseMoneyNumber(row.settlementAmount) ?? open);
-    if (settlement <= 0) continue;
-    const takeCash = Math.min(remaining, settlement);
-    if (takeCash <= 0) continue;
-    const takeNominal = roundMoney2((takeCash / settlement) * open);
-    out.push({ targetTransactionId: row.id, amount: formatMoney2(takeNominal) });
-    remaining = roundMoney2(remaining - takeCash);
-  }
-  return out;
-}
 
 /**
  * Tabla de ventas/débitos imputables: cada fila con importe a imputar.
@@ -103,7 +50,7 @@ export function CollectionAllocationsTable({
   const { dateFormat, timeZone } = useUserPreferences();
   const watchedAmount = Form.useWatch('amount', form);
   const collectionAmount = sourceAmount ?? watchedAmount;
-  const allocations = value ?? [];
+  const allocations = useMemo(() => value ?? [], [value]);
 
   const amountByTargetId = useMemo(() => {
     const map = new Map<string, string>();
@@ -276,8 +223,8 @@ export function CollectionAllocationsTable({
                     onKeyDown={(e) => e.stopPropagation()}
                   >
                     <InputNumber
-                      min={0}
-                      max={max}
+                      min="0"
+                      max={max != null ? String(max) : undefined}
                       precision={2}
                       stringMode
                       style={{ width: '100%' }}

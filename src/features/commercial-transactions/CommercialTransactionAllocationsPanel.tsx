@@ -10,36 +10,16 @@ import {
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
-
-export type AllocationRow = {
-  id?: string;
-  ordinal?: number;
-  targetTransactionId?: string;
-  amount?: string;
-  /** Enriched on get-by-id. */
-  targetType?: string | null;
-  targetEntityTxnNumber?: number | null;
-  targetTransactionDate?: string | null;
-  targetConcept?: string | null;
-};
+import {
+  commercialResourceCanHaveAllocations,
+  type AllocationRow,
+} from './commercialTransactionPanels.js';
 
 type Props = {
   /** Only debits, credits and collections carry outgoing allocations. */
   resource: CommercialTransactionResource;
   allocations?: AllocationRow[] | null;
 };
-
-const RESOURCES_WITH_ALLOCATIONS: CommercialTransactionResource[] = [
-  'debits',
-  'credits',
-  'collections',
-];
-
-export function commercialResourceCanHaveAllocations(
-  resource: CommercialTransactionResource,
-): boolean {
-  return RESOURCES_WITH_ALLOCATIONS.includes(resource);
-}
 
 /**
  * Read-only imputaciones for debit / credit / collection show.

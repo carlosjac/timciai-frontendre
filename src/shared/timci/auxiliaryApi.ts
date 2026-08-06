@@ -1,11 +1,12 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 import { timciFetch } from './http.js';
 
 export type OverduePolicyItem = { key: string; description: string };
 
 export async function fetchOverduePolicyCatalog(tenantId: string): Promise<OverduePolicyItem[]> {
   const { json } = await timciFetch(
-    `${getV1Base()}/tenants/${tenantId}/overdue-notification-policies/catalog`,
+    `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/overdue-notification-policies/catalog`,
   );
   const policies = (json as { policies?: OverduePolicyItem[] })?.policies;
   return Array.isArray(policies) ? policies : [];
@@ -23,7 +24,7 @@ export async function fetchPriceListsForEntity(
     filter: JSON.stringify({}),
   });
   const { json } = await timciFetch(
-    `${getV1Base()}/tenants/${tenantId}/entities/${entityId}/price-lists?${qs}`,
+    `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(entityId)}/price-lists?${qs}`,
   );
   return Array.isArray(json) ? (json as PriceListRow[]) : [];
 }

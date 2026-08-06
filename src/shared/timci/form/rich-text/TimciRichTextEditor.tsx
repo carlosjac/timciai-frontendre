@@ -74,7 +74,7 @@ export function TimciRichTextEditor({
     const current = editor.getHTML();
     const next = value ?? '';
     if (next !== current) {
-      editor.commands.setContent(next, { emitUpdate: false });
+      editor.commands.setContent(sanitizeRichTextHtml(next), { emitUpdate: false });
     }
   }, [editor, value]);
 

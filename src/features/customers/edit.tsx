@@ -118,7 +118,7 @@ export function CustomerEdit() {
     if (!id) return '—';
     const dt = (docTypeResult.data ?? []).find((d) => String(d.id) === String(id));
     return dt?.name ?? id;
-  }, [docTypeResult.data, record?.documentTypeId, record?.documentTypeName]);
+  }, [docTypeResult.data, record]);
 
   useEffect(() => {
     if (!tenantId || !entityId) return;

@@ -1,4 +1,5 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 import { timciFetch } from './http.js';
 
 export type TaxAttributeAppliesTo = 'issuer' | 'recipient' | 'both';
@@ -69,11 +70,11 @@ export type CalculateTaxesResult = {
 };
 
 export function getCountryTaxProfileSchemaUrl(tenantId: string, countryCode: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/taxes/countries/${encodeURIComponent(countryCode)}/profile-schema`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/taxes/countries/${encodeURIComponent(countryCode)}/profile-schema`;
 }
 
 export function getTaxesCalculateUrl(tenantId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/taxes/calculate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/taxes/calculate`;
 }
 
 export async function fetchCountryTaxProfileSchema(

@@ -73,7 +73,7 @@ export function SessionList() {
         titleKey: 'table.sessions.id',
         sorter: true,
         render: (v: unknown) => truncateId(String(v ?? '')),
-        exportValue: (r) => r.id,
+        exportValue: (r) => truncateId(r.id),
       },
       {
         key: 'userName',

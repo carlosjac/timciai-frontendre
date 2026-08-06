@@ -89,7 +89,7 @@ export function SellableItemPriceDrawer({
       entityRecord?.defaultCurrencyId != null ? String(entityRecord.defaultCurrencyId).trim() : '';
     if (!id) return undefined;
     return currencyOptions.some((o) => o.value === id) ? id : undefined;
-  }, [entityRecord?.defaultCurrencyId, currencyOptions]);
+  }, [entityRecord, currencyOptions]);
 
   useEffect(() => {
     if (!open) return;

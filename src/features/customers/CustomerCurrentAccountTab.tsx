@@ -108,57 +108,59 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
     return map;
   }, [currenciesResult.data]);
 
+  const accountsEnabled = Boolean(tenantId && customerId);
+  const movementsEnabled = Boolean(tenantId && customerId && currencyId);
+
   useEffect(() => {
-    if (!tenantId || !customerId) return;
+    if (!accountsEnabled || !tenantId || !customerId) return;
     let cancelled = false;
-    setAccountsLoading(true);
-    setLoadError(null);
-    void timciFetch(getCustomerCurrentAccountsUrl(tenantId, customerId))
-      .then(({ json }) => {
+    void (async () => {
+      setAccountsLoading(true);
+      setLoadError(null);
+      try {
+        const { json } = await timciFetch(getCustomerCurrentAccountsUrl(tenantId, customerId));
         if (cancelled) return;
         const rows = Array.isArray(json) ? (json as CurrentAccountRow[]) : [];
         setAccounts(rows);
         if (rows.length === 1 && !currencyId) setCurrencyId(rows[0].currencyId);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.currentAccountLoadError'));
           setAccounts([]);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setAccountsLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [currencyId, customerId, setCurrencyId, tenantId, translate]);
+  }, [accountsEnabled, currencyId, customerId, setCurrencyId, tenantId, translate]);
 
   useEffect(() => {
-    if (!tenantId || !customerId || !currencyId) {
-      setMovements([]);
-      return;
-    }
+    if (!movementsEnabled || !tenantId || !customerId || !currencyId) return;
     let cancelled = false;
-    setMovementsLoading(true);
-    void timciFetch(getCustomerCurrentAccountMovementsUrl(tenantId, customerId, currencyId))
-      .then(({ json }) => {
+    void (async () => {
+      setMovementsLoading(true);
+      try {
+        const { json } = await timciFetch(
+          getCustomerCurrentAccountMovementsUrl(tenantId, customerId, currencyId),
+        );
         if (cancelled) return;
         setMovements(Array.isArray(json) ? (json as MovementRow[]) : []);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.currentAccountMovementsError'));
           setMovements([]);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setMovementsLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [currencyId, customerId, tenantId, translate]);
+  }, [movementsEnabled, currencyId, customerId, tenantId, translate]);
 
   const openMovementShow = useCallback(
     (row: MovementRow) => {
@@ -214,7 +216,7 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
         size="middle"
         loading={movementsLoading}
         rowKey="id"
-        dataSource={movements}
+        dataSource={movementsEnabled ? movements : []}
         pagination={{ pageSize: 25, showSizeChanger: true }}
         locale={{ emptyText: translate('list.emptyData') }}
         onRow={(row) => ({

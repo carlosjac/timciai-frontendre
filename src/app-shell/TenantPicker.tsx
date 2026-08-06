@@ -60,11 +60,16 @@ export function TenantPicker({ compact = false }: TenantPickerProps) {
     if (typeof window === 'undefined') return;
     const onStorage = (e: StorageEvent) => {
       if (e.key !== TENANT_STORAGE_KEY) return;
-      setValue(e.newValue);
+      // Re-validate against loaded me/tenants; ignore forged IDs until list is ready.
+      if (tenants.length === 0) {
+        void load();
+        return;
+      }
+      applySelection(tenants, e.newValue);
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [applySelection, load, tenants]);
 
   return (
     <Space

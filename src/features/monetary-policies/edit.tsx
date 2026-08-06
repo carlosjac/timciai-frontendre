@@ -16,10 +16,10 @@ import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import {
   hydrateMonetaryPolicyParamsForForm,
-  MonetaryPolicyParamsFields,
   normalizeMonetaryPolicyParams,
-} from './MonetaryPolicyParamsFields.js';
+} from './monetaryPolicyParamsForm.js';
 import { MonetaryPolicyNameField } from './MonetaryPolicyNameField.js';
+import { MonetaryPolicyParamsFields } from './MonetaryPolicyParamsFields.js';
 
 const EDIT_FIELDS = ['name', 'params'] as const;
 

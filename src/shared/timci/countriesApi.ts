@@ -1,15 +1,16 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 
 export function getCountryByIdUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/countries/${encodeURIComponent(id)}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/countries/${requireTimciPathSegment(id)}`;
 }
 
 export function getCountryActivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/countries/${encodeURIComponent(id)}/activate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/countries/${requireTimciPathSegment(id)}/activate`;
 }
 
 export function getCountryDeactivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/countries/${encodeURIComponent(id)}/deactivate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/countries/${requireTimciPathSegment(id)}/deactivate`;
 }
 
 export function buildCountryUpdateBody(variables: Record<string, unknown>): Record<string, unknown> {

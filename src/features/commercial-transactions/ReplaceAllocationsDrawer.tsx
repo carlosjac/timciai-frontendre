@@ -6,10 +6,8 @@ import { getCommercialTransactionReplaceAllocationsUrl } from '../../shared/timc
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import { formatTimciMoneyOrEmpty } from '../../shared/timci/formatMoney.js';
-import {
-  CollectionAllocationsTable,
-  type AllocationCandidateRow,
-} from './CollectionAllocationsTable.js';
+import { type AllocationCandidateRow } from './collectionAllocations.js';
+import { CollectionAllocationsTable } from './CollectionAllocationsTable.js';
 import type { AllocationFormRow, CommercialTransactionRecord } from './types.js';
 
 type Props = {

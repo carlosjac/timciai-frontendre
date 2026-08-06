@@ -1,8 +1,9 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 import { timciFetch } from './http.js';
 
 export function getPriceListItemsListUrl(tenantId: string, priceListId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/price-lists/${encodeURIComponent(priceListId)}/items`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/price-lists/${requireTimciPathSegment(priceListId)}/items`;
 }
 
 export type PriceListUnitPriceRow = {
@@ -94,7 +95,7 @@ export async function fetchUnitPriceFromPriceList(params: {
 }
 
 export function getPriceListItemByIdUrl(tenantId: string, itemId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/price-list-items/${encodeURIComponent(itemId)}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/price-list-items/${requireTimciPathSegment(itemId)}`;
 }
 
 /** Fecha API (YYYY-MM-DD) o null para “sin límite”. */

@@ -1,19 +1,20 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 
 export function getPriceListsEntityListUrl(tenantId: string, entityId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/entities/${entityId}/price-lists`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(entityId)}/price-lists`;
 }
 
 export function getPriceListByIdUrl(tenantId: string, listId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/price-lists/${encodeURIComponent(listId)}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/price-lists/${requireTimciPathSegment(listId)}`;
 }
 
 export function getPriceListActivateUrl(tenantId: string, listId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/price-lists/${encodeURIComponent(listId)}/activate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/price-lists/${requireTimciPathSegment(listId)}/activate`;
 }
 
 export function getPriceListDeactivateUrl(tenantId: string, listId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/price-lists/${encodeURIComponent(listId)}/deactivate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/price-lists/${requireTimciPathSegment(listId)}/deactivate`;
 }
 
 export function buildPriceListCreateBody(variables: Record<string, unknown>): Record<string, unknown> {

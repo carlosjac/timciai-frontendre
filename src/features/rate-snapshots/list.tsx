@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useTranslate, type BaseRecord } from '@refinedev/core';
+import { type BaseRecord } from '@refinedev/core';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -15,7 +15,6 @@ type RateSnapshotRow = BaseRecord & {
 };
 
 export function RateSnapshotList() {
-  const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
 
   const columnDefs = useMemo((): TimciColumnDef<RateSnapshotRow>[] => {

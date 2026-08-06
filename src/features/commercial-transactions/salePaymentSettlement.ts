@@ -3,6 +3,8 @@
  * Based on `openAmount`: > 0 → unpaid; ≤ 0 → paid. Draft/voided → null.
  */
 
+import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
+
 export type SalePaymentSettlement = 'paid' | 'unpaid';
 
 function parseOpenAmount(raw: unknown): number | null {
@@ -34,4 +36,18 @@ export function salePaymentSettlementTitleKey(
 
 export function salePaymentSettlementTagColor(settlement: SalePaymentSettlement): string {
   return settlement === 'paid' ? 'success' : 'warning';
+}
+
+type Translate = (key: string, options?: object, defaultMessage?: string) => string;
+
+export function salePaymentSettlementLabel(
+  settlement: SalePaymentSettlement,
+  openAmount: unknown,
+  translate: Translate,
+): string {
+  const base = translate(salePaymentSettlementTitleKey(settlement));
+  if (settlement !== 'unpaid') return base;
+  const pending = formatTimciMoney(openAmount);
+  if (!pending || pending === '—') return base;
+  return `${base} · ${pending}`;
 }

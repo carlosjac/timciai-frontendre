@@ -93,60 +93,60 @@ export function CustomerSettlementTab({ customerId }: Props) {
     return map;
   }, [currenciesResult.data]);
 
+  const accountsEnabled = Boolean(tenantId && customerId);
+  const settlementEnabled = Boolean(tenantId && customerId && currencyId && settlementAsOf);
+
   useEffect(() => {
-    if (!tenantId || !customerId) return;
+    if (!accountsEnabled || !tenantId || !customerId) return;
     let cancelled = false;
-    setAccountsLoading(true);
-    setLoadError(null);
-    void timciFetch(getCustomerCurrentAccountsUrl(tenantId, customerId))
-      .then(({ json }) => {
+    void (async () => {
+      setAccountsLoading(true);
+      setLoadError(null);
+      try {
+        const { json } = await timciFetch(getCustomerCurrentAccountsUrl(tenantId, customerId));
         if (cancelled) return;
         const rows = Array.isArray(json) ? (json as CurrentAccountRow[]) : [];
         setAccounts(rows);
         if (rows.length === 1 && !currencyId) setCurrencyId(rows[0].currencyId);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.currentAccountLoadError'));
           setAccounts([]);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setAccountsLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [currencyId, customerId, setCurrencyId, tenantId, translate]);
+  }, [accountsEnabled, currencyId, customerId, setCurrencyId, tenantId, translate]);
 
   useEffect(() => {
-    if (!tenantId || !customerId || !currencyId || !settlementAsOf) {
-      setSettlement(null);
-      return;
-    }
+    if (!settlementEnabled || !tenantId || !customerId || !currencyId || !settlementAsOf) return;
     let cancelled = false;
-    setSettlementLoading(true);
-    setLoadError(null);
-    void timciFetch(
-      getCustomerCurrentAccountSettlementUrl(tenantId, customerId, currencyId, settlementAsOf),
-    )
-      .then(({ json }) => {
+    void (async () => {
+      setSettlementLoading(true);
+      setLoadError(null);
+      try {
+        const { json } = await timciFetch(
+          getCustomerCurrentAccountSettlementUrl(tenantId, customerId, currencyId, settlementAsOf),
+        );
         if (cancelled) return;
         setSettlement(json as CurrentAccountSettlementDto);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setSettlement(null);
           setLoadError(translate('pages.customers.currentAccountSettlementLoadError'));
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setSettlementLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [currencyId, customerId, settlementAsOf, tenantId, translate]);
+  }, [settlementEnabled, currencyId, customerId, settlementAsOf, tenantId, translate]);
 
   if (!tenantId) {
     return <Alert type="warning" showIcon message={translate('tenant.selectFirst')} />;

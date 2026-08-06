@@ -100,6 +100,7 @@ export const esMessages = {
   },
   app: {
     title: 'Timci',
+    loadingPage: 'Cargando página',
   },
   auth: {
     login: {
@@ -208,6 +209,16 @@ export const esMessages = {
       },
       signin: 'Entrar',
       signup: 'Registrarse',
+    },
+    accessDenied: {
+      title: 'Sin permiso',
+      description: 'No tienes permisos para realizar esta acción.',
+      goHome: 'Ir al inicio',
+    },
+    notFound: {
+      title: 'Página no encontrada',
+      description: 'Esa página no existe.',
+      goHome: 'Ir al inicio',
     },
     users: {
       title: 'Usuarios',

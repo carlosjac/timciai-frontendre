@@ -1,15 +1,16 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 
 export function getCurrencyByIdUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/currencies/${encodeURIComponent(id)}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/currencies/${requireTimciPathSegment(id)}`;
 }
 
 export function getCurrencyActivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/currencies/${encodeURIComponent(id)}/activate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/currencies/${requireTimciPathSegment(id)}/activate`;
 }
 
 export function getCurrencyDeactivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/currencies/${encodeURIComponent(id)}/deactivate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/currencies/${requireTimciPathSegment(id)}/deactivate`;
 }
 
 export function buildCurrencyUpdateBody(variables: Record<string, unknown>): Record<string, unknown> {

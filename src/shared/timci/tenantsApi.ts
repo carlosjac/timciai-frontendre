@@ -1,4 +1,5 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 import { timciFetch } from './http.js';
 
 /** Id del tenant global (__global__); no se puede desactivar. */
@@ -11,15 +12,15 @@ export function getTenantsListUrl(): string {
 }
 
 export function getTenantByIdUrl(id: string): string {
-  return `${getV1Base()}/authorization/tenants/${encodeURIComponent(id)}`;
+  return `${getV1Base()}/authorization/tenants/${requireTimciPathSegment(id)}`;
 }
 
 export function getTenantActivateUrl(id: string): string {
-  return `${getV1Base()}/authorization/tenants/${encodeURIComponent(id)}/activate`;
+  return `${getV1Base()}/authorization/tenants/${requireTimciPathSegment(id)}/activate`;
 }
 
 export function getTenantDeactivateUrl(id: string): string {
-  return `${getV1Base()}/authorization/tenants/${encodeURIComponent(id)}/deactivate`;
+  return `${getV1Base()}/authorization/tenants/${requireTimciPathSegment(id)}/deactivate`;
 }
 
 export function buildTenantUpdateBody(variables: Record<string, unknown>): Record<string, unknown> {

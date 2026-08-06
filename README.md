@@ -26,6 +26,18 @@ Abre **http://localhost:5174** (puerto distinto del Vite del admin React Admin e
 | `VITE_BACKEND_PORT` | Solo dev: puerto del proxy (por defecto `3000`). Se carga en `vite.config.ts` con `loadEnv`. |
 | `VITE_PROXY_TARGET` | Solo dev: URL completa del destino del proxy (p. ej. `http://127.0.0.1:3000`). Si está definida, sustituye host+puerto. |
 
+### Content-Security-Policy
+
+`index.html` incluye una CSP baseline **same-origin**: `script-src 'self'`, `connect-src 'self'`, `form-action 'self'`, `frame-ancestors 'none'`. Si en producción `VITE_API_URL` apunta a otro origen, amplía `connect-src` (meta o headers del reverse proxy) con ese host.
+
+Preferible reforzar la CSP en el hosting (Nginx/CDN) **además** de la meta, por ejemplo:
+
+```nginx
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'" always;
+```
+
+Si la API es cross-origin, añade ese origen a `connect-src` en el mismo header (y en la meta si la mantienes).
+
 ### 502 Bad Gateway en `/v1/...` en dev
 
 El navegador llama a `http://localhost:5174/v1/...` y Vite reenvía a la API. **502** suele ser **conexión rechazada** (API no levantada o host/puerto incorrecto).
@@ -52,6 +64,19 @@ El navegador llama a `http://localhost:5174/v1/...` y Vite reenvía a la API. **
 | [`shared/timci/`](src/shared/timci/) | Cliente HTTP, URLs por recurso, listas (`list/`), formularios y errores de API (`form/`, `i18n/`), `actionCodes`, `listQuery`, política de contraseña. |
 | [`shared/lib/`](src/shared/lib/) | Utilidades puras (CSV, paginación para exportación). |
 | [`i18n/`](src/i18n/) | Provider de Refine y mensajes en español. |
+
+## Scripts
+
+```bash
+pnpm dev          # Vite en :5174
+pnpm build        # tsc -b && vite build
+pnpm lint         # ESLint
+pnpm test         # Vitest (unitarios co-localizados `*.spec.ts`)
+pnpm test:watch   # Vitest en watch
+pnpm test:coverage
+```
+
+Los specs viven junto al código en `src/**/*.spec.ts` (helpers de `shared/`). No se incluyen en el build de la app.
 
 ## Autenticación y tenant
 

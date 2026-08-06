@@ -10,10 +10,8 @@ import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { GLOBAL_TENANT_ID, fetchActiveTenantsForSelect } from '../../shared/timci/tenantsApi.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
-import {
-  MonetaryPolicyParamsFields,
-  normalizeMonetaryPolicyParams,
-} from './MonetaryPolicyParamsFields.js';
+import { MonetaryPolicyParamsFields } from './MonetaryPolicyParamsFields.js';
+import { normalizeMonetaryPolicyParams } from './monetaryPolicyParamsForm.js';
 import { MonetaryPolicyNameField } from './MonetaryPolicyNameField.js';
 
 const CREATE_KIND = 'relative_bands';
@@ -41,18 +39,18 @@ export function MonetaryPolicyCreate() {
   useEffect(() => {
     if (!canPickOrg) return;
     let cancelled = false;
-    setOrgsLoading(true);
-    void fetchActiveTenantsForSelect()
-      .then((rows) => {
+    void (async () => {
+      setOrgsLoading(true);
+      try {
+        const rows = await fetchActiveTenantsForSelect();
         if (cancelled) return;
         setOrgOptions(rows.map((t) => ({ value: t.id, label: t.name })));
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setOrgOptions([]);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setOrgsLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };

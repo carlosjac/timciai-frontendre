@@ -1,26 +1,8 @@
 import { Tag } from 'antd';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
+import { unallocatedRemainderKind } from './unallocatedAmount.js';
 
 type Translate = (key: string, options?: object, defaultMessage?: string) => string;
-
-function parseAmount(raw: unknown): number | null {
-  if (raw === null || raw === undefined || raw === '') return null;
-  const n = typeof raw === 'number' ? raw : Number(String(raw).trim().replace(',', '.'));
-  return Number.isFinite(n) ? n : null;
-}
-
-export type UnallocatedRemainderKind = 'allocated' | 'unallocated';
-
-/** For registered collection/credit: fully allocated vs remanente pendiente. */
-export function unallocatedRemainderKind(params: {
-  type?: string | null;
-  unallocatedAmount?: string | number | null;
-}): UnallocatedRemainderKind | null {
-  if (params.type !== 'collection' && params.type !== 'credit') return null;
-  const rem = parseAmount(params.unallocatedAmount);
-  if (rem == null) return null;
-  return rem > 0 ? 'unallocated' : 'allocated';
-}
 
 /**
  * Tag Imputado / Sin imputar (+ monto) beside Cobro/Crédito in CC type column.

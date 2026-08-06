@@ -12,11 +12,8 @@ import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { COMMERCIAL_TX_CONFIG } from './types.js';
 import { commercialStatusTagColor, commercialStatusTitleKey } from './statusLabel.js';
-import { salePaymentSettlement } from './salePaymentSettlement.js';
-import {
-  SalePaymentSettlementTag,
-  salePaymentSettlementLabel,
-} from './SalePaymentSettlementTag.js';
+import { salePaymentSettlement, salePaymentSettlementLabel } from './salePaymentSettlement.js';
+import { SalePaymentSettlementTag } from './SalePaymentSettlementTag.js';
 import { unallocatedAmount } from './unallocatedAmount.js';
 
 type TxRow = BaseRecord & {

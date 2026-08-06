@@ -10,28 +10,15 @@ import {
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
-
-export type IncomingAllocationRow = {
-  sourceTransactionId: string;
-  sourceType: string;
-  sourceTransactionDate: string;
-  sourceAmount: string;
-  sourceConcept?: string | null;
-  sourceEntityTxnNumber?: number | null;
-  amount: string;
-};
+import {
+  commercialResourceCanReceiveAllocations,
+  type IncomingAllocationRow,
+} from './commercialTransactionPanels.js';
 
 type Props = {
   resource: CommercialTransactionResource;
   incomingAllocations?: IncomingAllocationRow[] | null;
 };
-
-/** Sale and debit can receive imputaciones from credits/collections. */
-export function commercialResourceCanReceiveAllocations(
-  resource: CommercialTransactionResource,
-): boolean {
-  return resource === 'sales' || resource === 'debits';
-}
 
 /**
  * Imputaciones recibidas (cobros/créditos registrados que aplicaron a esta venta/débito).

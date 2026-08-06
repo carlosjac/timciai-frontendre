@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
   const proxyCommon = {
     target: proxyTarget,
     changeOrigin: true,
+    // Dev only: local backends often use plain HTTP; never rely on this for production.
     secure: false,
   };
 
@@ -31,7 +32,32 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      sourcemap: true,
+      // Do not publish source maps on the public CDN (reduces reverse-engineering surface).
+      sourcemap: false,
+      // Ant Design + icons stay ~1.2 MB minified as a shared vendor; app/route chunks are far smaller.
+      chunkSizeWarningLimit: 1300,
+      rolldownOptions: {
+        output: {
+          /** Keep heavy vendors out of the app entry so route chunks stay smaller. */
+          manualChunks(id: string) {
+            if (!id.includes('node_modules')) return;
+            if (id.includes('@tiptap')) return 'vendor-tiptap';
+            if (id.includes('isomorphic-dompurify') || id.includes('/dompurify')) {
+              return 'vendor-sanitize';
+            }
+            if (id.includes('@refinedev')) return 'vendor-refine';
+            if (id.includes('antd') || id.includes('@ant-design')) return 'vendor-antd';
+            if (
+              id.includes('/react-dom') ||
+              id.includes('/react-router') ||
+              id.includes('/scheduler') ||
+              /[/\\]node_modules[/\\]react[/\\]/.test(id)
+            ) {
+              return 'vendor-react';
+            }
+          },
+        },
+      },
     },
   };
 });

@@ -3,7 +3,7 @@ import { Button, Card, DatePicker, Input, InputNumber, Select, Space, theme } fr
 import { antdDatePickerLocaleEs } from '../../antdPickerLocaleEs.js';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   defaultOperatorForKind,
   normalizeStoredOperator,
@@ -36,12 +36,57 @@ type Props = {
   pickerDateFormat: string;
 };
 
-export function ColumnFilterDropdown(props: Props) {
+function initialFromCurrent(kind: TimciFilterKind, current: LogicalFilter | undefined) {
+  const nextOp = normalizeStoredOperator(kind, current?.operator as string | undefined);
+  let textVal = '';
+  let num: number | null = null;
+  let num2: number | null = null;
+  let boolVal: boolean | null = null;
+  let dateSingle = '';
+  let dateRange: [string, string] | null = null;
+
+  if (current) {
+    const v = current.value;
+    const lfOp = String(current.operator);
+    switch (kind) {
+      case 'text':
+        textVal = String(v ?? '');
+        break;
+      case 'number':
+        if (lfOp === 'between' && Array.isArray(v)) {
+          num = v[0] != null && v[0] !== '' ? Number(v[0]) : null;
+          num2 = v[1] != null && v[1] !== '' ? Number(v[1]) : null;
+        } else if (v != null && v !== '') {
+          num = Number(v);
+        }
+        break;
+      case 'boolean':
+        if (typeof v === 'boolean') boolVal = v;
+        break;
+      case 'date':
+        if (lfOp === 'between' && Array.isArray(v)) {
+          dateRange = [String(v[0] ?? '').slice(0, 10), String(v[1] ?? '').slice(0, 10)];
+        } else {
+          dateSingle = String(v ?? '').slice(0, 10);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  return { nextOp, textVal, num, num2, boolVal, dateSingle, dateRange };
+}
+
+/**
+ * Body remounts when the filter panel opens so local fields sync from Refine filters
+ * without setState-in-effect.
+ */
+function ColumnFilterDropdownBody(props: Props) {
   const { token } = theme.useToken();
   const {
     kind,
     field,
-    visible,
     current,
     translate,
     onApply,
@@ -51,58 +96,14 @@ export function ColumnFilterDropdown(props: Props) {
     pickerDateFormat,
   } = props;
 
-  const [op, setOp] = useState(() => defaultOperatorForKind(kind));
-  const [textVal, setTextVal] = useState('');
-  const [num, setNum] = useState<number | null>(null);
-  const [num2, setNum2] = useState<number | null>(null);
-  const [boolVal, setBoolVal] = useState<boolean | null>(null);
-  const [dateSingle, setDateSingle] = useState('');
-  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
-
-  // When the Ant Table filter panel opens, align local fields with Refine `filters` (source of truth).
-  /* eslint-disable react-hooks/set-state-in-effect -- single batch reset on open; no external subscription */
-  useEffect(() => {
-    if (!visible) return;
-    const lf = current;
-    const nextOp = normalizeStoredOperator(kind, lf?.operator as string | undefined);
-    setOp(nextOp);
-    setTextVal('');
-    setNum(null);
-    setNum2(null);
-    setBoolVal(null);
-    setDateSingle('');
-    setDateRange(null);
-    if (!lf) return;
-
-    const v = lf.value;
-    const lfOp = String(lf.operator);
-    switch (kind) {
-      case 'text':
-        setTextVal(String(v ?? ''));
-        break;
-      case 'number':
-        if (lfOp === 'between' && Array.isArray(v)) {
-          setNum(v[0] != null && v[0] !== '' ? Number(v[0]) : null);
-          setNum2(v[1] != null && v[1] !== '' ? Number(v[1]) : null);
-        } else if (v != null && v !== '') {
-          setNum(Number(v));
-        }
-        break;
-      case 'boolean':
-        if (typeof v === 'boolean') setBoolVal(v);
-        break;
-      case 'date':
-        if (lfOp === 'between' && Array.isArray(v)) {
-          setDateRange([String(v[0] ?? '').slice(0, 10), String(v[1] ?? '').slice(0, 10)]);
-        } else {
-          setDateSingle(String(v ?? '').slice(0, 10));
-        }
-        break;
-      default:
-        break;
-    }
-  }, [visible, current, kind]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  const initial = initialFromCurrent(kind, current);
+  const [op, setOp] = useState(() => initial.nextOp || defaultOperatorForKind(kind));
+  const [textVal, setTextVal] = useState(() => initial.textVal);
+  const [num, setNum] = useState<number | null>(() => initial.num);
+  const [num2, setNum2] = useState<number | null>(() => initial.num2);
+  const [boolVal, setBoolVal] = useState<boolean | null>(() => initial.boolVal);
+  const [dateSingle, setDateSingle] = useState(() => initial.dateSingle);
+  const [dateRange, setDateRange] = useState<[string, string] | null>(() => initial.dateRange);
 
   const opOptions = operatorsForKind(kind).map((o) => ({
     value: o,
@@ -257,4 +258,10 @@ export function ColumnFilterDropdown(props: Props) {
       </Space>
     </Card>
   );
+}
+
+export function ColumnFilterDropdown(props: Props) {
+  if (!props.visible) return null;
+  const syncKey = `${props.field}:${props.kind}:${JSON.stringify(props.current ?? null)}`;
+  return <ColumnFilterDropdownBody key={syncKey} {...props} />;
 }

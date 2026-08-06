@@ -3,30 +3,12 @@ import { Table } from 'antd';
 import type { CommercialTransactionResource } from '../../shared/timci/commercialTransactionsApi.js';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import { computeSaleItemsTotal } from './saleLineAmounts.js';
-
-export type CommercialTransactionItemRow = {
-  id?: string;
-  ordinal?: number;
-  sellableItemId?: string | null;
-  description?: string;
-  quantity?: string;
-  unitPriceAmount?: string;
-  discountPercent?: string;
-  discountAmount?: string;
-  subtotal?: string;
-};
+import type { CommercialTransactionItemRow } from './commercialTransactionPanels.js';
 
 type Props = {
   resource: CommercialTransactionResource;
   items?: CommercialTransactionItemRow[] | null;
 };
-
-/** Only sales carry line items today (backend rejects items on other types). */
-export function commercialResourceCanHaveItems(
-  resource: CommercialTransactionResource,
-): boolean {
-  return resource === 'sales';
-}
 
 function formatQuantity(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';

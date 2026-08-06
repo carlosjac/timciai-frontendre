@@ -45,7 +45,7 @@ import { CommercialTransactionAllocationsPanel } from './CommercialTransactionAl
 import { CommercialTransactionIncomingAllocationsPanel } from './CommercialTransactionIncomingAllocationsPanel.js';
 import { CommercialTransactionItemsPanel } from './CommercialTransactionItemsPanel.js';
 import { ReplaceAllocationsDrawer } from './ReplaceAllocationsDrawer.js';
-import { commercialResourceCanHaveAllocations } from './CommercialTransactionAllocationsPanel.js';
+import { commercialResourceCanHaveAllocations } from './commercialTransactionPanels.js';
 import { unallocatedAmount } from './unallocatedAmount.js';
 
 type Props = {

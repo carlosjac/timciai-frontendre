@@ -8,29 +8,31 @@ export function useTaxProfileSchema(
   tenantId: string | null | undefined,
   countryCode: string | null | undefined,
 ) {
+  const code = countryCode?.trim().toUpperCase() ?? '';
+  const enabled = Boolean(tenantId && code.length === 2);
+
   const [schema, setSchema] = useState<CountryTaxProfileSchema | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const code = countryCode?.trim().toUpperCase() ?? '';
-    if (!tenantId || code.length !== 2) {
-      setSchema(null);
-      setLoading(false);
-      return;
-    }
+    if (!enabled || !tenantId) return;
     let cancelled = false;
-    setLoading(true);
-    void fetchCountryTaxProfileSchema(tenantId, code)
-      .then((result) => {
+    void (async () => {
+      setLoading(true);
+      try {
+        const result = await fetchCountryTaxProfileSchema(tenantId, code);
         if (!cancelled) setSchema(result);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [countryCode, tenantId]);
+  }, [enabled, code, tenantId]);
 
-  return { schema, loading };
+  return {
+    schema: enabled ? schema : null,
+    loading: enabled && loading,
+  };
 }

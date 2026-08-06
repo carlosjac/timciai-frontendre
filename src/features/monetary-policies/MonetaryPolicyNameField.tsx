@@ -1,8 +1,8 @@
 import { useTranslate } from '@refinedev/core';
 import { Button, Form, Input, Space } from 'antd';
 import { useEffect, useRef } from 'react';
-import { normalizeMonetaryPolicyParams } from './MonetaryPolicyParamsFields.js';
-import { formatRelativeBandsShortName } from './MonetaryPolicyParamsSummary.js';
+import { normalizeMonetaryPolicyParams } from './monetaryPolicyParamsForm.js';
+import { formatRelativeBandsShortName } from './monetaryPolicySummaryFormat.js';
 
 type Props = {
   disabled?: boolean;

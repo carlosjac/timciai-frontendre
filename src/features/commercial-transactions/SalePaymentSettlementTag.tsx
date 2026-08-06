@@ -1,10 +1,8 @@
 import { Tag } from 'antd';
-import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import {
   salePaymentSettlement,
+  salePaymentSettlementLabel,
   salePaymentSettlementTagColor,
-  salePaymentSettlementTitleKey,
-  type SalePaymentSettlement,
 } from './salePaymentSettlement.js';
 
 type Translate = (key: string, options?: object, defaultMessage?: string) => string;
@@ -26,16 +24,4 @@ export function SalePaymentSettlementTag({
 
   const label = salePaymentSettlementLabel(settlement, openAmount, translate);
   return <Tag color={salePaymentSettlementTagColor(settlement)}>{label}</Tag>;
-}
-
-export function salePaymentSettlementLabel(
-  settlement: SalePaymentSettlement,
-  openAmount: unknown,
-  translate: Translate,
-): string {
-  const base = translate(salePaymentSettlementTitleKey(settlement));
-  if (settlement !== 'unpaid') return base;
-  const pending = formatTimciMoney(openAmount);
-  if (!pending || pending === '—') return base;
-  return `${base} · ${pending}`;
 }

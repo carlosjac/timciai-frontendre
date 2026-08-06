@@ -3,20 +3,24 @@ import { timciFetch } from './http.js';
 
 export type TimciPermissionsData = { actionCodes: string[] };
 
+const ACTION_CODES_TTL_MS = 60_000;
+
 let cached: string[] | null = null;
+let cachedAt = 0;
 let inflight: Promise<string[]> | null = null;
 
 export function invalidateTimciActionCodes(): void {
   cached = null;
+  cachedAt = 0;
   inflight = null;
 }
 
 /**
  * GET /authorization/me/action-codes — mismo origen que el menú de timci-admin (react-admin).
- * Respuestas fallidas no se cachean para permitir reintento.
+ * Respuestas fallidas no se cachean para permitir reintento. Cache TTL 60s.
  */
 export async function fetchTimciActionCodes(): Promise<string[]> {
-  if (cached !== null) return cached;
+  if (cached !== null && Date.now() - cachedAt < ACTION_CODES_TTL_MS) return cached;
   if (inflight) return inflight;
 
   inflight = (async () => {
@@ -25,6 +29,7 @@ export async function fetchTimciActionCodes(): Promise<string[]> {
       const data = json as { actionCodes?: string[] };
       const codes = Array.isArray(data?.actionCodes) ? data.actionCodes : [];
       cached = codes;
+      cachedAt = Date.now();
       return codes;
     } catch {
       return [];

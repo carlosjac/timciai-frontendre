@@ -1,15 +1,16 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 
 export function getDocumentTypeByIdUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/document-types/${encodeURIComponent(id)}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/document-types/${requireTimciPathSegment(id)}`;
 }
 
 export function getDocumentTypeActivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/document-types/${encodeURIComponent(id)}/activate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/document-types/${requireTimciPathSegment(id)}/activate`;
 }
 
 export function getDocumentTypeDeactivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/document-types/${encodeURIComponent(id)}/deactivate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/document-types/${requireTimciPathSegment(id)}/deactivate`;
 }
 
 export function buildDocumentTypeUpdateBody(

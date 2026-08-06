@@ -1,6 +1,6 @@
 import { useList, usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Alert, Button, Select, Space, Spin, Typography } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { formatTimciUserDateOnly, formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -68,12 +68,7 @@ export function SellableItemPricesTab({
   const canMutatePricesForList =
     Boolean(priceListId) && selectedPriceList != null && selectedPriceList.isActive !== false;
 
-  useEffect(() => {
-    if (!canMutatePricesForList) {
-      setDrawerOpen(false);
-      setEditingId(null);
-    }
-  }, [canMutatePricesForList]);
+  const drawerVisible = drawerOpen && canMutatePricesForList;
 
   const listMeta = useMemo(
     () =>
@@ -266,7 +261,7 @@ export function SellableItemPricesTab({
 
       {priceListId && !readOnly && (
         <SellableItemPriceDrawer
-          open={drawerOpen}
+          open={drawerVisible}
           onClose={() => {
             setDrawerOpen(false);
             setEditingId(null);

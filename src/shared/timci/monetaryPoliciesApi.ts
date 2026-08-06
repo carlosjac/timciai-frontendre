@@ -1,4 +1,5 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 import { timciFetch } from './http.js';
 
 export type MonetaryPolicyKindItem = {
@@ -18,7 +19,7 @@ export type MonetaryPolicyListItem = {
 };
 
 export function getMonetaryPoliciesEntityListUrl(tenantId: string, entityId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/entities/${entityId}/monetary-policies`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(entityId)}/monetary-policies`;
 }
 
 export function getMonetaryPolicyByIdUrl(
@@ -26,7 +27,7 @@ export function getMonetaryPolicyByIdUrl(
   entityId: string,
   policyId: string,
 ): string {
-  return `${getMonetaryPoliciesEntityListUrl(tenantId, entityId)}/${encodeURIComponent(policyId)}`;
+  return `${getMonetaryPoliciesEntityListUrl(tenantId, entityId)}/${requireTimciPathSegment(policyId)}`;
 }
 
 export function getMonetaryPolicyActivateUrl(
@@ -46,7 +47,7 @@ export function getMonetaryPolicyDeactivateUrl(
 }
 
 export function getMonetaryPolicyKindsUrl(tenantId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/monetary-policy-kinds`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/monetary-policy-kinds`;
 }
 
 export async function fetchMonetaryPolicyKinds(

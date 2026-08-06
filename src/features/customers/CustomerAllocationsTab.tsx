@@ -56,57 +56,59 @@ export function CustomerAllocationsTab({ customerId }: Props) {
     return map;
   }, [currenciesResult.data]);
 
+  const accountsEnabled = Boolean(tenantId && customerId);
+  const rowsEnabled = Boolean(tenantId && customerId && currencyId);
+
   useEffect(() => {
-    if (!tenantId || !customerId) return;
+    if (!accountsEnabled || !tenantId || !customerId) return;
     let cancelled = false;
-    setAccountsLoading(true);
-    setLoadError(null);
-    void timciFetch(getCustomerCurrentAccountsUrl(tenantId, customerId))
-      .then(({ json }) => {
+    void (async () => {
+      setAccountsLoading(true);
+      setLoadError(null);
+      try {
+        const { json } = await timciFetch(getCustomerCurrentAccountsUrl(tenantId, customerId));
         if (cancelled) return;
         const list = Array.isArray(json) ? (json as CurrentAccountRow[]) : [];
         setAccounts(list);
         if (list.length === 1 && !currencyId) setCurrencyId(list[0].currencyId);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.currentAccountLoadError'));
           setAccounts([]);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setAccountsLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [currencyId, customerId, setCurrencyId, tenantId, translate]);
+  }, [accountsEnabled, currencyId, customerId, setCurrencyId, tenantId, translate]);
 
   useEffect(() => {
-    if (!tenantId || !customerId || !currencyId) {
-      setRows([]);
-      return;
-    }
+    if (!rowsEnabled || !tenantId || !customerId || !currencyId) return;
     let cancelled = false;
-    setRowsLoading(true);
-    void timciFetch(getCustomerCurrentAccountAllocationsUrl(tenantId, customerId, currencyId))
-      .then(({ json }) => {
+    void (async () => {
+      setRowsLoading(true);
+      try {
+        const { json } = await timciFetch(
+          getCustomerCurrentAccountAllocationsUrl(tenantId, customerId, currencyId),
+        );
         if (cancelled) return;
         setRows(Array.isArray(json) ? (json as CurrentAccountAllocationLinkDto[]) : []);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.allocationsLoadError'));
           setRows([]);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setRowsLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [currencyId, customerId, tenantId, translate]);
+  }, [rowsEnabled, currencyId, customerId, tenantId, translate]);
 
   const typeLabel = useCallback(
     (type: string) => {
@@ -162,9 +164,9 @@ export function CustomerAllocationsTab({ customerId }: Props) {
 
       <Table
         size="middle"
-        loading={rowsLoading}
+        loading={rowsEnabled && rowsLoading}
         rowKey={(r) => `${r.source.id}-${r.target.id}-${r.amount}`}
-        dataSource={rows}
+        dataSource={rowsEnabled ? rows : []}
         pagination={{ pageSize: 25, showSizeChanger: true }}
         tableLayout="fixed"
         locale={{ emptyText: translate('pages.customers.allocationsEmpty') }}

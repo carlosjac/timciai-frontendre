@@ -1,4 +1,5 @@
 import { getV1Base, LEGACY_TENANT_STORAGE_KEY, TENANT_STORAGE_KEY } from '../../config.js';
+import { encodeTimciPathSegment, isTimciIdSegment } from './pathSegment.js';
 
 const GLOBAL_LIST: Record<string, string> = {
   users: 'authentication/users',
@@ -24,21 +25,42 @@ const TENANT_RESOURCE_PATH: Record<string, string> = {
   collections: 'collections',
 };
 
+function clearStoredTenantKeys(): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.removeItem(TENANT_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_TENANT_STORAGE_KEY);
+}
+
 export function getStoredTenantId(): string | null {
   if (typeof localStorage === 'undefined') return null;
   const current = localStorage.getItem(TENANT_STORAGE_KEY);
-  if (current) return current;
+  if (current) {
+    if (!isTimciIdSegment(current)) {
+      clearStoredTenantKeys();
+      return null;
+    }
+    return current.trim();
+  }
   const legacy = localStorage.getItem(LEGACY_TENANT_STORAGE_KEY);
   if (legacy) {
-    localStorage.setItem(TENANT_STORAGE_KEY, legacy);
+    if (!isTimciIdSegment(legacy)) {
+      clearStoredTenantKeys();
+      return null;
+    }
+    const trimmed = legacy.trim();
+    localStorage.setItem(TENANT_STORAGE_KEY, trimmed);
     localStorage.removeItem(LEGACY_TENANT_STORAGE_KEY);
-    return legacy;
+    return trimmed;
   }
   return null;
 }
 
 export function setStoredTenantId(id: string): void {
-  localStorage.setItem(TENANT_STORAGE_KEY, id);
+  if (!isTimciIdSegment(id)) {
+    clearStoredTenantKeys();
+    return;
+  }
+  localStorage.setItem(TENANT_STORAGE_KEY, id.trim());
 }
 
 /**
@@ -55,5 +77,5 @@ export function getResourceApiBase(resource: string): string | null {
   const tenantId = getStoredTenantId();
   if (!tenantId) return null;
 
-  return `${v1}/tenants/${tenantId}/${path}`;
+  return `${v1}/tenants/${encodeTimciPathSegment(tenantId)}/${path}`;
 }

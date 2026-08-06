@@ -1,5 +1,5 @@
 import { Authenticated, Refine } from '@refinedev/core';
-import { RefineThemes, useNotificationProvider, AuthPage } from '@refinedev/antd';
+import { RefineThemes, useNotificationProvider } from '@refinedev/antd';
 import { ThemedLayout } from '@refinedev/antd';
 import refineRouterProvider, { DocumentTitleHandler } from '@refinedev/react-router';
 import {
@@ -27,9 +27,14 @@ import {
 import { App as AntdApp, ConfigProvider, theme as antdTheme } from 'antd';
 import esES from 'antd/locale/es_ES';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router';
-import { useMemo } from 'react';
+import { Suspense, useMemo } from 'react';
 import { AppHeader } from './app-shell/AppHeader.js';
+import { lazyPage } from './app-shell/lazyPage.js';
+import { TimciPageChunkFallback } from './app-shell/TimciPageChunkFallback.js';
+import { TimciLoginPage } from './app-shell/TimciLoginPage.js';
 import { NavigateToFirstAccessibleList } from './app-shell/NavigateToFirstAccessibleList.js';
+import { TimciNotFoundPage } from './app-shell/TimciNotFoundPage.js';
+import { timciGuarded } from './app-shell/timciGuarded.js';
 import { TimciThemedSider } from './app-shell/TimciThemedSider.js';
 import { createTimciAuthProvider } from './providers/authProvider.js';
 import { createTimciAccessControlProvider } from './providers/accessControlProvider.js';
@@ -38,78 +43,145 @@ import { createTimciI18nProvider } from './i18n/index.js';
 import { esMessages } from './i18n/locale.es.js';
 import { UserPreferencesProvider } from './features/preferences/UserPreferencesProvider.js';
 import { useUserPreferences } from './features/preferences/useUserPreferences.js';
-import { UserList } from './features/users/list.js';
-import { UserCreate } from './features/users/create.js';
-import { UserShow } from './features/users/show.js';
-import { UserEdit } from './features/users/edit.js';
-import { TenantList } from './features/tenants/list.js';
-import { TenantCreate } from './features/tenants/create.js';
-import { TenantShow } from './features/tenants/show.js';
-import { TenantEdit } from './features/tenants/edit.js';
-import { SessionList } from './features/sessions/list.js';
-import { RoleList } from './features/roles/list.js';
-import { RoleCreate } from './features/roles/create.js';
-import { RoleShow } from './features/roles/show.js';
-import { RoleEdit } from './features/roles/edit.js';
-import { ActionList } from './features/actions/list.js';
-import { ActionCreate } from './features/actions/create.js';
-import { RateSnapshotList } from './features/rate-snapshots/list.js';
-import { RateSnapshotShow } from './features/rate-snapshots/show.js';
-import { UserTenantRoleList } from './features/user-tenant-roles/list.js';
-import { UserTenantRoleCreate } from './features/user-tenant-roles/create.js';
-import { CountryList } from './features/countries/list.js';
-import { CountryCreate } from './features/countries/create.js';
-import { CountryShow } from './features/countries/show.js';
-import { CountryEdit } from './features/countries/edit.js';
-import { EntityList } from './features/entities/list.js';
-import { EntityCreate } from './features/entities/create.js';
-import { EntityShow } from './features/entities/show.js';
-import { EntityEdit } from './features/entities/edit.js';
-import { EntitySettingsPage } from './features/entities/settings.js';
-import { SellableItemList } from './features/sellable-items/list.js';
-import { SellableItemCreate } from './features/sellable-items/create.js';
-import { SellableItemShow } from './features/sellable-items/show.js';
-import { SellableItemEdit } from './features/sellable-items/edit.js';
-import { PriceListList } from './features/price-lists/list.js';
-import { PriceListCreate } from './features/price-lists/create.js';
-import { PriceListShow } from './features/price-lists/show.js';
-import { PriceListEdit } from './features/price-lists/edit.js';
-import { MonetaryPolicyList } from './features/monetary-policies/list.js';
-import { MonetaryPolicyCreate } from './features/monetary-policies/create.js';
-import { MonetaryPolicyShow } from './features/monetary-policies/show.js';
-import { MonetaryPolicyEdit } from './features/monetary-policies/edit.js';
-import { CustomerList } from './features/customers/list.js';
-import { CustomerCreate } from './features/customers/create.js';
-import { CustomerShow } from './features/customers/show.js';
-import { CustomerEdit } from './features/customers/edit.js';
-import { SaleList } from './features/sales/list.js';
-import { SaleCreate } from './features/sales/create.js';
-import { SaleShow } from './features/sales/show.js';
-import { SaleEdit } from './features/sales/edit.js';
-import { DebitList } from './features/debits/list.js';
-import { DebitCreate } from './features/debits/create.js';
-import { DebitShow } from './features/debits/show.js';
-import { DebitEdit } from './features/debits/edit.js';
-import { CreditList } from './features/credits/list.js';
-import { CreditCreate } from './features/credits/create.js';
-import { CreditShow } from './features/credits/show.js';
-import { CreditEdit } from './features/credits/edit.js';
-import { CollectionList } from './features/collections/list.js';
-import { CollectionCreate } from './features/collections/create.js';
-import { CollectionShow } from './features/collections/show.js';
-import { CollectionEdit } from './features/collections/edit.js';
-import { DocumentTypeList } from './features/document-types/list.js';
-import { DocumentTypeCreate } from './features/document-types/create.js';
-import { DocumentTypeEdit } from './features/document-types/edit.js';
-import { DocumentTypeShow } from './features/document-types/show.js';
-import { CurrencyList } from './features/currencies/list.js';
-import { CurrencyCreate } from './features/currencies/create.js';
-import { CurrencyShow } from './features/currencies/show.js';
-import { CurrencyEdit } from './features/currencies/edit.js';
-import { PermissionList } from './features/permissions/list.js';
-import { PermissionCreate } from './features/permissions/create.js';
-import { PreferencesPage } from './features/preferences/PreferencesPage.js';
-import { ChangePasswordPage } from './features/change-password/ChangePasswordPage.js';
+
+const UserList = lazyPage(() => import('./features/users/list.js'), 'UserList');
+const UserCreate = lazyPage(() => import('./features/users/create.js'), 'UserCreate');
+const UserShow = lazyPage(() => import('./features/users/show.js'), 'UserShow');
+const UserEdit = lazyPage(() => import('./features/users/edit.js'), 'UserEdit');
+const TenantList = lazyPage(() => import('./features/tenants/list.js'), 'TenantList');
+const TenantCreate = lazyPage(() => import('./features/tenants/create.js'), 'TenantCreate');
+const TenantShow = lazyPage(() => import('./features/tenants/show.js'), 'TenantShow');
+const TenantEdit = lazyPage(() => import('./features/tenants/edit.js'), 'TenantEdit');
+const SessionList = lazyPage(() => import('./features/sessions/list.js'), 'SessionList');
+const RoleList = lazyPage(() => import('./features/roles/list.js'), 'RoleList');
+const RoleCreate = lazyPage(() => import('./features/roles/create.js'), 'RoleCreate');
+const RoleShow = lazyPage(() => import('./features/roles/show.js'), 'RoleShow');
+const RoleEdit = lazyPage(() => import('./features/roles/edit.js'), 'RoleEdit');
+const ActionList = lazyPage(() => import('./features/actions/list.js'), 'ActionList');
+const ActionCreate = lazyPage(() => import('./features/actions/create.js'), 'ActionCreate');
+const RateSnapshotList = lazyPage(
+  () => import('./features/rate-snapshots/list.js'),
+  'RateSnapshotList',
+);
+const RateSnapshotShow = lazyPage(
+  () => import('./features/rate-snapshots/show.js'),
+  'RateSnapshotShow',
+);
+const UserTenantRoleList = lazyPage(
+  () => import('./features/user-tenant-roles/list.js'),
+  'UserTenantRoleList',
+);
+const UserTenantRoleCreate = lazyPage(
+  () => import('./features/user-tenant-roles/create.js'),
+  'UserTenantRoleCreate',
+);
+const CountryList = lazyPage(() => import('./features/countries/list.js'), 'CountryList');
+const CountryCreate = lazyPage(() => import('./features/countries/create.js'), 'CountryCreate');
+const CountryShow = lazyPage(() => import('./features/countries/show.js'), 'CountryShow');
+const CountryEdit = lazyPage(() => import('./features/countries/edit.js'), 'CountryEdit');
+const EntityList = lazyPage(() => import('./features/entities/list.js'), 'EntityList');
+const EntityCreate = lazyPage(() => import('./features/entities/create.js'), 'EntityCreate');
+const EntityShow = lazyPage(() => import('./features/entities/show.js'), 'EntityShow');
+const EntityEdit = lazyPage(() => import('./features/entities/edit.js'), 'EntityEdit');
+const EntitySettingsPage = lazyPage(
+  () => import('./features/entities/settings.js'),
+  'EntitySettingsPage',
+);
+const SellableItemList = lazyPage(
+  () => import('./features/sellable-items/list.js'),
+  'SellableItemList',
+);
+const SellableItemCreate = lazyPage(
+  () => import('./features/sellable-items/create.js'),
+  'SellableItemCreate',
+);
+const SellableItemShow = lazyPage(
+  () => import('./features/sellable-items/show.js'),
+  'SellableItemShow',
+);
+const SellableItemEdit = lazyPage(
+  () => import('./features/sellable-items/edit.js'),
+  'SellableItemEdit',
+);
+const PriceListList = lazyPage(() => import('./features/price-lists/list.js'), 'PriceListList');
+const PriceListCreate = lazyPage(
+  () => import('./features/price-lists/create.js'),
+  'PriceListCreate',
+);
+const PriceListShow = lazyPage(() => import('./features/price-lists/show.js'), 'PriceListShow');
+const PriceListEdit = lazyPage(() => import('./features/price-lists/edit.js'), 'PriceListEdit');
+const MonetaryPolicyList = lazyPage(
+  () => import('./features/monetary-policies/list.js'),
+  'MonetaryPolicyList',
+);
+const MonetaryPolicyCreate = lazyPage(
+  () => import('./features/monetary-policies/create.js'),
+  'MonetaryPolicyCreate',
+);
+const MonetaryPolicyShow = lazyPage(
+  () => import('./features/monetary-policies/show.js'),
+  'MonetaryPolicyShow',
+);
+const MonetaryPolicyEdit = lazyPage(
+  () => import('./features/monetary-policies/edit.js'),
+  'MonetaryPolicyEdit',
+);
+const CustomerList = lazyPage(() => import('./features/customers/list.js'), 'CustomerList');
+const CustomerCreate = lazyPage(() => import('./features/customers/create.js'), 'CustomerCreate');
+const CustomerShow = lazyPage(() => import('./features/customers/show.js'), 'CustomerShow');
+const CustomerEdit = lazyPage(() => import('./features/customers/edit.js'), 'CustomerEdit');
+const SaleList = lazyPage(() => import('./features/sales/list.js'), 'SaleList');
+const SaleCreate = lazyPage(() => import('./features/sales/create.js'), 'SaleCreate');
+const SaleShow = lazyPage(() => import('./features/sales/show.js'), 'SaleShow');
+const SaleEdit = lazyPage(() => import('./features/sales/edit.js'), 'SaleEdit');
+const DebitList = lazyPage(() => import('./features/debits/list.js'), 'DebitList');
+const DebitCreate = lazyPage(() => import('./features/debits/create.js'), 'DebitCreate');
+const DebitShow = lazyPage(() => import('./features/debits/show.js'), 'DebitShow');
+const DebitEdit = lazyPage(() => import('./features/debits/edit.js'), 'DebitEdit');
+const CreditList = lazyPage(() => import('./features/credits/list.js'), 'CreditList');
+const CreditCreate = lazyPage(() => import('./features/credits/create.js'), 'CreditCreate');
+const CreditShow = lazyPage(() => import('./features/credits/show.js'), 'CreditShow');
+const CreditEdit = lazyPage(() => import('./features/credits/edit.js'), 'CreditEdit');
+const CollectionList = lazyPage(() => import('./features/collections/list.js'), 'CollectionList');
+const CollectionCreate = lazyPage(
+  () => import('./features/collections/create.js'),
+  'CollectionCreate',
+);
+const CollectionShow = lazyPage(() => import('./features/collections/show.js'), 'CollectionShow');
+const CollectionEdit = lazyPage(() => import('./features/collections/edit.js'), 'CollectionEdit');
+const DocumentTypeList = lazyPage(
+  () => import('./features/document-types/list.js'),
+  'DocumentTypeList',
+);
+const DocumentTypeCreate = lazyPage(
+  () => import('./features/document-types/create.js'),
+  'DocumentTypeCreate',
+);
+const DocumentTypeEdit = lazyPage(
+  () => import('./features/document-types/edit.js'),
+  'DocumentTypeEdit',
+);
+const DocumentTypeShow = lazyPage(
+  () => import('./features/document-types/show.js'),
+  'DocumentTypeShow',
+);
+const CurrencyList = lazyPage(() => import('./features/currencies/list.js'), 'CurrencyList');
+const CurrencyCreate = lazyPage(() => import('./features/currencies/create.js'), 'CurrencyCreate');
+const CurrencyShow = lazyPage(() => import('./features/currencies/show.js'), 'CurrencyShow');
+const CurrencyEdit = lazyPage(() => import('./features/currencies/edit.js'), 'CurrencyEdit');
+const PermissionList = lazyPage(() => import('./features/permissions/list.js'), 'PermissionList');
+const PermissionCreate = lazyPage(
+  () => import('./features/permissions/create.js'),
+  'PermissionCreate',
+);
+const PreferencesPage = lazyPage(
+  () => import('./features/preferences/PreferencesPage.js'),
+  'PreferencesPage',
+);
+const ChangePasswordPage = lazyPage(
+  () => import('./features/change-password/ChangePasswordPage.js'),
+  'ChangePasswordPage',
+);
 
 const authProvider = createTimciAuthProvider();
 const accessControlProvider = createTimciAccessControlProvider();
@@ -310,97 +382,239 @@ function TimciRefineTree() {
           >
           <DocumentTitleHandler />
           <Routes>
-            <Route
-              path="/login"
-              element={
-                <main style={{ minHeight: '100vh' }} aria-label={esMessages.pages.login.title}>
-                  <AuthPage type="login" registerLink={false} forgotPasswordLink={false} />
-                </main>
-              }
-            />
+            <Route path="/login" element={<TimciLoginPage />} />
             <Route
               element={
                 <Authenticated key="app" redirectOnFail="/login">
                   <ThemedLayout Header={AppHeader} Sider={TimciThemedSider}>
-                    <Outlet />
+                    <Suspense fallback={<TimciPageChunkFallback />}>
+                      <Outlet />
+                    </Suspense>
                   </ThemedLayout>
                 </Authenticated>
               }
             >
               <Route index element={<NavigateToFirstAccessibleList />} />
-              <Route path="/users" element={<UserList />} />
-              <Route path="/users/create" element={<UserCreate />} />
-              <Route path="/users/show/:id" element={<UserShow />} />
-              <Route path="/users/edit/:id" element={<UserEdit />} />
-              <Route path="/sessions" element={<SessionList />} />
-              <Route path="/tenants" element={<TenantList />} />
-              <Route path="/tenants/create" element={<TenantCreate />} />
-              <Route path="/tenants/show/:id" element={<TenantShow />} />
-              <Route path="/tenants/edit/:id" element={<TenantEdit />} />
-              <Route path="/roles" element={<RoleList />} />
-              <Route path="/roles/create" element={<RoleCreate />} />
-              <Route path="/roles/show/:id" element={<RoleShow />} />
-              <Route path="/roles/edit/:id" element={<RoleEdit />} />
-              <Route path="/actions" element={<ActionList />} />
-              <Route path="/actions/create" element={<ActionCreate />} />
-              <Route path="/user-tenant-roles" element={<UserTenantRoleList />} />
-              <Route path="/user-tenant-roles/create" element={<UserTenantRoleCreate />} />
-              <Route path="/permissions" element={<PermissionList />} />
-              <Route path="/permissions/create" element={<PermissionCreate />} />
-              <Route path="/countries" element={<CountryList />} />
-              <Route path="/countries/create" element={<CountryCreate />} />
-              <Route path="/countries/show/:id" element={<CountryShow />} />
-              <Route path="/countries/edit/:id" element={<CountryEdit />} />
-              <Route path="/entities" element={<EntityList />} />
-              <Route path="/entities/create" element={<EntityCreate />} />
-              <Route path="/entities/show/:id" element={<EntityShow />} />
-              <Route path="/entities/edit/:id" element={<EntityEdit />} />
-              <Route path="/entity-settings" element={<EntitySettingsPage />} />
-              <Route path="/sellable-items" element={<SellableItemList />} />
-              <Route path="/sellable-items/create" element={<SellableItemCreate />} />
-              <Route path="/sellable-items/show/:id" element={<SellableItemShow />} />
-              <Route path="/sellable-items/edit/:id" element={<SellableItemEdit />} />
-              <Route path="/price-lists" element={<PriceListList />} />
-              <Route path="/price-lists/create" element={<PriceListCreate />} />
-              <Route path="/price-lists/show/:id" element={<PriceListShow />} />
-              <Route path="/price-lists/edit/:id" element={<PriceListEdit />} />
-              <Route path="/monetary-policies" element={<MonetaryPolicyList />} />
-              <Route path="/monetary-policies/create" element={<MonetaryPolicyCreate />} />
-              <Route path="/monetary-policies/show/:id" element={<MonetaryPolicyShow />} />
-              <Route path="/monetary-policies/edit/:id" element={<MonetaryPolicyEdit />} />
-              <Route path="/customers" element={<CustomerList />} />
-              <Route path="/customers/create" element={<CustomerCreate />} />
-              <Route path="/customers/show/:id" element={<CustomerShow />} />
-              <Route path="/customers/edit/:id" element={<CustomerEdit />} />
-              <Route path="/sales" element={<SaleList />} />
-              <Route path="/sales/create" element={<SaleCreate />} />
-              <Route path="/sales/show/:id" element={<SaleShow />} />
-              <Route path="/sales/edit/:id" element={<SaleEdit />} />
-              <Route path="/debits" element={<DebitList />} />
-              <Route path="/debits/create" element={<DebitCreate />} />
-              <Route path="/debits/show/:id" element={<DebitShow />} />
-              <Route path="/debits/edit/:id" element={<DebitEdit />} />
-              <Route path="/credits" element={<CreditList />} />
-              <Route path="/credits/create" element={<CreditCreate />} />
-              <Route path="/credits/show/:id" element={<CreditShow />} />
-              <Route path="/credits/edit/:id" element={<CreditEdit />} />
-              <Route path="/collections" element={<CollectionList />} />
-              <Route path="/collections/create" element={<CollectionCreate />} />
-              <Route path="/collections/show/:id" element={<CollectionShow />} />
-              <Route path="/collections/edit/:id" element={<CollectionEdit />} />
-              <Route path="/document-types" element={<DocumentTypeList />} />
-              <Route path="/document-types/create" element={<DocumentTypeCreate />} />
-              <Route path="/document-types/show/:id" element={<DocumentTypeShow />} />
-              <Route path="/document-types/edit/:id" element={<DocumentTypeEdit />} />
-              <Route path="/currencies" element={<CurrencyList />} />
-              <Route path="/currencies/create" element={<CurrencyCreate />} />
-              <Route path="/currencies/show/:id" element={<CurrencyShow />} />
-              <Route path="/currencies/edit/:id" element={<CurrencyEdit />} />
-              <Route path="/rate-snapshots" element={<RateSnapshotList />} />
-              <Route path="/rate-snapshots/show/:id" element={<RateSnapshotShow />} />
+              <Route path="/users" element={timciGuarded('users', 'list', <UserList />)} />
+              <Route path="/users/create" element={timciGuarded('users', 'create', <UserCreate />)} />
+              <Route path="/users/show/:id" element={timciGuarded('users', 'show', <UserShow />)} />
+              <Route path="/users/edit/:id" element={timciGuarded('users', 'edit', <UserEdit />)} />
+              <Route path="/sessions" element={timciGuarded('sessions', 'list', <SessionList />)} />
+              <Route path="/tenants" element={timciGuarded('tenants', 'list', <TenantList />)} />
+              <Route
+                path="/tenants/create"
+                element={timciGuarded('tenants', 'create', <TenantCreate />)}
+              />
+              <Route
+                path="/tenants/show/:id"
+                element={timciGuarded('tenants', 'show', <TenantShow />)}
+              />
+              <Route
+                path="/tenants/edit/:id"
+                element={timciGuarded('tenants', 'edit', <TenantEdit />)}
+              />
+              <Route path="/roles" element={timciGuarded('roles', 'list', <RoleList />)} />
+              <Route path="/roles/create" element={timciGuarded('roles', 'create', <RoleCreate />)} />
+              <Route path="/roles/show/:id" element={timciGuarded('roles', 'show', <RoleShow />)} />
+              <Route path="/roles/edit/:id" element={timciGuarded('roles', 'edit', <RoleEdit />)} />
+              <Route path="/actions" element={timciGuarded('actions', 'list', <ActionList />)} />
+              <Route
+                path="/actions/create"
+                element={timciGuarded('actions', 'create', <ActionCreate />)}
+              />
+              <Route
+                path="/user-tenant-roles"
+                element={timciGuarded('userTenantRoles', 'list', <UserTenantRoleList />)}
+              />
+              <Route
+                path="/user-tenant-roles/create"
+                element={timciGuarded('userTenantRoles', 'create', <UserTenantRoleCreate />)}
+              />
+              <Route
+                path="/permissions"
+                element={timciGuarded('permissions', 'list', <PermissionList />)}
+              />
+              <Route
+                path="/permissions/create"
+                element={timciGuarded('permissions', 'create', <PermissionCreate />)}
+              />
+              <Route path="/countries" element={timciGuarded('countries', 'list', <CountryList />)} />
+              <Route
+                path="/countries/create"
+                element={timciGuarded('countries', 'create', <CountryCreate />)}
+              />
+              <Route
+                path="/countries/show/:id"
+                element={timciGuarded('countries', 'show', <CountryShow />)}
+              />
+              <Route
+                path="/countries/edit/:id"
+                element={timciGuarded('countries', 'edit', <CountryEdit />)}
+              />
+              <Route path="/entities" element={timciGuarded('entities', 'list', <EntityList />)} />
+              <Route
+                path="/entities/create"
+                element={timciGuarded('entities', 'create', <EntityCreate />)}
+              />
+              <Route
+                path="/entities/show/:id"
+                element={timciGuarded('entities', 'show', <EntityShow />)}
+              />
+              <Route
+                path="/entities/edit/:id"
+                element={timciGuarded('entities', 'edit', <EntityEdit />)}
+              />
+              <Route
+                path="/entity-settings"
+                element={timciGuarded('entity_settings', 'list', <EntitySettingsPage />)}
+              />
+              <Route
+                path="/sellable-items"
+                element={timciGuarded('sellable_items', 'list', <SellableItemList />)}
+              />
+              <Route
+                path="/sellable-items/create"
+                element={timciGuarded('sellable_items', 'create', <SellableItemCreate />)}
+              />
+              <Route
+                path="/sellable-items/show/:id"
+                element={timciGuarded('sellable_items', 'show', <SellableItemShow />)}
+              />
+              <Route
+                path="/sellable-items/edit/:id"
+                element={timciGuarded('sellable_items', 'edit', <SellableItemEdit />)}
+              />
+              <Route
+                path="/price-lists"
+                element={timciGuarded('price_lists', 'list', <PriceListList />)}
+              />
+              <Route
+                path="/price-lists/create"
+                element={timciGuarded('price_lists', 'create', <PriceListCreate />)}
+              />
+              <Route
+                path="/price-lists/show/:id"
+                element={timciGuarded('price_lists', 'show', <PriceListShow />)}
+              />
+              <Route
+                path="/price-lists/edit/:id"
+                element={timciGuarded('price_lists', 'edit', <PriceListEdit />)}
+              />
+              <Route
+                path="/monetary-policies"
+                element={timciGuarded('monetary_policies', 'list', <MonetaryPolicyList />)}
+              />
+              <Route
+                path="/monetary-policies/create"
+                element={timciGuarded('monetary_policies', 'create', <MonetaryPolicyCreate />)}
+              />
+              <Route
+                path="/monetary-policies/show/:id"
+                element={timciGuarded('monetary_policies', 'show', <MonetaryPolicyShow />)}
+              />
+              <Route
+                path="/monetary-policies/edit/:id"
+                element={timciGuarded('monetary_policies', 'edit', <MonetaryPolicyEdit />)}
+              />
+              <Route path="/customers" element={timciGuarded('customers', 'list', <CustomerList />)} />
+              <Route
+                path="/customers/create"
+                element={timciGuarded('customers', 'create', <CustomerCreate />)}
+              />
+              <Route
+                path="/customers/show/:id"
+                element={timciGuarded('customers', 'show', <CustomerShow />)}
+              />
+              <Route
+                path="/customers/edit/:id"
+                element={timciGuarded('customers', 'edit', <CustomerEdit />)}
+              />
+              <Route path="/sales" element={timciGuarded('sales', 'list', <SaleList />)} />
+              <Route path="/sales/create" element={timciGuarded('sales', 'create', <SaleCreate />)} />
+              <Route path="/sales/show/:id" element={timciGuarded('sales', 'show', <SaleShow />)} />
+              <Route path="/sales/edit/:id" element={timciGuarded('sales', 'edit', <SaleEdit />)} />
+              <Route path="/debits" element={timciGuarded('debits', 'list', <DebitList />)} />
+              <Route
+                path="/debits/create"
+                element={timciGuarded('debits', 'create', <DebitCreate />)}
+              />
+              <Route
+                path="/debits/show/:id"
+                element={timciGuarded('debits', 'show', <DebitShow />)}
+              />
+              <Route path="/debits/edit/:id" element={timciGuarded('debits', 'edit', <DebitEdit />)} />
+              <Route path="/credits" element={timciGuarded('credits', 'list', <CreditList />)} />
+              <Route
+                path="/credits/create"
+                element={timciGuarded('credits', 'create', <CreditCreate />)}
+              />
+              <Route
+                path="/credits/show/:id"
+                element={timciGuarded('credits', 'show', <CreditShow />)}
+              />
+              <Route
+                path="/credits/edit/:id"
+                element={timciGuarded('credits', 'edit', <CreditEdit />)}
+              />
+              <Route
+                path="/collections"
+                element={timciGuarded('collections', 'list', <CollectionList />)}
+              />
+              <Route
+                path="/collections/create"
+                element={timciGuarded('collections', 'create', <CollectionCreate />)}
+              />
+              <Route
+                path="/collections/show/:id"
+                element={timciGuarded('collections', 'show', <CollectionShow />)}
+              />
+              <Route
+                path="/collections/edit/:id"
+                element={timciGuarded('collections', 'edit', <CollectionEdit />)}
+              />
+              <Route
+                path="/document-types"
+                element={timciGuarded('document_types', 'list', <DocumentTypeList />)}
+              />
+              <Route
+                path="/document-types/create"
+                element={timciGuarded('document_types', 'create', <DocumentTypeCreate />)}
+              />
+              <Route
+                path="/document-types/show/:id"
+                element={timciGuarded('document_types', 'show', <DocumentTypeShow />)}
+              />
+              <Route
+                path="/document-types/edit/:id"
+                element={timciGuarded('document_types', 'edit', <DocumentTypeEdit />)}
+              />
+              <Route
+                path="/currencies"
+                element={timciGuarded('currencies', 'list', <CurrencyList />)}
+              />
+              <Route
+                path="/currencies/create"
+                element={timciGuarded('currencies', 'create', <CurrencyCreate />)}
+              />
+              <Route
+                path="/currencies/show/:id"
+                element={timciGuarded('currencies', 'show', <CurrencyShow />)}
+              />
+              <Route
+                path="/currencies/edit/:id"
+                element={timciGuarded('currencies', 'edit', <CurrencyEdit />)}
+              />
+              <Route
+                path="/rate-snapshots"
+                element={timciGuarded('rateSnapshots', 'list', <RateSnapshotList />)}
+              />
+              <Route
+                path="/rate-snapshots/show/:id"
+                element={timciGuarded('rateSnapshots', 'show', <RateSnapshotShow />)}
+              />
               <Route path="/preferences" element={<PreferencesPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />
-              <Route path="*" element={<NavigateToFirstAccessibleList />} />
+              <Route path="*" element={<TimciNotFoundPage />} />
             </Route>
           </Routes>
           </Refine>

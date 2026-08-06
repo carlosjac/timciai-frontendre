@@ -1,5 +1,5 @@
 import type { AuthProvider, CheckResponse, HttpError } from '@refinedev/core';
-import { getV1Base } from '../config.js';
+import { getV1Base, LEGACY_TENANT_STORAGE_KEY, TENANT_STORAGE_KEY } from '../config.js';
 import { timciFetch } from '../shared/timci/http.js';
 import { translateEs } from '../i18n/index.js';
 import {
@@ -7,6 +7,13 @@ import {
   invalidateTimciActionCodes,
   type TimciPermissionsData,
 } from '../shared/timci/actionCodes.js';
+import { markPostLogoutLoginHome, consumePostLogoutLoginHome } from '../shared/timci/postLogoutLoginHome.js';
+
+function clearStoredTenantSelection(): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.removeItem(TENANT_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_TENANT_STORAGE_KEY);
+}
 
 export function createTimciAuthProvider(): AuthProvider {
   const base = () => getV1Base();
@@ -28,11 +35,15 @@ export function createTimciAuthProvider(): AuthProvider {
         body: JSON.stringify({ email, password }),
       });
       invalidateTimciActionCodes();
+      consumePostLogoutLoginHome();
+      // Home when no `?to=` (e.g. after logout). Deep links keep `?to=` via Authenticated.
       return { success: true, redirectTo: '/' };
     },
 
     logout: async () => {
       invalidateTimciActionCodes();
+      clearStoredTenantSelection();
+      markPostLogoutLoginHome();
       try {
         await timciFetch(`${base()}/auth/logout`, {
           method: 'POST',

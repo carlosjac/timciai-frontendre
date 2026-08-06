@@ -12,6 +12,7 @@ import type {
 import { getV1Base } from '../config.js';
 import { getResourceApiBase, getStoredTenantId } from '../shared/timci/apiUrl.js';
 import { timciFetch, toHttpError } from '../shared/timci/http.js';
+import { requireTimciPathSegment } from '../shared/timci/pathSegment.js';
 import { fetchTimciListPage } from '../shared/timci/list/infrastructure/timci-list-http.fetcher.js';
 import {
   buildPriceListItemCreateBody,
@@ -199,7 +200,13 @@ export function createTimciDataProvider(): DataProvider {
       if (!base) {
         throw toHttpError(400, 'Select a tenant in the header for this resource.');
       }
-      const { json } = await timciFetch(`${base}/${id}`);
+      let idSegment: string;
+      try {
+        idSegment = requireTimciPathSegment(String(id));
+      } catch {
+        throw toHttpError(400, 'Invalid resource id.');
+      }
+      const { json } = await timciFetch(`${base}/${idSegment}`);
       return { data: normalizeGetOnePayload(json as TData) };
     },
 
@@ -441,8 +448,14 @@ export function createTimciDataProvider(): DataProvider {
         if (!base) {
           throw toHttpError(400, 'Select a tenant in the header for this resource.');
         }
+        let idSegment: string;
+        try {
+          idSegment = requireTimciPathSegment(String(id));
+        } catch {
+          throw toHttpError(400, 'Invalid resource id.');
+        }
         const body = buildCommercialTransactionWriteBody(variables as Record<string, unknown>);
-        await timciFetch(`${base}/${encodeURIComponent(String(id))}`, {
+        await timciFetch(`${base}/${idSegment}`, {
           method: 'PATCH',
           body: JSON.stringify(body),
         });
@@ -460,7 +473,13 @@ export function createTimciDataProvider(): DataProvider {
         if (!base) {
           throw toHttpError(400, 'Invalid resource for delete.');
         }
-        await timciFetch(`${base}/${encodeURIComponent(String(id))}`, { method: 'DELETE' });
+        let idSegment: string;
+        try {
+          idSegment = requireTimciPathSegment(String(id));
+        } catch {
+          throw toHttpError(400, 'Invalid resource id.');
+        }
+        await timciFetch(`${base}/${idSegment}`, { method: 'DELETE' });
         return { data: { id } as TData };
       }
       if (resource !== 'userTenantRoles' && resource !== 'permissions') {

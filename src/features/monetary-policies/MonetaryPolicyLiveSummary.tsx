@@ -1,6 +1,6 @@
 import { useTranslate } from '@refinedev/core';
 import { Alert, Form } from 'antd';
-import { formatRelativeBandsSummary } from './MonetaryPolicyParamsSummary.js';
+import { formatRelativeBandsSummary } from './monetaryPolicySummaryFormat.js';
 
 type BandForm = {
   fromMode?: string;

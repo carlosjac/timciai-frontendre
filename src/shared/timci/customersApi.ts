@@ -1,19 +1,20 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 
 export function getCustomerByIdUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/customers/${encodeURIComponent(id)}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(id)}`;
 }
 
 export function getCustomerActivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/customers/${encodeURIComponent(id)}/activate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(id)}/activate`;
 }
 
 export function getCustomerDeactivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/customers/${encodeURIComponent(id)}/deactivate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(id)}/deactivate`;
 }
 
 export function getCustomerReplaceContactsUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/customers/${encodeURIComponent(id)}/contacts`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(id)}/contacts`;
 }
 
 export type CustomerContactInput = {

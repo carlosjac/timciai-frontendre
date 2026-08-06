@@ -1,15 +1,16 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 
 export function getEntityByIdUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/entities/${encodeURIComponent(id)}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(id)}`;
 }
 
 export function getEntityActivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/entities/${encodeURIComponent(id)}/activate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(id)}/activate`;
 }
 
 export function getEntityDeactivateUrl(tenantId: string, id: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/entities/${encodeURIComponent(id)}/deactivate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(id)}/deactivate`;
 }
 
 export function getEntityPaymentOptionActivateUrl(
@@ -17,7 +18,7 @@ export function getEntityPaymentOptionActivateUrl(
   entityId: string,
   paymentOptionId: string,
 ): string {
-  return `${getV1Base()}/tenants/${tenantId}/entities/${encodeURIComponent(entityId)}/payment-options/${encodeURIComponent(paymentOptionId)}/activate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(entityId)}/payment-options/${requireTimciPathSegment(paymentOptionId)}/activate`;
 }
 
 export function getEntityPaymentOptionDeactivateUrl(
@@ -25,7 +26,7 @@ export function getEntityPaymentOptionDeactivateUrl(
   entityId: string,
   paymentOptionId: string,
 ): string {
-  return `${getV1Base()}/tenants/${tenantId}/entities/${encodeURIComponent(entityId)}/payment-options/${encodeURIComponent(paymentOptionId)}/deactivate`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(entityId)}/payment-options/${requireTimciPathSegment(paymentOptionId)}/deactivate`;
 }
 
 type PaymentOptionInput = {

@@ -1,4 +1,5 @@
 import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from './pathSegment.js';
 import { timciFetch } from './http.js';
 
 export type CommercialTransactionResource = 'sales' | 'debits' | 'credits' | 'collections';
@@ -67,7 +68,7 @@ export function commercialTransactionShowPath(
         : resource === 'credits'
           ? 'credits'
           : 'collections';
-  return `/${segment}/show/${encodeURIComponent(id)}`;
+  return `/${segment}/show/${requireTimciPathSegment(id)}`;
 }
 
 export function getCommercialTransactionRegisterUrl(
@@ -75,7 +76,7 @@ export function getCommercialTransactionRegisterUrl(
   resource: CommercialTransactionResource,
   id: string,
 ): string {
-  return `${getV1Base()}/tenants/${tenantId}/${resource}/${encodeURIComponent(id)}/register`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/${resource}/${requireTimciPathSegment(id)}/register`;
 }
 
 export function getCommercialTransactionVoidUrl(
@@ -83,7 +84,7 @@ export function getCommercialTransactionVoidUrl(
   resource: CommercialTransactionResource,
   id: string,
 ): string {
-  return `${getV1Base()}/tenants/${tenantId}/${resource}/${encodeURIComponent(id)}/void`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/${resource}/${requireTimciPathSegment(id)}/void`;
 }
 
 export function getCommercialTransactionReplaceAllocationsUrl(
@@ -91,7 +92,7 @@ export function getCommercialTransactionReplaceAllocationsUrl(
   resource: CommercialTransactionResource,
   id: string,
 ): string {
-  return `${getV1Base()}/tenants/${tenantId}/${resource}/${encodeURIComponent(id)}/replace-allocations`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/${resource}/${requireTimciPathSegment(id)}/replace-allocations`;
 }
 
 export function getCommercialTransactionHoldFromAutoAllocationUrl(
@@ -99,11 +100,11 @@ export function getCommercialTransactionHoldFromAutoAllocationUrl(
   resource: CommercialTransactionResource,
   id: string,
 ): string {
-  return `${getV1Base()}/tenants/${tenantId}/${resource}/${encodeURIComponent(id)}/hold-from-auto-allocation`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/${resource}/${requireTimciPathSegment(id)}/hold-from-auto-allocation`;
 }
 
 export function getCustomerCurrentAccountsUrl(tenantId: string, customerId: string): string {
-  return `${getV1Base()}/tenants/${tenantId}/customers/${encodeURIComponent(customerId)}/current-accounts`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts`;
 }
 
 export function getCustomerCurrentAccountMovementsUrl(
@@ -111,7 +112,7 @@ export function getCustomerCurrentAccountMovementsUrl(
   customerId: string,
   currencyId: string,
 ): string {
-  return `${getV1Base()}/tenants/${tenantId}/customers/${encodeURIComponent(customerId)}/current-accounts/${encodeURIComponent(currencyId)}/movements`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/movements`;
 }
 
 export function getCustomerCurrentAccountSettlementUrl(
@@ -121,7 +122,7 @@ export function getCustomerCurrentAccountSettlementUrl(
   asOf: string,
 ): string {
   const qs = new URLSearchParams({ asOf: asOf.slice(0, 10) });
-  return `${getV1Base()}/tenants/${tenantId}/customers/${encodeURIComponent(customerId)}/current-accounts/${encodeURIComponent(currencyId)}/settlement?${qs}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/settlement?${qs}`;
 }
 
 export function getCustomerCurrentAccountAllocationsUrl(
@@ -129,7 +130,7 @@ export function getCustomerCurrentAccountAllocationsUrl(
   customerId: string,
   currencyId: string,
 ): string {
-  return `${getV1Base()}/tenants/${tenantId}/customers/${encodeURIComponent(customerId)}/current-accounts/${encodeURIComponent(currencyId)}/allocations`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/allocations`;
 }
 
 export type CurrentAccountAllocationLinkDto = {
@@ -192,7 +193,7 @@ export function getFxQuoteUrl(
 ): string {
   const qs = new URLSearchParams({ currencyId });
   if (entityId) qs.set('entityId', entityId);
-  return `${getV1Base()}/tenants/${tenantId}/fx-quote?${qs}`;
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/fx-quote?${qs}`;
 }
 
 /** Cotización TX→base vigente (1 unidad de la moneda de la TX = fxRate en moneda base). */
