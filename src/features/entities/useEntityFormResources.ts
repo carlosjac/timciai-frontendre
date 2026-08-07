@@ -102,6 +102,7 @@ export function useEntityFormResources(tenantId: string | null) {
     countrySelect,
     currencySelect,
     docTypes,
+    policies,
     policyOptions,
     resolveCountry,
     resolvePolicy,

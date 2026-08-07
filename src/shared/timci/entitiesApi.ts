@@ -97,7 +97,12 @@ export function buildEntityUpdateBody(variables: Record<string, unknown>): Recor
     payload.taxManagementEnabled = variables.taxManagementEnabled === true;
   }
   if (variables.taxProfile !== undefined) {
-    payload.taxProfile = mapTaxProfile(variables.taxProfile, variables.taxManagementEnabled === true);
+    // Profile-only updates (edit) omit the flag; do not clear profile unless flag is explicitly false.
+    if (variables.taxManagementEnabled === false) {
+      payload.taxProfile = null;
+    } else {
+      payload.taxProfile = mapTaxProfile(variables.taxProfile, true);
+    }
   }
   if (variables.paymentOptions !== undefined) {
     payload.paymentOptions = mapPaymentOptions(variables.paymentOptions);

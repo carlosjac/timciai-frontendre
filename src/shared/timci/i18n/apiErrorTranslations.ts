@@ -13,6 +13,8 @@ export const apiErrorMessagesEs: Record<string, string> = {
   FORBIDDEN: 'No tienes permiso para esta acción',
   FORBIDDEN_ENTITY: 'No tienes permiso para acceder a este recurso en esta entidad',
   FORBIDDEN_ENTITY_FIELD: 'Solo el usuario root puede modificar este campo de la entidad',
+  TAX_MANAGEMENT_IMMUTABLE:
+    'Gestionar impuestos se define al crear la entidad y no se puede cambiar después',
   FORBIDDEN_PAYMENT_OPTION_REMOVAL:
     'No se puede quitar un medio de pago guardado; desactívalo en su lugar',
   PAYMENT_OPTION_IN_USE:

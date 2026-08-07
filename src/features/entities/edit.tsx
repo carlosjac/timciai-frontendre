@@ -1,6 +1,8 @@
-import { Edit, SaveButton, useForm } from '@refinedev/antd';
+import { Edit, useForm } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, App, Form, Typography } from 'antd';
+import { Alert, App, Button, Form, Tabs, Typography } from 'antd';
+import { useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { canFullyEditEntity } from '../../shared/timci/actionCodes.js';
@@ -8,9 +10,14 @@ import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCo
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
+import {
+  filterAttributeDefsForRole,
+  normalizeTaxProfile,
+  taxProfileFormNamePaths,
+} from '../../shared/timci/taxesApi.js';
+import { useCountryIsoCodeMap } from '../../shared/timci/tax/useCountryIsoCodeMap.js';
+import { useTaxProfileSchema } from '../../shared/timci/tax/useTaxProfileSchema.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
-import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router';
 import { EntityAdminRedirect } from './EntityAdminRedirect.js';
 import { EntityGeneralSettingsFields } from './EntityGeneralSettingsFields.js';
 import { EntityIdentityFields } from './EntityIdentityFields.js';
@@ -18,19 +25,36 @@ import { EntityPaymentOptionsFields } from './EntityPaymentOptionsFields.js';
 import { EntityTaxManagementFields } from './EntityTaxManagementFields.js';
 import { mapPaymentOptionsForSubmit } from './entity-payment-options-utils.js';
 import {
+  ENTITY_ADVERTISEMENT_FIELD_NAMES,
   ENTITY_EDIT_FIELD_NAMES,
+  ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
+  ENTITY_IDENTITY_FIELD_NAMES,
   type EntityRecord,
   type PaymentOptionRow,
 } from './entity-types.js';
 import { useEntityFormResources } from './useEntityFormResources.js';
 import { useEntityPaymentOptionToggle } from './useEntityPaymentOptionToggle.js';
-import { normalizeTaxProfile } from '../../shared/timci/taxesApi.js';
+
+const IDENTITY_FIELD_NAMES = [...ENTITY_IDENTITY_FIELD_NAMES] as string[];
+const PAYMENT_FIELD_NAMES = ['paymentOptions'];
+
+type EntityEditTab = 'identity' | 'general' | 'taxes' | 'payment-options';
+
+function resolveActiveTab(raw: string | null, canFullEdit: boolean): EntityEditTab {
+  if (raw === 'payment-options') return 'payment-options';
+  if (raw === 'taxes' && canFullEdit) return 'taxes';
+  if (raw === 'identity' && canFullEdit) return 'identity';
+  if (raw === 'general') return 'general';
+  return canFullEdit ? 'identity' : 'general';
+}
+
 export function EntityEdit() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
   const { message } = App.useApp();
   const navigate = useNavigate();
   const { id: routeId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
   const { data: permData } = usePermissions<TimciPermissionsData>({});
@@ -41,9 +65,12 @@ export function EntityEdit() {
   const canDeactivatePaymentOption =
     codes.includes('entities.deactivate') || codes.includes('entities.update');
 
-  const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
+  const activeTab = resolveActiveTab(searchParams.get('tab'), canFullEditEntity);
+
+  const { formProps, onFinish: submitRecord, form, query, formLoading } = useForm({
     resource: 'entities',
     action: 'edit',
+    redirect: false,
   });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
     formFieldNames: ENTITY_EDIT_FIELD_NAMES,
@@ -51,19 +78,32 @@ export function EntityEdit() {
 
   const record = query?.data?.data as EntityRecord | undefined;
   const defaultCurrencyIdWatched = Form.useWatch('defaultCurrencyId', form);
+  const countryIdWatched = Form.useWatch('countryId', form) as string | undefined;
+  const taxManagementEnabledWatched = Form.useWatch('taxManagementEnabled', form) as
+    | boolean
+    | undefined;
 
-  const {
-    countrySelect,
-    currencySelect,
-    docTypes,
-    policyOptions,
-  } = useEntityFormResources(tenantId);
+  const { countrySelect, currencySelect, docTypes, policyOptions } =
+    useEntityFormResources(tenantId);
+
+  const { resolveIsoCode } = useCountryIsoCodeMap(tenantId);
+  const countryCodeForTaxes = resolveIsoCode(countryIdWatched);
+  const { schema: taxProfileSchema, loading: taxProfileSchemaLoading } = useTaxProfileSchema(
+    taxManagementEnabledWatched === true ? tenantId : null,
+    taxManagementEnabledWatched === true ? countryCodeForTaxes : null,
+  );
 
   const { paymentToggleLoading, openPaymentToggle, paymentToggleModal } =
     useEntityPaymentOptionToggle({
       tenantId,
       entityId: record?.id,
-      onRefetch: () => query?.refetch?.(),
+      onRefetch: async () => {
+        const result = await query?.refetch?.();
+        const data = result?.data?.data as EntityRecord | undefined;
+        if (data?.paymentOptions != null) {
+          form.setFieldsValue({ paymentOptions: data.paymentOptions });
+        }
+      },
     });
 
   useEffect(() => {
@@ -89,139 +129,181 @@ export function EntityEdit() {
     return <Edit title={translate('pages.entities.editTitle')} isLoading />;
   }
 
-  return (
-    <>
-      <EntityAdminRedirect />
-      <Edit
-        title={translate('pages.entities.editTitle')}
-        isLoading={formLoading}
-        saveButtonProps={saveButtonProps}
-        footerButtons={({ saveButtonProps: refineSaveProps }) => (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              width: '100%',
-              columnGap: 24,
-              rowGap: 12,
-            }}
-          >
-            <SaveButton {...refineSaveProps} />
-          </div>
-        )}
-      >
-        <TimciFormServerAlert messages={generalMessages} />
-        <TimciFormInactiveRecordBanner isActive={record?.isActive} />
-        {record?.id && (
-          <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
-            Id: {record.id}
-          </Typography.Paragraph>
-        )}
-        <Form
-          {...formProps}
-          layout="vertical"
-          onFinish={async (values: Record<string, unknown>) => {
-            clearServerErrors(form);
+  const saveIdentity = async () => {
+    clearServerErrors(form);
+    try {
+      const values = (await form.validateFields(IDENTITY_FIELD_NAMES)) as {
+        name: string;
+        countryId: string;
+        personType: string;
+        documentTypeId: string;
+        documentNumber: string;
+        fantasyName?: string | null;
+      };
+      const fantasyRaw = values.fantasyName;
+      const fantasyName =
+        typeof fantasyRaw === 'string' && fantasyRaw.trim() !== '' ? fantasyRaw.trim() : null;
 
-            const paymentOptions = mapPaymentOptionsForSubmit(
-              values.paymentOptions as PaymentOptionRow[] | undefined,
-            );
+      await submitRecord({
+        name: values.name,
+        countryId: values.countryId,
+        personType: values.personType,
+        documentTypeId: values.documentTypeId,
+        documentNumber: values.documentNumber,
+        fantasyName,
+      });
+      message.success(translate('pages.entities.savedIdentity'));
+    } catch (e) {
+      applyServerError(form, e);
+    }
+  };
 
-            if (canFullEditEntity) {
-              const fantasyRaw = values.fantasyName;
-              const fantasyName =
-                typeof fantasyRaw === 'string' && fantasyRaw.trim() !== ''
-                  ? fantasyRaw.trim()
-                  : null;
+  const saveGeneral = async () => {
+    clearServerErrors(form);
+    try {
+      const fieldNames = canFullEditEntity
+        ? ([
+            ...ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
+            ...ENTITY_ADVERTISEMENT_FIELD_NAMES,
+          ] as string[])
+        : ([...ENTITY_GENERAL_SETTINGS_FIELD_NAMES] as string[]);
+      const values = (await form.validateFields(fieldNames)) as {
+        address: string;
+        email: string;
+        phone: string;
+        defaultCountryId: string;
+        defaultCurrencyId: string;
+        baseCurrencyId: string;
+        defaultOverdueNotificationPolicyKey: string;
+        defaultPaymentTermDays: number;
+        defaultMonetaryPolicyId: string;
+        availableOverduePolicyKeys: string[];
+        addAdvertisement?: boolean;
+      };
 
-              try {
-                await submitRecord({
-                  name: values.name,
-                  countryId: values.countryId,
-                  address: values.address,
-                  email: values.email,
-                  phone: values.phone,
-                  defaultCountryId: values.defaultCountryId,
-                  defaultCurrencyId: values.defaultCurrencyId,
-                  baseCurrencyId: values.baseCurrencyId,
-                  personType: values.personType,
-                  documentTypeId: values.documentTypeId,
-                  documentNumber: values.documentNumber,
-                  defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
-                  defaultPaymentTermDays: values.defaultPaymentTermDays,
-                  defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
-                  availableOverduePolicyKeys: values.availableOverduePolicyKeys,
-                  addAdvertisement: values.addAdvertisement,
-                  fantasyName,
-                  taxManagementEnabled: values.taxManagementEnabled === true,
-                  taxProfile:
-                    values.taxManagementEnabled === true
-                      ? (normalizeTaxProfile(values.taxProfile) ?? {})
-                      : null,
-                  paymentOptions,
-                });
-              } catch (e) {
-                applyServerError(form, e);
-                throw e;
-              }
+      await submitRecord({
+        address: values.address,
+        email: values.email,
+        phone: values.phone,
+        defaultCountryId: values.defaultCountryId,
+        defaultCurrencyId: values.defaultCurrencyId,
+        baseCurrencyId: values.baseCurrencyId,
+        defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
+        defaultPaymentTermDays: values.defaultPaymentTermDays,
+        defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
+        availableOverduePolicyKeys: values.availableOverduePolicyKeys,
+        ...(canFullEditEntity
+          ? { addAdvertisement: values.addAdvertisement === true }
+          : {}),
+      });
+      message.success(translate('pages.entities.savedGeneral'));
+    } catch (e) {
+      applyServerError(form, e);
+    }
+  };
 
-              return;
-            }
+  const saveTaxes = async () => {
+    clearServerErrors(form);
+    try {
+      const taxManagementEnabled = form.getFieldValue('taxManagementEnabled') === true;
+      if (!taxManagementEnabled) {
+        return;
+      }
 
-            try {
-              await submitRecord({
-                address: values.address,
-                email: values.email,
-                phone: values.phone,
-                defaultCountryId: values.defaultCountryId,
-                defaultCurrencyId: values.defaultCurrencyId,
-                baseCurrencyId: values.baseCurrencyId,
-                defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
-                defaultPaymentTermDays: values.defaultPaymentTermDays,
-                defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
-                availableOverduePolicyKeys: values.availableOverduePolicyKeys,
-                paymentOptions,
-              });
-            } catch (e) {
-              applyServerError(form, e);
-              throw e;
-            }
-          }}
-        >
-          <EntityIdentityFields
-            form={form}
-            countrySelect={countrySelect}
-            docTypes={docTypes}
-            disabled={!canFullEditEntity}
-            sections={['nameCountry']}
-          />
+      const countryId = form.getFieldValue('countryId') as string | undefined;
+      if (!countryId) {
+        message.warning(translate('tax.pickCountryFirst'));
+        return;
+      }
+      const countryCode = resolveIsoCode(countryId);
+      if (!countryCode) {
+        message.warning(translate('tax.countryIsoMissing'));
+        return;
+      }
+      if (taxProfileSchemaLoading) {
+        return;
+      }
+
+      const roleDefs = filterAttributeDefsForRole(taxProfileSchema?.attributeDefs, 'issuer');
+      const missingRequired = roleDefs.filter((def) => {
+        if (!def.required) return false;
+        const value = form.getFieldValue(['taxProfile', def.attributeKey]);
+        return value == null || String(value).trim() === '';
+      });
+      if (missingRequired.length > 0) {
+        form.setFields(
+          missingRequired.map((def) => ({
+            name: ['taxProfile', def.attributeKey],
+            errors: [translate('form.validation.requiredField')],
+          })),
+        );
+        return;
+      }
+
+      const profilePaths = taxProfileFormNamePaths(taxProfileSchema, 'issuer');
+      await form.validateFields(profilePaths);
+
+      const taxProfile = form.getFieldValue('taxProfile') as
+        | Record<string, string>
+        | null
+        | undefined;
+
+      await submitRecord({
+        taxProfile: normalizeTaxProfile(taxProfile) ?? {},
+      });
+      message.success(translate('pages.entities.savedTaxes'));
+    } catch (e) {
+      if (e && typeof e === 'object' && 'errorFields' in e) return;
+      applyServerError(form, e);
+    }
+  };
+
+  const savePaymentOptions = async () => {
+    clearServerErrors(form);
+    try {
+      await form.validateFields(PAYMENT_FIELD_NAMES);
+      const paymentOptions = mapPaymentOptionsForSubmit(
+        form.getFieldValue('paymentOptions') as PaymentOptionRow[] | undefined,
+      );
+      await submitRecord({ paymentOptions });
+      message.success(translate('pages.entities.savedPaymentOptions'));
+    } catch (e) {
+      applyServerError(form, e);
+    }
+  };
+
+  const tabItems = [
+    ...(canFullEditEntity
+      ? [
+          {
+            key: 'identity',
+            label: translate('pages.entities.tabs.identity'),
+            children: (
+              <>
+                <EntityIdentityFields
+                  form={form}
+                  countrySelect={countrySelect}
+                  docTypes={docTypes}
+                  sections={['nameCountry', 'personDocument', 'fantasyName']}
+                />
+                <Button type="primary" htmlType="button" onClick={() => void saveIdentity()}>
+                  {translate('pages.entities.saveIdentity')}
+                </Button>
+              </>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: 'general',
+      label: translate('pages.entities.tabs.general'),
+      children: (
+        <>
           <EntityGeneralSettingsFields
             form={form}
             countrySelect={countrySelect}
             currencySelect={currencySelect}
             policyOptions={policyOptions}
-            sections={['contact']}
-            tenantId={tenantId}
-            entityId={record?.id ?? tenantId}
-          />
-          <EntityIdentityFields
-            form={form}
-            countrySelect={countrySelect}
-            docTypes={docTypes}
-            disabled={!canFullEditEntity}
-            sections={['personDocument']}
-          />
-          {canFullEditEntity ? (
-            <EntityTaxManagementFields form={form} tenantId={tenantId} />
-          ) : null}
-          <EntityGeneralSettingsFields
-            form={form}
-            countrySelect={countrySelect}
-            currencySelect={currencySelect}
-            policyOptions={policyOptions}
-            sections={['policies']}
             tenantId={tenantId}
             entityId={record?.id ?? tenantId}
           />
@@ -233,6 +315,39 @@ export function EntityEdit() {
               sections={['advertisement']}
             />
           ) : null}
+          <Button type="primary" htmlType="button" onClick={() => void saveGeneral()}>
+            {translate('pages.entities.saveGeneral')}
+          </Button>
+        </>
+      ),
+    },
+    ...(canFullEditEntity
+      ? [
+          {
+            key: 'taxes',
+            label: translate('pages.entities.tabs.taxes'),
+            children: (
+              <>
+                <EntityTaxManagementFields
+                  form={form}
+                  tenantId={tenantId}
+                  lockTaxManagementEnabled
+                />
+                {taxManagementEnabledWatched === true ? (
+                  <Button type="primary" htmlType="button" onClick={() => void saveTaxes()}>
+                    {translate('pages.entities.saveTaxes')}
+                  </Button>
+                ) : null}
+              </>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: 'payment-options',
+      label: translate('pages.entities.tabs.paymentOptions'),
+      children: (
+        <>
           <EntityPaymentOptionsFields
             form={form}
             currencySelect={currencySelect}
@@ -241,6 +356,45 @@ export function EntityEdit() {
             canDeactivatePaymentOption={canDeactivatePaymentOption}
             paymentToggleLoading={paymentToggleLoading}
             onPaymentToggleClick={openPaymentToggle}
+          />
+          <Button type="primary" htmlType="button" onClick={() => void savePaymentOptions()}>
+            {translate('pages.entities.savePaymentOptions')}
+          </Button>
+        </>
+      ),
+    },
+  ];
+
+  const defaultTab: EntityEditTab = canFullEditEntity ? 'identity' : 'general';
+
+  return (
+    <>
+      <EntityAdminRedirect />
+      <Edit
+        title={translate('pages.entities.editTitle')}
+        isLoading={formLoading}
+        footerButtons={() => null}
+      >
+        <TimciFormServerAlert messages={generalMessages} />
+        <TimciFormInactiveRecordBanner isActive={record?.isActive} />
+        {record?.id && (
+          <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
+            Id: {record.id}
+          </Typography.Paragraph>
+        )}
+        <Form
+          {...formProps}
+          form={form}
+          layout="vertical"
+          onValuesChange={() => clearServerErrors(form)}
+        >
+          <Tabs
+            activeKey={activeTab}
+            onChange={(key) =>
+              setSearchParams(key === defaultTab ? {} : { tab: key }, { replace: true })
+            }
+            aria-label={translate('pages.entities.tabsLabel')}
+            items={tabItems}
           />
         </Form>
         {record && (

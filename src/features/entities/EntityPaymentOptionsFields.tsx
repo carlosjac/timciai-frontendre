@@ -1,4 +1,4 @@
-import { Button, Form, Input, Select, Space, Typography } from 'antd';
+import { Button, Form, Input, Select, Space, Switch, Typography } from 'antd';
 import { useTranslate } from '@refinedev/core';
 import type { FormInstance, SelectProps } from 'antd';
 import {
@@ -192,12 +192,17 @@ export function EntityPaymentOptionsFields({
                     {...restField}
                     name={[rowName, 'isActive']}
                     label={translate('create.entity.paymentOptionActive')}
+                    valuePropName={isPersistedRow ? undefined : 'checked'}
                   >
-                    <span>
-                      {rowValues?.isActive !== false
-                        ? translate('table.entities.yes')
-                        : translate('table.entities.no')}
-                    </span>
+                    {isPersistedRow ? (
+                      <span>
+                        {rowValues?.isActive !== false
+                          ? translate('table.entities.yes')
+                          : translate('table.entities.no')}
+                      </span>
+                    ) : (
+                      <Switch />
+                    )}
                   </Form.Item>
                 </div>
               );

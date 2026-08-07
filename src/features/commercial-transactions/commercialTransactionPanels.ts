@@ -10,6 +10,17 @@ export type CommercialTransactionItemRow = {
   discountPercent?: string;
   discountAmount?: string;
   subtotal?: string;
+  taxAttributes?: Record<string, string> | null;
+  taxRateKey?: string | null;
+  taxRatePercent?: string | null;
+  taxAmount?: string | null;
+  netSubtotal?: string | null;
+  lineTaxes?: Array<{
+    kind: string;
+    taxRateKey?: string | null;
+    taxRatePercent?: string | null;
+    taxAmount: string;
+  }> | null;
 };
 
 export type AllocationRow = {

@@ -1,9 +1,13 @@
 import { Show } from '@refinedev/antd';
 import { useList, usePermissions, useShow, useTranslate } from '@refinedev/core';
-import { Alert, Descriptions, Table, Tag, Typography } from 'antd';
+import { Alert, Descriptions, Table, Tabs, Tag } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
-import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
+import {
+  canFullyEditEntity,
+  type TimciPermissionsData,
+} from '../../shared/timci/actionCodes.js';
 import {
   getEntityActivateUrl,
   getEntityDeactivateUrl,
@@ -18,47 +22,24 @@ import {
   useTimciActivateDeactivateToggle,
 } from '../../shared/timci/form/index.js';
 import { timciPersonTypeLabel } from '../../shared/timci/personTypeLabel.js';
-import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
+import { useCountryIsoCodeMap } from '../../shared/timci/tax/useCountryIsoCodeMap.js';
+import { useTaxProfileSchema } from '../../shared/timci/tax/useTaxProfileSchema.js';
+import { filterAttributeDefsForRole } from '../../shared/timci/taxesApi.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { EntityAdminRedirect } from './EntityAdminRedirect.js';
+import type { EntityRecord } from './entity-types.js';
 
-type PaymentOptionRow = {
-  id?: string;
-  ordinal?: number;
-  name?: string;
-  details?: string;
-  currencyIds?: string[];
-  isActive?: boolean;
-};
+const descStyles = { label: { width: 220, maxWidth: 280, verticalAlign: 'top' as const } };
 
-type EntityRecord = {
-  id?: string;
-  name?: string;
-  countryId?: string;
-  address?: string;
-  email?: string;
-  phone?: string;
-  defaultCountryId?: string;
-  defaultCurrencyId?: string;
-  baseCurrencyId?: string;
-  personType?: string;
-  documentTypeId?: string;
-  documentNumber?: string;
-  documentTypeName?: string;
-  defaultOverdueNotificationPolicyKey?: string;
-  defaultPaymentTermDays?: number;
-  defaultMonetaryPolicyId?: string | null;
-  defaultMonetaryPolicyName?: string;
-  availableOverduePolicyKeys?: string[];
-  addAdvertisement?: boolean;
-  fantasyName?: string | null;
-  isActive?: boolean;
-  paymentOptions?: PaymentOptionRow[];
-  createdAt?: string;
-  updatedAt?: string;
-  createdBy?: TimciAuditUserRef;
-  updatedBy?: TimciAuditUserRef;
-};
+type EntityShowTab = 'identity' | 'general' | 'taxes' | 'payment-options';
+
+function resolveActiveTab(raw: string | null, canFullEdit: boolean): EntityShowTab {
+  if (raw === 'payment-options') return 'payment-options';
+  if (raw === 'taxes' && canFullEdit) return 'taxes';
+  if (raw === 'identity' && canFullEdit) return 'identity';
+  if (raw === 'general') return 'general';
+  return canFullEdit ? 'identity' : 'general';
+}
 
 function boolTag(translate: (key: string) => string, value: boolean | undefined) {
   return value ? (
@@ -71,11 +52,17 @@ function boolTag(translate: (key: string) => string, value: boolean | undefined)
 export function EntityShow() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
+  const [searchParams, setSearchParams] = useSearchParams();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { data: permData } = usePermissions<TimciPermissionsData>({});
-  const canUpdate = permData?.actionCodes?.includes('entities.update') ?? false;
-  const canActivate = permData?.actionCodes?.includes('entities.activate') ?? false;
-  const canDeactivate = permData?.actionCodes?.includes('entities.deactivate') ?? false;
+  const codes = permData?.actionCodes ?? [];
+  const canFullEditEntity = canFullyEditEntity(codes);
+  const canUpdate = codes.includes('entities.update');
+  const canActivate = codes.includes('entities.activate');
+  const canDeactivate = codes.includes('entities.deactivate');
+
+  const activeTab = resolveActiveTab(searchParams.get('tab'), canFullEditEntity);
+  const defaultTab: EntityShowTab = canFullEditEntity ? 'identity' : 'general';
 
   const { query } = useShow<EntityRecord>({ resource: 'entities' });
   const record = query?.data?.data;
@@ -114,6 +101,14 @@ export function EntityShow() {
     pagination: { currentPage: 1, pageSize: 500 },
     queryOptions: { enabled: !!tenantId },
   });
+
+  const { resolveIsoCode } = useCountryIsoCodeMap(tenantId);
+  const countryCode = resolveIsoCode(record?.countryId);
+  const taxEnabled = record?.taxManagementEnabled === true;
+  const { schema: taxProfileSchema } = useTaxProfileSchema(
+    taxEnabled ? tenantId : null,
+    taxEnabled ? countryCode : null,
+  );
 
   useEffect(() => {
     if (!tenantId) return;
@@ -155,6 +150,9 @@ export function EntityShow() {
   const resolvePolicy = (key: string | undefined) =>
     key != null && key !== '' ? (policyLabelByKey.get(key) ?? key) : '—';
 
+  const resolveCurrency = (id: string | undefined) =>
+    id != null && id !== '' ? (currencyLabelById.get(id) ?? id) : '—';
+
   if (!tenantId) {
     return (
       <Show title={translate('pages.entities.showTitle')}>
@@ -165,6 +163,163 @@ export function EntityShow() {
 
   const availablePolicies =
     record?.availableOverduePolicyKeys?.map((k) => resolvePolicy(k)).join(', ') ?? '—';
+
+  const issuerDefs = filterAttributeDefsForRole(taxProfileSchema?.attributeDefs, 'issuer');
+
+  const tabItems = [
+    ...(canFullEditEntity
+      ? [
+          {
+            key: 'identity',
+            label: translate('pages.entities.tabs.identity'),
+            children: (
+              <Descriptions bordered column={1} size="middle" styles={descStyles}>
+                <Descriptions.Item label="Id">{record?.id ?? '—'}</Descriptions.Item>
+                <Descriptions.Item label={translate('table.entities.name')}>
+                  {record?.name ?? '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label={translate('create.entity.country')}>
+                  {resolveCountry(record?.countryId)}
+                </Descriptions.Item>
+                <Descriptions.Item label={translate('table.entities.personType')}>
+                  {timciPersonTypeLabel(translate, record?.personType)}
+                </Descriptions.Item>
+                <Descriptions.Item label={translate('table.entities.documentType')}>
+                  {record?.documentTypeName ?? '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label={translate('table.entities.documentNumber')}>
+                  {record?.documentNumber ?? '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label={translate('table.entities.fantasyName')}>
+                  {record?.fantasyName != null && String(record.fantasyName) !== ''
+                    ? record.fantasyName
+                    : '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label={translate('table.entities.active')}>
+                  {boolTag(translate, record?.isActive)}
+                </Descriptions.Item>
+              </Descriptions>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: 'general',
+      label: translate('pages.entities.tabs.general'),
+      children: (
+        <Descriptions bordered column={1} size="middle" styles={descStyles}>
+          {!canFullEditEntity ? (
+            <Descriptions.Item label="Id">{record?.id ?? '—'}</Descriptions.Item>
+          ) : null}
+          <Descriptions.Item label={translate('table.entities.address')}>
+            {record?.address ?? '—'}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('table.entities.email')}>
+            {record?.email ?? '—'}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('table.entities.phone')}>
+            {record?.phone ?? '—'}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('create.entity.defaultCountry')}>
+            {resolveCountry(record?.defaultCountryId)}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('create.entity.defaultCurrency')}>
+            {resolveCurrency(record?.defaultCurrencyId)}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('create.entity.baseCurrency')}>
+            {resolveCurrency(record?.baseCurrencyId)}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('create.entity.defaultOverduePolicy')}>
+            {resolvePolicy(record?.defaultOverdueNotificationPolicyKey)}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('create.entity.availableOverduePolicies')}>
+            {availablePolicies}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('create.entity.defaultPaymentTermDays')}>
+            {record?.defaultPaymentTermDays ?? '—'}
+          </Descriptions.Item>
+          <Descriptions.Item label={translate('create.entity.defaultMonetaryPolicy')}>
+            {record?.defaultMonetaryPolicyName?.trim() ||
+              record?.defaultMonetaryPolicyId ||
+              '—'}
+          </Descriptions.Item>
+          {canFullEditEntity ? (
+            <Descriptions.Item label={translate('create.entity.addAdvertisement')}>
+              {boolTag(translate, record?.addAdvertisement)}
+            </Descriptions.Item>
+          ) : null}
+        </Descriptions>
+      ),
+    },
+    ...(canFullEditEntity
+      ? [
+          {
+            key: 'taxes',
+            label: translate('pages.entities.tabs.taxes'),
+            children: (
+              <Descriptions bordered column={1} size="middle" styles={descStyles}>
+                <Descriptions.Item label={translate('create.entity.taxManagementEnabled')}>
+                  {boolTag(translate, record?.taxManagementEnabled)}
+                </Descriptions.Item>
+                {taxEnabled
+                  ? issuerDefs.map((def) => {
+                      const raw = record?.taxProfile?.[def.attributeKey];
+                      const valueLabel =
+                        def.values.find((v) => v.valueKey === raw)?.name ?? raw ?? '—';
+                      return (
+                        <Descriptions.Item key={def.attributeKey} label={def.name}>
+                          {valueLabel}
+                        </Descriptions.Item>
+                      );
+                    })
+                  : null}
+              </Descriptions>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: 'payment-options',
+      label: translate('pages.entities.tabs.paymentOptions'),
+      children: (
+        <Table
+          size="small"
+          rowKey={(row) => row.id ?? `opt-${row.ordinal}`}
+          pagination={false}
+          dataSource={record?.paymentOptions ?? []}
+          locale={{ emptyText: '—' }}
+          columns={[
+            {
+              title: translate('create.entity.paymentOptionName'),
+              dataIndex: 'name',
+              key: 'name',
+            },
+            {
+              title: translate('create.entity.paymentOptionDetails'),
+              dataIndex: 'details',
+              key: 'details',
+              render: (value: string | undefined) => <TimciRichTextView html={value} />,
+            },
+            {
+              title: translate('create.entity.paymentOptionCurrencies'),
+              key: 'currencyIds',
+              render: (_: unknown, row: { currencyIds?: string[] }) => {
+                const ids = row.currencyIds ?? [];
+                if (ids.length === 0) return '—';
+                return ids.map((id) => currencyLabelById.get(id) ?? id).join(', ');
+              },
+            },
+            {
+              title: translate('create.entity.paymentOptionActive'),
+              dataIndex: 'isActive',
+              key: 'isActive',
+              render: (v: boolean) => boolTag(translate, v),
+            },
+          ]}
+        />
+      ),
+    },
+  ];
 
   return (
     <>
@@ -189,129 +344,24 @@ export function EntityShow() {
         )}
       >
         <TimciFormInactiveRecordBanner isActive={record?.isActive} />
-        <Descriptions
-        bordered
-        column={1}
-        size="middle"
-        styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
-      >
-        <Descriptions.Item label="Id">{record?.id ?? '—'}</Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.name')}>
-          {record?.name ?? '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.fantasyName')}>
-          {record?.fantasyName != null && String(record.fantasyName) !== ''
-            ? record.fantasyName
-            : '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.country')}>
-          {resolveCountry(record?.countryId)}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.address')}>
-          {record?.address ?? '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.email')}>
-          {record?.email ?? '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.phone')}>
-          {record?.phone ?? '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.defaultCountry')}>
-          {resolveCountry(record?.defaultCountryId)}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.defaultCurrency')}>
-          {record?.defaultCurrencyId != null
-            ? (currencyLabelById.get(record.defaultCurrencyId) ?? record.defaultCurrencyId)
-            : '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.baseCurrency')}>
-          {record?.baseCurrencyId != null
-            ? (currencyLabelById.get(record.baseCurrencyId) ?? record.baseCurrencyId)
-            : '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.personType')}>
-          {timciPersonTypeLabel(translate, record?.personType)}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.documentType')}>
-          {record?.documentTypeName ?? '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.documentNumber')}>
-          {record?.documentNumber ?? '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.defaultOverduePolicy')}>
-          {resolvePolicy(record?.defaultOverdueNotificationPolicyKey)}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.availableOverduePolicies')}>
-          {availablePolicies}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.defaultPaymentTermDays')}>
-          {record?.defaultPaymentTermDays ?? '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.defaultMonetaryPolicy')}>
-          {record?.defaultMonetaryPolicyName?.trim() ||
-            record?.defaultMonetaryPolicyId ||
-            '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('create.entity.addAdvertisement')}>
-          {boolTag(translate, record?.addAdvertisement)}
-        </Descriptions.Item>
-        <Descriptions.Item label={translate('table.entities.active')}>
-          {boolTag(translate, record?.isActive)}
-        </Descriptions.Item>
-      </Descriptions>
-
-      {(record?.paymentOptions?.length ?? 0) > 0 && (
-        <>
-          <Typography.Text strong style={{ display: 'block', margin: '16px 0 8px' }}>
-            {translate('create.entity.paymentOptionsSection')}
-          </Typography.Text>
-          <Table
-            size="small"
-            rowKey={(row) => row.id ?? `opt-${row.ordinal}`}
-            pagination={false}
-            dataSource={record?.paymentOptions ?? []}
-            columns={[
-              {
-                title: translate('create.entity.paymentOptionName'),
-                dataIndex: 'name',
-                key: 'name',
-              },
-              {
-                title: translate('create.entity.paymentOptionDetails'),
-                dataIndex: 'details',
-                key: 'details',
-                render: (value: string | undefined) => <TimciRichTextView html={value} />,
-              },
-              {
-                title: translate('create.entity.paymentOptionCurrencies'),
-                key: 'currencyIds',
-                render: (_, row) => {
-                  const ids = row.currencyIds ?? [];
-                  if (ids.length === 0) return '—';
-                  return ids.map((id) => currencyLabelById.get(id) ?? id).join(', ');
-                },
-              },
-              {
-                title: translate('create.entity.paymentOptionActive'),
-                dataIndex: 'isActive',
-                key: 'isActive',
-                render: (v: boolean) => boolTag(translate, v),
-              },
-            ]}
-          />
-        </>
-      )}
-
-      {record && (
-        <TimciFormAuditCollapse
-          dateFormat={dateFormat}
-          timeZone={timeZone}
-          createdAt={record.createdAt}
-          updatedAt={record.updatedAt}
-          createdBy={record.createdBy}
-          updatedBy={record.updatedBy}
+        <Tabs
+          activeKey={activeTab}
+          onChange={(key) =>
+            setSearchParams(key === defaultTab ? {} : { tab: key }, { replace: true })
+          }
+          aria-label={translate('pages.entities.tabsLabel')}
+          items={tabItems}
         />
-      )}
+        {record && (
+          <TimciFormAuditCollapse
+            dateFormat={dateFormat}
+            timeZone={timeZone}
+            createdAt={record.createdAt}
+            updatedAt={record.updatedAt}
+            createdBy={record.createdBy}
+            updatedBy={record.updatedBy}
+          />
+        )}
       </Show>
       <TimciActivateDeactivateConfirmModal
         open={toggle.toggleOpen}

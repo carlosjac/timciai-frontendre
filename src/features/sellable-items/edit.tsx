@@ -12,16 +12,17 @@ import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { SELLABLE_ITEM_KINDS } from './kindChoices.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { SellableItemPricesTab } from './SellableItemPricesTab.js';
+import { normalizeTaxAttributes } from '../../shared/timci/taxesApi.js';
 import { SellableItemTaxFields } from './SellableItemTaxFields.js';
 import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 
-const SELLABLE_EDIT_FIELDS = ['kind', 'name', 'code', 'description', 'taxCategoryKey'] as const;
+const SELLABLE_EDIT_FIELDS = ['kind', 'name', 'code', 'description', 'taxAttributes'] as const;
 
 type SellableRecord = {
   id?: string;
   name?: string;
   kind?: string;
-  taxCategoryKey?: string | null;
+  taxAttributes?: Record<string, string> | null;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -106,13 +107,7 @@ export function SellableItemEdit() {
                         ...values,
                         kind: values.kind === 'Service' ? 'Service' : 'Product',
                         ...(taxManagementEnabled
-                          ? {
-                              taxCategoryKey:
-                                values.taxCategoryKey != null &&
-                                String(values.taxCategoryKey).trim() !== ''
-                                  ? String(values.taxCategoryKey).trim()
-                                  : null,
-                            }
+                          ? { taxAttributes: normalizeTaxAttributes(values.taxAttributes) }
                           : {}),
                       });
                     } catch (e) {

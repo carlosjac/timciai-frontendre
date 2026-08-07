@@ -38,6 +38,7 @@ import {
   formatTimciUserDateTime,
 } from '../../shared/timci/formatUserDateTime.js';
 import { timciFetch } from '../../shared/timci/http.js';
+import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { COMMERCIAL_TX_CONFIG, type CommercialTransactionRecord } from './types.js';
 import { commercialStatusTagColor, commercialStatusTitleKey } from './statusLabel.js';
@@ -46,6 +47,10 @@ import { CommercialTransactionIncomingAllocationsPanel } from './CommercialTrans
 import { CommercialTransactionItemsPanel } from './CommercialTransactionItemsPanel.js';
 import { ReplaceAllocationsDrawer } from './ReplaceAllocationsDrawer.js';
 import { commercialResourceCanHaveAllocations } from './commercialTransactionPanels.js';
+import {
+  documentTaxAmountDisplayRows,
+  taxAttributeDisplayRows,
+} from './commercialTransactionTaxDisplay.js';
 import { unallocatedAmount } from './unallocatedAmount.js';
 
 type Props = {
@@ -133,6 +138,37 @@ export function CommercialTransactionShow({ resource }: Props) {
     queryOptions: { enabled: Boolean(tenantId) },
     errorNotification: false,
   });
+  const entityTax = useEntityTaxContext(tenantId, tenantId);
+  const taxesOn =
+    resource !== 'collections' &&
+    (Boolean(record?.taxManagementEnabled) ||
+      Boolean(record?.taxSummary && record.taxSummary.length > 0) ||
+      (Array.isArray(record?.items) &&
+        record.items.some(
+          (i) =>
+            (i.lineTaxes?.length ?? 0) > 0 ||
+            (i.taxAmount != null &&
+              String(i.taxAmount).trim() !== '' &&
+              Number(String(i.taxAmount).replace(',', '.')) !== 0),
+        )));
+  const taxAmountRows = useMemo(
+    () =>
+      documentTaxAmountDisplayRows({
+        schema: entityTax.schema,
+        record,
+        fallbackTaxLabel: translate('pages.commercialTransactions.fields.taxAmount'),
+      }),
+    [entityTax.schema, record, translate],
+  );
+  const headerTaxAttributeRows = useMemo(
+    () =>
+      taxAttributeDisplayRows({
+        schema: entityTax.schema,
+        taxAttributes: record?.taxAttributes,
+        fallbackCategoryLabel: translate('pages.commercialTransactions.fields.taxCategory'),
+      }),
+    [entityTax.schema, record?.taxAttributes, translate],
+  );
 
   const currencyLabel = useMemo(() => {
     if (!currencyResult) return record?.currencyId ?? '—';
@@ -470,9 +506,30 @@ export function CommercialTransactionShow({ resource }: Props) {
           <Descriptions.Item label={translate('table.commercialTransactions.currency')}>
             {currencyLabel}
           </Descriptions.Item>
-          <Descriptions.Item label={translate('table.commercialTransactions.amount')}>
-            {formatTimciMoney(record?.amount)}
-          </Descriptions.Item>
+          {taxesOn ? (
+            <>
+              <Descriptions.Item label={translate('pages.commercialTransactions.fields.net')}>
+                {formatTimciMoney(record?.netAmount)}
+              </Descriptions.Item>
+              {taxAmountRows.map((row) => (
+                <Descriptions.Item key={row.key} label={row.label}>
+                  {formatTimciMoney(row.amount)}
+                </Descriptions.Item>
+              ))}
+              <Descriptions.Item label={translate('pages.commercialTransactions.fields.gross')}>
+                {formatTimciMoney(record?.amount)}
+              </Descriptions.Item>
+              {headerTaxAttributeRows.map((row) => (
+                <Descriptions.Item key={`tax-attr-${row.key}`} label={row.label}>
+                  {row.value}
+                </Descriptions.Item>
+              ))}
+            </>
+          ) : (
+            <Descriptions.Item label={translate('table.commercialTransactions.amount')}>
+              {formatTimciMoney(record?.amount)}
+            </Descriptions.Item>
+          )}
           <Descriptions.Item label={translate('pages.commercialTransactions.fields.fxRate')}>
             {record?.fxRate ?? '—'}
           </Descriptions.Item>
@@ -568,6 +625,8 @@ export function CommercialTransactionShow({ resource }: Props) {
         <CommercialTransactionItemsPanel
           resource={resource}
           items={Array.isArray(record?.items) ? record.items : []}
+          taxesOn={taxesOn}
+          schema={entityTax.schema}
         />
 
         <CommercialTransactionIncomingAllocationsPanel
@@ -575,11 +634,18 @@ export function CommercialTransactionShow({ resource }: Props) {
           incomingAllocations={
             Array.isArray(record?.incomingAllocations) ? record.incomingAllocations : []
           }
+          targetTransactionId={record?.id}
+          customerId={record?.customerId}
+          currencyId={record?.currencyId}
         />
 
         <CommercialTransactionAllocationsPanel
           resource={resource}
           allocations={Array.isArray(record?.allocations) ? record.allocations : []}
+          status={record?.status}
+          customerId={record?.customerId}
+          currencyId={record?.currencyId}
+          transactionDate={record?.transactionDate}
         />
 
         {record && (

@@ -1,15 +1,23 @@
 import { useTranslate } from '@refinedev/core';
 import { Table } from 'antd';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
   commercialResourceFromType,
   commercialTransactionShowPath,
+  getCustomerCurrentAccountSettlementUrl,
   type CommercialTransactionResource,
+  type CurrentAccountSettlementLine,
 } from '../../shared/timci/commercialTransactionsApi.js';
-import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
+import { formatTimciMoney, formatTimciMoneyOrEmpty } from '../../shared/timci/formatMoney.js';
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
+import { timciFetch } from '../../shared/timci/http.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import {
+  cashDisplayForStoredAllocation,
+  parseMoneyNumber,
+} from './collectionAllocations.js';
 import {
   commercialResourceCanHaveAllocations,
   type AllocationRow,
@@ -19,17 +27,100 @@ type Props = {
   /** Only debits, credits and collections carry outgoing allocations. */
   resource: CommercialTransactionResource;
   allocations?: AllocationRow[] | null;
+  status?: string | null;
+  customerId?: string | null;
+  currencyId?: string | null;
+  transactionDate?: string | null;
 };
+
+function allocationRowKey(row: AllocationRow): string {
+  return String(row.id ?? `${row.ordinal}-${row.targetTransactionId}-${row.amount}`);
+}
 
 /**
  * Read-only imputaciones for debit / credit / collection show.
- * Row click navigates to the target transaction show (browser back restores origin).
+ * Collections and credits show cash (efectivo) in the amount column when possible.
  */
-export function CommercialTransactionAllocationsPanel({ resource, allocations }: Props) {
+export function CommercialTransactionAllocationsPanel({
+  resource,
+  allocations,
+  status,
+  customerId,
+  currencyId,
+  transactionDate,
+}: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
   const { dateFormat, timeZone } = useUserPreferences();
   const rows = Array.isArray(allocations) ? allocations : [];
+  const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
+
+  /** Collections: only drafts store nominal. Credits: always nominal (no materialize rewrite). */
+  const convertNominalToCash =
+    (resource === 'collections' && status === 'draft') || resource === 'credits';
+
+  const needsSettlementDisplay = convertNominalToCash && rows.length > 0;
+
+  const [settlementByTargetId, setSettlementByTargetId] = useState<
+    Map<string, CurrentAccountSettlementLine>
+  >(new Map());
+
+  useEffect(() => {
+    if (!needsSettlementDisplay || !tenantId || !customerId || !currencyId) {
+      setSettlementByTargetId(new Map());
+      return;
+    }
+    const asOf =
+      transactionDate != null && String(transactionDate).trim() !== ''
+        ? String(transactionDate).slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { json } = await timciFetch(
+          getCustomerCurrentAccountSettlementUrl(tenantId, customerId, currencyId, asOf),
+        );
+        if (cancelled) return;
+        const lines = (json as { lines?: CurrentAccountSettlementLine[] })?.lines ?? [];
+        const map = new Map<string, CurrentAccountSettlementLine>();
+        for (const line of lines) {
+          if (line?.id) map.set(String(line.id), line);
+        }
+        setSettlementByTargetId(map);
+      } catch {
+        if (!cancelled) setSettlementByTargetId(new Map());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [needsSettlementDisplay, tenantId, customerId, currencyId, transactionDate]);
+
+  const displayAmountByRowKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of rows) {
+      const key = allocationRowKey(row);
+      const stored = parseMoneyNumber(row.amount) ?? 0;
+      if (!convertNominalToCash) {
+        const formatted = formatTimciMoneyOrEmpty(row.amount);
+        if (formatted) map.set(key, formatted);
+        continue;
+      }
+      const targetId = row.targetTransactionId != null ? String(row.targetTransactionId) : '';
+      const line = targetId ? settlementByTargetId.get(targetId) : undefined;
+      const open = parseMoneyNumber(line?.openAmount) ?? 0;
+      const settlement = parseMoneyNumber(line?.settlementAmount) ?? open;
+      const cash = cashDisplayForStoredAllocation({
+        storedAmount: stored,
+        openAmount: open,
+        settlementAmount: settlement,
+        convertNominalToCash: true,
+      });
+      const formatted = formatTimciMoneyOrEmpty(cash);
+      if (formatted) map.set(key, formatted);
+    }
+    return map;
+  }, [rows, convertNominalToCash, settlementByTargetId]);
 
   const typeLabel = useCallback(
     (type: string | null | undefined) => {
@@ -53,13 +144,18 @@ export function CommercialTransactionAllocationsPanel({ resource, allocations }:
 
   if (!commercialResourceCanHaveAllocations(resource)) return null;
 
+  const amountColumnTitle =
+    resource === 'collections' || resource === 'credits'
+      ? translate('pages.commercialTransactions.fields.allocationAmountCash')
+      : translate('pages.commercialTransactions.fields.allocationAmountNominal');
+
   return (
     <Table
       style={{ marginTop: 16 }}
       size="small"
       pagination={false}
       scroll={{ x: true }}
-      rowKey={(r) => String(r.id ?? `${r.ordinal}-${r.targetTransactionId}-${r.amount}`)}
+      rowKey={(r) => allocationRowKey(r)}
       dataSource={rows}
       locale={{
         emptyText: translate('pages.commercialTransactions.fields.allocationsNone'),
@@ -102,10 +198,13 @@ export function CommercialTransactionAllocationsPanel({ resource, allocations }:
             formatTimciUserDateOnly(row.targetTransactionDate, { dateFormat, timeZone }),
         },
         {
-          title: translate('pages.commercialTransactions.fields.allocationAmount'),
-          dataIndex: 'amount',
+          title: amountColumnTitle,
+          key: 'amount',
           align: 'right',
-          render: (v: unknown) => formatTimciMoney(v),
+          render: (_: unknown, row: AllocationRow) => {
+            const display = displayAmountByRowKey.get(allocationRowKey(row));
+            return formatTimciMoney(display ?? row.amount);
+          },
         },
       ]}
     />

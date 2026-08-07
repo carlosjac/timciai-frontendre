@@ -3,6 +3,7 @@ import { useTranslate } from '@refinedev/core';
 import { Alert, Form, Input, Select, Switch } from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { SELLABLE_ITEM_KINDS } from './kindChoices.js';
+import { normalizeTaxAttributes } from '../../shared/timci/taxesApi.js';
 import { SellableItemTaxFields } from './SellableItemTaxFields.js';
 import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 
@@ -31,12 +32,7 @@ export function SellableItemCreate() {
             kind: values.kind === 'Service' ? 'Service' : 'Product',
             isActive: values.isActive !== false,
             ...(taxManagementEnabled
-              ? {
-                  taxCategoryKey:
-                    values.taxCategoryKey != null && String(values.taxCategoryKey).trim() !== ''
-                      ? String(values.taxCategoryKey).trim()
-                      : undefined,
-                }
+              ? { taxAttributes: normalizeTaxAttributes(values.taxAttributes) }
               : {}),
           });
         }}

@@ -9,6 +9,8 @@ type Props = {
   form: FormInstance;
   tenantId: string;
   disabled?: boolean;
+  /** When true, the tax-management switch cannot be changed (edit after create). */
+  lockTaxManagementEnabled?: boolean;
   /** When set (edit without watching country), use this country id instead of the form field. */
   countryIdOverride?: string | null;
 };
@@ -20,6 +22,7 @@ export function EntityTaxManagementFields({
   form,
   tenantId,
   disabled = false,
+  lockTaxManagementEnabled = false,
   countryIdOverride,
 }: Props) {
   const translate = useTranslate();
@@ -34,6 +37,8 @@ export function EntityTaxManagementFields({
     taxManagementEnabled === true ? countryCode : null,
   );
 
+  const switchDisabled = disabled || lockTaxManagementEnabled;
+
   return (
     <>
       <Typography.Text strong style={{ display: 'block', marginBottom: 8, marginTop: 8 }}>
@@ -43,11 +48,15 @@ export function EntityTaxManagementFields({
         label={translate('create.entity.taxManagementEnabled')}
         name="taxManagementEnabled"
         valuePropName="checked"
-        extra={translate('create.entity.taxManagementEnabledHelp')}
+        extra={
+          lockTaxManagementEnabled
+            ? translate('create.entity.taxManagementEnabledImmutableHelp')
+            : translate('create.entity.taxManagementEnabledHelp')
+        }
         initialValue={false}
       >
         <Switch
-          disabled={disabled}
+          disabled={switchDisabled}
           aria-label={translate('create.entity.taxManagementEnabled')}
         />
       </Form.Item>

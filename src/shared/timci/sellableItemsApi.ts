@@ -1,5 +1,6 @@
 import { getV1Base } from '../../config.js';
 import { requireTimciPathSegment } from './pathSegment.js';
+import { normalizeTaxAttributes } from './taxesApi.js';
 
 export function getSellableItemsEntityListUrl(tenantId: string, entityId: string): string {
   return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(entityId)}/sellable-items`;
@@ -33,10 +34,15 @@ export function buildSellableItemCreateBody(
         ? String(variables.description).trim()
         : null,
     isActive: variables.isActive !== false,
-    ...(variables.taxCategoryKey != null && String(variables.taxCategoryKey).trim() !== ''
-      ? { taxCategoryKey: String(variables.taxCategoryKey).trim() }
-      : {}),
+    ...sellableTaxAttributesPayload(variables),
   };
+}
+
+function sellableTaxAttributesPayload(
+  variables: Record<string, unknown>,
+): Record<string, unknown> {
+  if (variables.taxAttributes === undefined) return {};
+  return { taxAttributes: normalizeTaxAttributes(variables.taxAttributes) };
 }
 
 export function buildSellableItemUpdateBody(
@@ -59,11 +65,8 @@ export function buildSellableItemUpdateBody(
         ? String(variables.description).trim()
         : null;
   }
-  if (variables.taxCategoryKey !== undefined) {
-    payload.taxCategoryKey =
-      variables.taxCategoryKey != null && String(variables.taxCategoryKey).trim() !== ''
-        ? String(variables.taxCategoryKey).trim()
-        : null;
+  if (variables.taxAttributes !== undefined) {
+    Object.assign(payload, sellableTaxAttributesPayload(variables));
   }
   return payload;
 }

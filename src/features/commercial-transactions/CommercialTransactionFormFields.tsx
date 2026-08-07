@@ -38,11 +38,21 @@ import { computeSaleLineAmounts, computeSaleItemsTotal } from './saleLineAmounts
 import { formatTimciMoneyOrEmpty } from '../../shared/timci/formatMoney.js';
 import {
   calculateTaxes,
+  documentTaxAmountForKind,
+  indexLineTaxesByLineAndKind,
+  lineGrossDisplay,
+  lineNetFromTaxes,
+  normalizeTaxAttributes,
+  resolveIvaRateCategoryKey,
+  sortedLineTaxAmountDefs,
+  taxAmountForKind,
   type CalculateTaxesResult,
+  type CountryTaxLineAmountDef,
+  type CountryTaxProfileSchema,
   type LineTaxDto,
 } from '../../shared/timci/taxesApi.js';
 import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
-import { TaxCategorySelect } from '../../shared/timci/tax/TaxCategorySelect.js';
+import { LineTaxFields } from '../../shared/timci/tax/LineTaxFields.js';
 
 type PaymentOptionRow = {
   id?: string;
@@ -62,7 +72,7 @@ type SellableRow = BaseRecord & {
   id: string;
   name?: string;
   code?: string | null;
-  taxCategoryKey?: string | null;
+  taxAttributes?: Record<string, string> | null;
 };
 
 type Props = {
@@ -87,18 +97,25 @@ function emptySaleItem() {
     quantity: '1',
     unitPriceAmount: '',
     discountPercent: '0',
-    taxCategoryKey: undefined as string | undefined,
+    taxAttributes: undefined as Record<string, string> | undefined,
   };
+}
+
+function sellableRowTaxAttributes(row: SellableRow): Record<string, string> | undefined {
+  const attrs = normalizeTaxAttributes(row.taxAttributes);
+  return Object.keys(attrs).length > 0 ? attrs : undefined;
 }
 
 function SaleItemComputedAmounts({
   itemIndex,
   taxesOn,
-  lineTax,
+  lineTaxesByKind,
+  amountDefs,
 }: {
   itemIndex: number;
   taxesOn: boolean;
-  lineTax?: LineTaxDto | null;
+  lineTaxesByKind?: Map<string, LineTaxDto>;
+  amountDefs: CountryTaxLineAmountDef[];
 }) {
   const translate = useTranslate();
   const quantity = Form.useWatch(['items', itemIndex, 'quantity']);
@@ -108,6 +125,29 @@ function SaleItemComputedAmounts({
   const netLabel = taxesOn
     ? translate('pages.commercialTransactions.fields.net')
     : translate('pages.commercialTransactions.fields.subtotal');
+  const fallbackTaxLabel = translate('pages.commercialTransactions.fields.taxAmount');
+  const net = taxesOn
+    ? lineNetFromTaxes(lineTaxesByKind, computed?.subtotal ?? null)
+    : (computed?.subtotal ?? null);
+  const gross = taxesOn
+    ? lineGrossDisplay({ byKind: lineTaxesByKind, amountDefs, net })
+    : null;
+  const taxFields =
+    amountDefs.length > 0
+      ? amountDefs.map((def) => ({
+          key: def.taxKind,
+          label: def.name,
+          value: taxAmountForKind(lineTaxesByKind, def.taxKind),
+        }))
+      : [
+          {
+            key: 'legacy',
+            label: fallbackTaxLabel,
+            value: lineTaxesByKind
+              ? ([...lineTaxesByKind.values()][0]?.taxAmount ?? null)
+              : null,
+          },
+        ];
 
   return (
     <>
@@ -125,7 +165,11 @@ function SaleItemComputedAmounts({
         <Form.Item label={netLabel}>
           <Input
             readOnly
-            value={taxesOn ? (lineTax?.netAmount ?? computed?.subtotal ?? '') : (computed?.subtotal ?? '')}
+            value={
+              taxesOn
+                ? formatTimciMoneyOrEmpty(net) || (computed?.subtotal ?? '')
+                : (computed?.subtotal ?? '')
+            }
             placeholder="—"
             aria-label={netLabel}
           />
@@ -133,21 +177,23 @@ function SaleItemComputedAmounts({
       </Col>
       {taxesOn ? (
         <>
-          <Col xs={12} sm={8} md={6} lg={4}>
-            <Form.Item label={translate('pages.commercialTransactions.fields.taxAmount')}>
-              <Input
-                readOnly
-                value={formatTimciMoneyOrEmpty(lineTax?.taxAmount)}
-                placeholder="—"
-                aria-label={translate('pages.commercialTransactions.fields.taxAmount')}
-              />
-            </Form.Item>
-          </Col>
+          {taxFields.map((field) => (
+            <Col key={field.key} xs={12} sm={8} md={6} lg={4}>
+              <Form.Item label={field.label}>
+                <Input
+                  readOnly
+                  value={formatTimciMoneyOrEmpty(field.value)}
+                  placeholder="—"
+                  aria-label={field.label}
+                />
+              </Form.Item>
+            </Col>
+          ))}
           <Col xs={12} sm={8} md={6} lg={4}>
             <Form.Item label={translate('pages.commercialTransactions.fields.gross')}>
               <Input
                 readOnly
-                value={formatTimciMoneyOrEmpty(lineTax?.grossAmount)}
+                value={formatTimciMoneyOrEmpty(gross)}
                 placeholder="—"
                 aria-label={translate('pages.commercialTransactions.fields.gross')}
               />
@@ -162,9 +208,11 @@ function SaleItemComputedAmounts({
 function SaleItemsTotal({
   taxesOn,
   taxResult,
+  amountDefs,
 }: {
   taxesOn: boolean;
   taxResult: CalculateTaxesResult | null;
+  amountDefs: CountryTaxLineAmountDef[];
 }) {
   const translate = useTranslate();
   const items = Form.useWatch('items') as
@@ -182,6 +230,21 @@ function SaleItemsTotal({
   const totalLabel = taxesOn
     ? translate('pages.commercialTransactions.fields.gross')
     : translate('pages.commercialTransactions.fields.total');
+  const fallbackTaxLabel = translate('tax.taxAmount');
+  const taxFields =
+    amountDefs.length > 0
+      ? amountDefs.map((def) => ({
+          key: def.taxKind,
+          label: def.name,
+          value: documentTaxAmountForKind(taxResult, def.taxKind),
+        }))
+      : [
+          {
+            key: 'legacy',
+            label: fallbackTaxLabel,
+            value: taxResult?.taxAmount ?? null,
+          },
+        ];
 
   return (
     <div
@@ -209,18 +272,21 @@ function SaleItemsTotal({
               style={{ textAlign: 'right' }}
             />
           </Form.Item>
-          <Form.Item
-            label={<span style={{ fontWeight: 600 }}>{translate('tax.taxAmount')}</span>}
-            style={{ marginBottom: 0, minWidth: 140 }}
-          >
-            <Input
-              readOnly
-              value={formatTimciMoneyOrEmpty(taxResult?.taxAmount)}
-              placeholder="—"
-              aria-label={translate('tax.taxAmount')}
-              style={{ textAlign: 'right' }}
-            />
-          </Form.Item>
+          {taxFields.map((field) => (
+            <Form.Item
+              key={field.key}
+              label={<span style={{ fontWeight: 600 }}>{field.label}</span>}
+              style={{ marginBottom: 0, minWidth: 140 }}
+            >
+              <Input
+                readOnly
+                value={formatTimciMoneyOrEmpty(field.value)}
+                placeholder="—"
+                aria-label={field.label}
+                style={{ textAlign: 'right' }}
+              />
+            </Form.Item>
+          ))}
         </>
       ) : null}
       <Form.Item
@@ -245,6 +311,59 @@ function SaleItemsTotal({
   );
 }
 
+function DocumentTaxAmountFields({
+  schema,
+  taxResult,
+}: {
+  schema: CountryTaxProfileSchema | null;
+  taxResult: CalculateTaxesResult | null;
+}) {
+  const translate = useTranslate();
+  const amountDefs = sortedLineTaxAmountDefs(schema);
+  const fallbackTaxLabel = translate('pages.commercialTransactions.fields.taxAmount');
+  const taxFields =
+    amountDefs.length > 0
+      ? amountDefs.map((def) => ({
+          key: def.taxKind,
+          label: def.name,
+          value: documentTaxAmountForKind(taxResult, def.taxKind),
+        }))
+      : [
+          {
+            key: 'legacy',
+            label: fallbackTaxLabel,
+            value: taxResult?.taxAmount ?? null,
+          },
+        ];
+
+  return (
+    <Row gutter={16}>
+      {taxFields.map((field) => (
+        <Col key={field.key} xs={24} sm={8}>
+          <Form.Item label={field.label}>
+            <Input
+              readOnly
+              value={formatTimciMoneyOrEmpty(field.value)}
+              placeholder="—"
+              aria-label={field.label}
+            />
+          </Form.Item>
+        </Col>
+      ))}
+      <Col xs={24} sm={8}>
+        <Form.Item label={translate('pages.commercialTransactions.fields.gross')}>
+          <Input
+            readOnly
+            value={formatTimciMoneyOrEmpty(taxResult?.grossAmount)}
+            placeholder="—"
+            aria-label={translate('pages.commercialTransactions.fields.gross')}
+          />
+        </Form.Item>
+      </Col>
+    </Row>
+  );
+}
+
 export function CommercialTransactionFormFields({
   resource,
   tenantId,
@@ -260,7 +379,9 @@ export function CommercialTransactionFormFields({
   const fxRateManual = Form.useWatch('fxRateManual', form) as boolean | undefined;
   const entityTxnNumber = Form.useWatch('entityTxnNumber', form) as number | undefined;
   const amountWatch = Form.useWatch('amount', form);
-  const taxCategoryKeyWatch = Form.useWatch('taxCategoryKey', form) as string | undefined;
+  const taxAttributesWatch = Form.useWatch('taxAttributes', form) as
+    | Record<string, string>
+    | undefined;
   const itemsWatch = Form.useWatch('items', form);
   const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
   const [taxResult, setTaxResult] = useState<CalculateTaxesResult | null>(null);
@@ -458,8 +579,11 @@ export function CommercialTransactionFormFields({
         ['items', itemIndex, 'sellableItemId'],
         row ? String(row.id) : undefined,
       );
-      if (taxesOn && row?.taxCategoryKey) {
-        form.setFieldValue(['items', itemIndex, 'taxCategoryKey'], String(row.taxCategoryKey));
+      if (taxesOn) {
+        const attrs = sellableRowTaxAttributes(row);
+        if (attrs) {
+          form.setFieldValue(['items', itemIndex, 'taxAttributes'], attrs);
+        }
       }
     },
     [form, sellableByLabel, taxesOn],
@@ -473,8 +597,11 @@ export function CommercialTransactionFormFields({
         return;
       }
       form.setFieldValue(['items', itemIndex, 'sellableItemId'], String(row.id));
-      if (taxesOn && row.taxCategoryKey) {
-        form.setFieldValue(['items', itemIndex, 'taxCategoryKey'], String(row.taxCategoryKey));
+      if (taxesOn) {
+        const attrs = sellableRowTaxAttributes(row);
+        if (attrs) {
+          form.setFieldValue(['items', itemIndex, 'taxAttributes'], attrs);
+        }
       }
       void applyListPriceToItem(itemIndex, String(row.id));
     },
@@ -505,7 +632,7 @@ export function CommercialTransactionFormFields({
             quantity?: unknown;
             unitPriceAmount?: unknown;
             discountPercent?: unknown;
-            taxCategoryKey?: string | null;
+            taxAttributes?: Record<string, string> | null;
           }>;
           const lines = items
             .map((item, index) => {
@@ -515,14 +642,11 @@ export function CommercialTransactionFormFields({
                 discountPercent: item.discountPercent,
               });
               if (!amounts?.subtotal) return null;
-              const category =
-                item.taxCategoryKey != null && String(item.taxCategoryKey).trim() !== ''
-                  ? String(item.taxCategoryKey).trim()
-                  : undefined;
+              const category = resolveIvaRateCategoryKey(item.taxAttributes);
               return {
                 lineId: String(index),
                 netAmount: amounts.subtotal,
-                taxCategoryKey: category,
+                taxCategoryKey: category || undefined,
               };
             })
             .filter((l): l is NonNullable<typeof l> => l != null);
@@ -546,10 +670,7 @@ export function CommercialTransactionFormFields({
             amountWatch != null && String(amountWatch).trim() !== ''
               ? String(amountWatch).trim().replace(',', '.')
               : '';
-          const category =
-            taxCategoryKeyWatch != null && String(taxCategoryKeyWatch).trim() !== ''
-              ? String(taxCategoryKeyWatch).trim()
-              : undefined;
+          const category = resolveIvaRateCategoryKey(taxAttributesWatch);
           if (!net || Number.isNaN(Number(net)) || !category) {
             if (!cancelled) setTaxResult(null);
             return;
@@ -579,20 +700,26 @@ export function CommercialTransactionFormFields({
     isDebit,
     isSale,
     itemsWatch,
-    taxCategoryKeyWatch,
+    taxAttributesWatch,
     taxesEnabled,
     tenantId,
     transactionDate,
   ]);
 
   const lineTaxByIndex = useMemo(() => {
-    const map = new Map<number, LineTaxDto>();
-    for (const line of taxResult?.lineTaxes ?? []) {
-      const idx = Number(line.lineId);
-      if (Number.isFinite(idx)) map.set(idx, line);
+    const byLine = indexLineTaxesByLineAndKind(taxResult?.lineTaxes);
+    const map = new Map<number, Map<string, LineTaxDto>>();
+    for (const [lineId, byKind] of byLine) {
+      const idx = Number(lineId);
+      if (Number.isFinite(idx)) map.set(idx, byKind);
     }
     return map;
   }, [taxResult]);
+
+  const lineTaxAmountDefs = useMemo(
+    () => sortedLineTaxAmountDefs(entityTax.schema),
+    [entityTax.schema],
+  );
 
   const paymentOptionOptions = useMemo(() => {
     const rows = entityRecord?.paymentOptions ?? [];
@@ -872,35 +999,13 @@ export function CommercialTransactionFormFields({
 
       {taxesOn && (isDebit || isCredit) ? (
         <>
-          <TaxCategorySelect
+          <LineTaxFields
             schema={entityTax.schema}
-            name="taxCategoryKey"
-            required
+            namePrefix="taxAttributes"
             disabled={entityTax.schemaLoading}
-            labelKey="pages.commercialTransactions.fields.taxCategory"
+            fallbackLabelKey="pages.commercialTransactions.fields.taxCategory"
           />
-          <Row gutter={16}>
-            <Col xs={24} sm={8}>
-              <Form.Item label={translate('pages.commercialTransactions.fields.taxAmount')}>
-                <Input
-                  readOnly
-                  value={formatTimciMoneyOrEmpty(taxResult?.taxAmount)}
-                  placeholder="—"
-                  aria-label={translate('pages.commercialTransactions.fields.taxAmount')}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item label={translate('pages.commercialTransactions.fields.gross')}>
-                <Input
-                  readOnly
-                  value={formatTimciMoneyOrEmpty(taxResult?.grossAmount)}
-                  placeholder="—"
-                  aria-label={translate('pages.commercialTransactions.fields.gross')}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <DocumentTaxAmountFields schema={entityTax.schema} taxResult={taxResult} />
         </>
       ) : null}
 
@@ -1064,12 +1169,12 @@ export function CommercialTransactionFormFields({
                           ]) as string | undefined;
                           const requireCategory = !sellableId;
                           return (
-                            <TaxCategorySelect
+                            <LineTaxFields
                               schema={entityTax.schema}
-                              name={[name, 'taxCategoryKey']}
-                              required={requireCategory}
+                              namePrefix={[name, 'taxAttributes']}
+                              requiredOverride={requireCategory}
                               disabled={entityTax.schemaLoading}
-                              labelKey="pages.commercialTransactions.fields.taxCategory"
+                              fallbackLabelKey="pages.commercialTransactions.fields.taxCategory"
                               formItemProps={restField}
                             />
                           );
@@ -1113,7 +1218,8 @@ export function CommercialTransactionFormFields({
                       <SaleItemComputedAmounts
                         itemIndex={name}
                         taxesOn={taxesOn}
-                        lineTax={lineTaxByIndex.get(name)}
+                        lineTaxesByKind={lineTaxByIndex.get(name)}
+                        amountDefs={lineTaxAmountDefs}
                       />
                     </Row>
                   </Card>
@@ -1122,7 +1228,11 @@ export function CommercialTransactionFormFields({
                   {translate('pages.commercialTransactions.fields.addItem')}
                 </Button>
                 <Form.ErrorList errors={errors} />
-                <SaleItemsTotal taxesOn={taxesOn} taxResult={taxResult} />
+                <SaleItemsTotal
+                  taxesOn={taxesOn}
+                  taxResult={taxResult}
+                  amountDefs={lineTaxAmountDefs}
+                />
               </>
             )}
           </Form.List>

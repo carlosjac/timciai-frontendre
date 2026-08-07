@@ -1,6 +1,6 @@
 import { useTranslate } from '@refinedev/core';
 import { Typography } from 'antd';
-import { TaxCategorySelect } from '../../shared/timci/tax/TaxCategorySelect.js';
+import { LineTaxFields } from '../../shared/timci/tax/LineTaxFields.js';
 import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
   disabled?: boolean;
 };
 
-/** Sellable item tax category when entity tax management is on. */
+/** Sellable item line tax fields when entity tax management is on. */
 export function SellableItemTaxFields({ tenantId, entityId, disabled = false }: Props) {
   const translate = useTranslate();
   const { taxManagementEnabled, schema, schemaLoading, entityLoading } = useEntityTaxContext(
@@ -24,12 +24,11 @@ export function SellableItemTaxFields({ tenantId, entityId, disabled = false }: 
       <Typography.Text strong style={{ display: 'block', marginBottom: 8, marginTop: 8 }}>
         {translate('tax.sectionTitle')}
       </Typography.Text>
-      <TaxCategorySelect
+      <LineTaxFields
         schema={schema}
-        name="taxCategoryKey"
-        required
+        namePrefix="taxAttributes"
         disabled={disabled || schemaLoading}
-        labelKey="table.sellableItems.taxCategory"
+        fallbackLabelKey="table.sellableItems.taxCategory"
       />
     </>
   );

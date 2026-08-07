@@ -53,11 +53,12 @@ export const ENTITY_IDENTITY_FIELD_NAMES = [
   'personType',
   'documentTypeId',
   'documentNumber',
-  'addAdvertisement',
   'fantasyName',
-  'taxManagementEnabled',
-  'taxProfile',
 ] as const;
+
+export const ENTITY_ADVERTISEMENT_FIELD_NAMES = ['addAdvertisement'] as const;
+
+export const ENTITY_TAX_FIELD_NAMES = ['taxManagementEnabled', 'taxProfile'] as const;
 
 export const ENTITY_GENERAL_SETTINGS_FIELD_NAMES = [
   'address',
@@ -74,5 +75,7 @@ export const ENTITY_GENERAL_SETTINGS_FIELD_NAMES = [
 
 export const ENTITY_EDIT_FIELD_NAMES = [
   ...ENTITY_IDENTITY_FIELD_NAMES,
+  ...ENTITY_ADVERTISEMENT_FIELD_NAMES,
+  ...ENTITY_TAX_FIELD_NAMES,
   ...ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
 ] as const;

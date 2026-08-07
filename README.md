@@ -76,7 +76,7 @@ pnpm test:watch   # Vitest en watch
 pnpm test:coverage
 ```
 
-Los specs viven junto al código en `src/**/*.spec.ts` (helpers de `shared/`). No se incluyen en el build de la app.
+Los specs viven junto al código en `src/**/*.spec.ts` (helpers de `shared/`, `http` / data provider con **MSW**). No se incluyen en el build de la app. Setup compartido: `src/test/setup.ts`.
 
 ## Autenticación y tenant
 

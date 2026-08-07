@@ -3,7 +3,11 @@ import { useTranslate } from '@refinedev/core';
 import type { FormInstance, SelectProps } from 'antd';
 import type { DocTypeRow } from './entity-types.js';
 
-export type EntityIdentitySection = 'nameCountry' | 'personDocument' | 'advertisement';
+export type EntityIdentitySection =
+  | 'nameCountry'
+  | 'personDocument'
+  | 'fantasyName'
+  | 'advertisement';
 
 type EntityIdentityFieldsProps = {
   form: FormInstance;
@@ -18,7 +22,7 @@ export function EntityIdentityFields({
   countrySelect,
   docTypes,
   disabled = false,
-  sections = ['nameCountry', 'personDocument', 'advertisement'],
+  sections = ['nameCountry', 'personDocument', 'fantasyName', 'advertisement'],
 }: EntityIdentityFieldsProps) {
   const translate = useTranslate();
   const show = (section: EntityIdentitySection) => sections.includes(section);
@@ -107,19 +111,19 @@ export function EntityIdentityFields({
           </Form.Item>
         </>
       ) : null}
+      {show('fantasyName') ? (
+        <Form.Item label={translate('create.entity.fantasyName')} name="fantasyName">
+          <Input disabled={disabled} />
+        </Form.Item>
+      ) : null}
       {show('advertisement') ? (
-        <>
-          <Form.Item
-            label={translate('create.entity.addAdvertisement')}
-            name="addAdvertisement"
-            valuePropName="checked"
-          >
-            <Switch disabled={disabled} />
-          </Form.Item>
-          <Form.Item label={translate('create.entity.fantasyName')} name="fantasyName">
-            <Input disabled={disabled} />
-          </Form.Item>
-        </>
+        <Form.Item
+          label={translate('create.entity.addAdvertisement')}
+          name="addAdvertisement"
+          valuePropName="checked"
+        >
+          <Switch disabled={disabled} />
+        </Form.Item>
       ) : null}
     </>
   );

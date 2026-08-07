@@ -8,6 +8,8 @@ import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import type { AllocationFormRow } from './types.js';
 import {
   buildFifoAllocations,
+  cashAllocatedToNominal,
+  nominalAllocatedToCash,
   parseMoneyNumber,
   parsePositiveAmount,
   type AllocationCandidateRow,
@@ -63,6 +65,26 @@ export function CollectionAllocationsTable({
     return map;
   }, [allocations]);
 
+  /** Editable column shows cash; form state keeps nominal for the API. */
+  const cashByTargetId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const candidate of candidates) {
+      const nominalRaw = amountByTargetId.get(candidate.id);
+      if (!nominalRaw) continue;
+      const open = parseMoneyNumber(candidate.openAmount ?? candidate.amount) ?? 0;
+      const settlement = parseMoneyNumber(candidate.settlementAmount) ?? open;
+      const nominal = parseMoneyNumber(nominalRaw) ?? 0;
+      const cash = nominalAllocatedToCash({
+        nominalAllocated: nominal,
+        openAmount: open,
+        settlementAmount: settlement,
+      });
+      const formatted = formatTimciMoneyOrEmpty(cash);
+      if (formatted) map.set(candidate.id, formatted);
+    }
+    return map;
+  }, [amountByTargetId, candidates]);
+
   const candidateIds = useMemo(() => new Set(candidates.map((c) => c.id)), [candidates]);
 
   /** Drop allocations that no longer appear in the candidate table (customer/currency change). */
@@ -76,14 +98,29 @@ export function CollectionAllocationsTable({
     }
   }, [allocations, candidateIds, candidates.length, loading, onChange]);
 
-  const setAmountForTarget = useCallback(
-    (targetTransactionId: string, raw: string | number | null) => {
+  const setCashForTarget = useCallback(
+    (targetTransactionId: string, raw: string | number | null, candidate: AllocationCandidateRow) => {
       const without = allocations.filter(
         (a) => String(a?.targetTransactionId ?? '') !== targetTransactionId,
       );
-      const positive = parsePositiveAmount(raw);
+      const cashPositive = parsePositiveAmount(raw);
+      if (!cashPositive) {
+        onChange?.(without);
+        return;
+      }
+      const open = parseMoneyNumber(candidate.openAmount ?? candidate.amount) ?? 0;
+      const settlement = parseMoneyNumber(candidate.settlementAmount) ?? open;
+      const cash = parseMoneyNumber(cashPositive) ?? 0;
+      const nominal = cashAllocatedToNominal({
+        cashAllocated: cash,
+        openAmount: open,
+        settlementAmount: settlement,
+      });
+      const nominalFormatted = formatTimciMoneyOrEmpty(nominal);
       onChange?.(
-        positive ? [...without, { targetTransactionId, amount: positive }] : without,
+        nominalFormatted && Number(nominalFormatted) > 0
+          ? [...without, { targetTransactionId, amount: nominalFormatted }]
+          : without,
       );
     },
     [allocations, onChange],
@@ -214,8 +251,9 @@ export function CollectionAllocationsTable({
               key: 'allocate',
               width: 160,
               render: (_: unknown, row) => {
-                const open = Number(String(row.openAmount ?? row.amount ?? '').replace(',', '.'));
-                const max = Number.isFinite(open) && open > 0 ? open : undefined;
+                const open = parseMoneyNumber(row.openAmount ?? row.amount) ?? 0;
+                const settlement = parseMoneyNumber(row.settlementAmount) ?? open;
+                const max = settlement > 0 ? settlement : open > 0 ? open : undefined;
                 return (
                   <span
                     data-timci-row-action
@@ -229,8 +267,8 @@ export function CollectionAllocationsTable({
                       stringMode
                       style={{ width: '100%' }}
                       disabled={disabled}
-                      value={amountByTargetId.get(row.id)}
-                      onChange={(v) => setAmountForTarget(row.id, v)}
+                      value={cashByTargetId.get(row.id)}
+                      onChange={(v) => setCashForTarget(row.id, v, row)}
                       aria-label={translate(
                         'pages.commercialTransactions.fields.allocationAmount',
                       )}

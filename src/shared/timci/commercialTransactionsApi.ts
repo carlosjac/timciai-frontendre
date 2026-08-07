@@ -278,11 +278,18 @@ export function buildCommercialTransactionWriteBody(
         ? String(variables.monetaryPolicyId)
         : null;
   }
-  if (variables.taxCategoryKey !== undefined) {
-    payload.taxCategoryKey =
-      variables.taxCategoryKey != null && String(variables.taxCategoryKey).trim() !== ''
-        ? String(variables.taxCategoryKey).trim()
-        : null;
+  if (variables.taxAttributes !== undefined) {
+    const attrs =
+      variables.taxAttributes != null &&
+      typeof variables.taxAttributes === 'object' &&
+      !Array.isArray(variables.taxAttributes)
+        ? Object.fromEntries(
+            Object.entries(variables.taxAttributes as Record<string, unknown>)
+              .filter(([, v]) => v != null && String(v).trim() !== '')
+              .map(([k, v]) => [k, String(v).trim()]),
+          )
+        : {};
+    payload.taxAttributes = attrs;
   }
   if (variables.items !== undefined) {
     payload.items = mapSaleItems(variables.items);
@@ -311,8 +318,18 @@ function mapSaleItems(raw: unknown): Record<string, unknown>[] {
           ? String(r.discountPercent)
           : '0',
     };
-    if (r.taxCategoryKey != null && String(r.taxCategoryKey).trim() !== '') {
-      item.taxCategoryKey = String(r.taxCategoryKey).trim();
+    if (
+      r.taxAttributes != null &&
+      typeof r.taxAttributes === 'object' &&
+      !Array.isArray(r.taxAttributes)
+    ) {
+      const attrs: Record<string, string> = {};
+      for (const [k, v] of Object.entries(r.taxAttributes as Record<string, unknown>)) {
+        if (v == null) continue;
+        const s = String(v).trim();
+        if (s !== '') attrs[k] = s;
+      }
+      item.taxAttributes = attrs;
     }
     return item;
   });
