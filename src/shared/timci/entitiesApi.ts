@@ -60,6 +60,13 @@ function mapPaymentOptions(raw: unknown): PaymentOptionInput[] {
   });
 }
 
+function mapSupportedCurrencyIds(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((id) => (id == null ? '' : String(id).trim()))
+    .filter((id) => id !== '');
+}
+
 export function buildEntityUpdateBody(variables: Record<string, unknown>): Record<string, unknown> {
   const payload: Record<string, unknown> = {};
   if (variables.name !== undefined) payload.name = String(variables.name).trim();
@@ -86,6 +93,9 @@ export function buildEntityUpdateBody(variables: Record<string, unknown>): Recor
   }
   if (variables.availableOverduePolicyKeys !== undefined) {
     payload.availableOverduePolicyKeys = variables.availableOverduePolicyKeys;
+  }
+  if (variables.supportedCurrencyIds !== undefined) {
+    payload.supportedCurrencyIds = mapSupportedCurrencyIds(variables.supportedCurrencyIds);
   }
   if (variables.addAdvertisement !== undefined) payload.addAdvertisement = variables.addAdvertisement;
   if (variables.fantasyName !== undefined) {

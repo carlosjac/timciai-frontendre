@@ -17,6 +17,7 @@ import {
 import dayjs from 'dayjs';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
 import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
+import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 import {
   fetchPriceListsForEntity,
   type PriceListRow,
@@ -405,14 +406,7 @@ export function CommercialTransactionFormFields({
   });
   const customerSelect = stripSelectServerSearch(customerSelectRaw);
 
-  const { selectProps: currencySelectRaw } = useSelect({
-    resource: 'currencies',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-  const currencySelect = stripSelectServerSearch(currencySelectRaw);
+  const { selectProps: currencySelect } = useEntitySupportedCurrencySelect(tenantId);
 
   const { result: entityRecord } = useOne<EntityWithPaymentOptions>({
     resource: 'entities',
@@ -579,7 +573,7 @@ export function CommercialTransactionFormFields({
         ['items', itemIndex, 'sellableItemId'],
         row ? String(row.id) : undefined,
       );
-      if (taxesOn) {
+      if (taxesOn && row) {
         const attrs = sellableRowTaxAttributes(row);
         if (attrs) {
           form.setFieldValue(['items', itemIndex, 'taxAttributes'], attrs);

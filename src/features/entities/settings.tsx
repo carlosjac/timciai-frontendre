@@ -21,8 +21,12 @@ import {
 } from './entity-types.js';
 import { useEntityFormResources } from './useEntityFormResources.js';
 import { useEntityPaymentOptionToggle } from './useEntityPaymentOptionToggle.js';
+import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
-const GENERAL_FIELD_NAMES = [...ENTITY_GENERAL_SETTINGS_FIELD_NAMES] as string[];
+const GENERAL_FIELD_NAMES = [
+  ...ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
+  'supportedCurrencyIds',
+] as string[];
 const PAYMENT_FIELD_NAMES = ['paymentOptions'];
 
 export function EntitySettingsPage() {
@@ -56,8 +60,15 @@ export function EntitySettingsPage() {
 
   const record = query?.data?.data as EntityRecord | undefined;
   const defaultCurrencyIdWatched = Form.useWatch('defaultCurrencyId', form);
+  const supportedCurrencyIdsWatched = Form.useWatch('supportedCurrencyIds', form) as
+    | string[]
+    | undefined;
 
   const { countrySelect, currencySelect, policyOptions } = useEntityFormResources(tenantId);
+  const acceptedCurrencySelect = filterSelectOptionsByIds(
+    currencySelect,
+    supportedCurrencyIdsWatched ?? record?.supportedCurrencyIds,
+  );
 
   const { paymentToggleLoading, openPaymentToggle, paymentToggleModal } =
     useEntityPaymentOptionToggle({
@@ -112,6 +123,7 @@ export function EntitySettingsPage() {
         defaultPaymentTermDays: number;
         defaultMonetaryPolicyId: string;
         availableOverduePolicyKeys: string[];
+        supportedCurrencyIds: string[];
       };
       await submitRecord({
         address: values.address,
@@ -124,6 +136,9 @@ export function EntitySettingsPage() {
         defaultPaymentTermDays: values.defaultPaymentTermDays,
         defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
         availableOverduePolicyKeys: values.availableOverduePolicyKeys,
+        supportedCurrencyIds: Array.isArray(values.supportedCurrencyIds)
+          ? values.supportedCurrencyIds.filter((id) => id != null && String(id).trim() !== '')
+          : [],
       });
       message.success(translate('pages.entitySettings.savedGeneral'));
     } catch (e) {
@@ -168,7 +183,9 @@ export function EntitySettingsPage() {
                     <EntityGeneralSettingsFields
                       form={form}
                       countrySelect={countrySelect}
-                      currencySelect={currencySelect}
+                      currencySelect={acceptedCurrencySelect}
+                      allCurrencySelect={currencySelect}
+                      showSupportedCurrencies
                       policyOptions={policyOptions}
                       tenantId={tenantId}
                       entityId={tenantId}
@@ -186,7 +203,7 @@ export function EntitySettingsPage() {
                   <>
                     <EntityPaymentOptionsFields
                       form={form}
-                      currencySelect={currencySelect}
+                      currencySelect={acceptedCurrencySelect}
                       defaultCurrencyId={defaultCurrencyIdWatched}
                       canActivatePaymentOption={canActivatePaymentOption}
                       canDeactivatePaymentOption={canDeactivatePaymentOption}

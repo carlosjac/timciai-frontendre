@@ -57,6 +57,31 @@ export const esMessages = {
   price_list_items: {
     price_list_items: 'el ítem de lista de precios',
   },
+  import: {
+    job: {
+      back: 'Volver',
+      empty: 'No hay importaciones',
+      createdAt: 'Fecha',
+      createdBy: 'Usuario',
+      statusLabel: 'Estado',
+      status: {
+        queued: 'En cola',
+        running: 'En curso',
+        completed: 'Completada',
+        failed: 'Fallida',
+      },
+      created: 'Creados',
+      skipped: 'Omitidos',
+      failed: 'Con error',
+      progress: 'Progreso',
+      progressDetail:
+        'Creados: {{created}}. Omitidos: {{skipped}}. Con error: {{failed}}. Procesados: {{processed}}.',
+      runningHint: 'La importación sigue en curso. Esta pantalla se actualiza sola.',
+      batchError: 'Error del lote',
+      loadError: 'No se pudo cargar la importación',
+      emptyRows: 'No hay filas en esta categoría',
+    },
+  },
   form: {
     serverError: {
       title: 'No se pudo guardar',
@@ -426,6 +451,44 @@ export const esMessages = {
         'Quedará inactivo hasta que se reactive. No podrá editarse mientras esté inactivo.',
       inactiveCannotEdit:
         'No se puede editar un cliente inactivo. Actívalo desde la vista del registro.',
+      import: {
+        downloadTemplate: 'Descargar plantilla',
+        upload: 'Importar',
+        history: 'Importaciones',
+        historyTitle: 'Importaciones de clientes',
+        modalTitle: 'Importar clientes',
+        modalHint:
+          'Usá la plantilla de esta entidad. La primera hoja (Ayuda) explica cómo completarla.',
+        openingDate: 'Fecha de corte',
+        openingDatePlaceholder: 'Hoy',
+        openingDateHelp:
+          'Fecha que se registra en los saldos iniciales de cada cliente. Por defecto es hoy.',
+        saldoColumnsHint:
+          'Una vez qwue hayas llenado la plantilal en Excel, elegí el archivo y hacé click en «Importar».',
+        chooseFile: 'Elegir archivo Excel',
+        submit: 'Importar',
+        cancel: 'Cancelar',
+        downloadError: 'No se pudo descargar la plantilla',
+        uploadError: 'No se pudo importar el archivo',
+        resultsTitle: 'Resultado de la importación',
+        backToList: 'Volver al listado',
+        batchOk: 'El lote se importó correctamente',
+        batchOkDetail:
+          '{{created}} cliente(s) creado(s). {{skipped}} ya existían y se omitieron.',
+        batchPartial: 'El lote terminó con filas con error',
+        summary:
+          'Creados: {{created}}. Ya existían: {{skipped}}. Con error: {{failed}}.',
+        createdTable: 'Clientes creados',
+        skippedTable: 'Clientes que ya existían',
+        failedTable: 'Filas con error',
+        colRow: 'Fila',
+        colName: 'Nombre',
+        colDocument: 'Documento',
+        colReason: 'Motivo',
+        colColumns: 'Columnas',
+        colMessage: 'Motivo',
+        alreadyExists: 'Ya existía en esta entidad',
+      },
     },
     sellableItems: {
       title: 'Productos y servicios',
@@ -1112,6 +1175,14 @@ export const esMessages = {
       defaultCountry: 'País por defecto',
       defaultCurrency: 'Moneda por defecto',
       baseCurrency: 'Moneda base',
+      supportedCurrencies: 'Monedas aceptadas',
+      supportedCurrenciesHint:
+        'Se eligen al crear la entidad o en su configuración. No se puede quitar una moneda si hay registros relacionados.',
+      supportedCurrenciesMinOne: 'Debe elegir al menos una moneda aceptada.',
+      defaultCurrencyMustBeSupported:
+        'La moneda por defecto debe estar incluida en las monedas aceptadas.',
+      baseCurrencyMustBeSupported:
+        'La moneda base debe estar incluida en las monedas aceptadas.',
       personType: 'Tipo de persona',
       documentType: 'Tipo de documento',
       documentNumber: 'Número de documento',
@@ -1133,7 +1204,7 @@ export const esMessages = {
       movePaymentOptionUp: 'Subir',
       movePaymentOptionDown: 'Bajar',
       paymentOptionActive: 'Activo',
-      paymentOptionCurrencies: 'Monedas aceptadas',
+      paymentOptionCurrencies: 'Monedas de este medio',
       paymentOptionsMinOne: 'Debe existir al menos un medio de pago.',
       paymentOptionsAtLeastOneActive: 'Debe haber al menos un medio de pago activo.',
       paymentOptionsDuplicateNames: 'Los nombres de los medios de pago no pueden repetirse.',

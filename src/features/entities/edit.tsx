@@ -34,6 +34,7 @@ import {
 } from './entity-types.js';
 import { useEntityFormResources } from './useEntityFormResources.js';
 import { useEntityPaymentOptionToggle } from './useEntityPaymentOptionToggle.js';
+import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
 const IDENTITY_FIELD_NAMES = [...ENTITY_IDENTITY_FIELD_NAMES] as string[];
 const PAYMENT_FIELD_NAMES = ['paymentOptions'];
@@ -78,6 +79,9 @@ export function EntityEdit() {
 
   const record = query?.data?.data as EntityRecord | undefined;
   const defaultCurrencyIdWatched = Form.useWatch('defaultCurrencyId', form);
+  const supportedCurrencyIdsWatched = Form.useWatch('supportedCurrencyIds', form) as
+    | string[]
+    | undefined;
   const countryIdWatched = Form.useWatch('countryId', form) as string | undefined;
   const taxManagementEnabledWatched = Form.useWatch('taxManagementEnabled', form) as
     | boolean
@@ -85,6 +89,10 @@ export function EntityEdit() {
 
   const { countrySelect, currencySelect, docTypes, policyOptions } =
     useEntityFormResources(tenantId);
+  const acceptedCurrencySelect = filterSelectOptionsByIds(
+    currencySelect,
+    supportedCurrencyIdsWatched ?? record?.supportedCurrencyIds,
+  );
 
   const { resolveIsoCode } = useCountryIsoCodeMap(tenantId);
   const countryCodeForTaxes = resolveIsoCode(countryIdWatched);
@@ -165,6 +173,7 @@ export function EntityEdit() {
         ? ([
             ...ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
             ...ENTITY_ADVERTISEMENT_FIELD_NAMES,
+            'supportedCurrencyIds',
           ] as string[])
         : ([...ENTITY_GENERAL_SETTINGS_FIELD_NAMES] as string[]);
       const values = (await form.validateFields(fieldNames)) as {
@@ -178,6 +187,7 @@ export function EntityEdit() {
         defaultPaymentTermDays: number;
         defaultMonetaryPolicyId: string;
         availableOverduePolicyKeys: string[];
+        supportedCurrencyIds?: string[];
         addAdvertisement?: boolean;
       };
 
@@ -193,7 +203,14 @@ export function EntityEdit() {
         defaultMonetaryPolicyId: values.defaultMonetaryPolicyId,
         availableOverduePolicyKeys: values.availableOverduePolicyKeys,
         ...(canFullEditEntity
-          ? { addAdvertisement: values.addAdvertisement === true }
+          ? {
+              addAdvertisement: values.addAdvertisement === true,
+              supportedCurrencyIds: Array.isArray(values.supportedCurrencyIds)
+                ? values.supportedCurrencyIds.filter(
+                    (id) => id != null && String(id).trim() !== '',
+                  )
+                : [],
+            }
           : {}),
       });
       message.success(translate('pages.entities.savedGeneral'));
@@ -302,7 +319,9 @@ export function EntityEdit() {
           <EntityGeneralSettingsFields
             form={form}
             countrySelect={countrySelect}
-            currencySelect={currencySelect}
+            currencySelect={acceptedCurrencySelect}
+            allCurrencySelect={currencySelect}
+            showSupportedCurrencies={canFullEditEntity}
             policyOptions={policyOptions}
             tenantId={tenantId}
             entityId={record?.id ?? tenantId}
@@ -350,7 +369,7 @@ export function EntityEdit() {
         <>
           <EntityPaymentOptionsFields
             form={form}
-            currencySelect={currencySelect}
+            currencySelect={acceptedCurrencySelect}
             defaultCurrencyId={defaultCurrencyIdWatched}
             canActivatePaymentOption={canActivatePaymentOption}
             canDeactivatePaymentOption={canDeactivatePaymentOption}

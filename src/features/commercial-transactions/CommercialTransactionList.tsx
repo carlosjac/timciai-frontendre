@@ -2,6 +2,7 @@ import { EditButton } from '@refinedev/antd';
 import { useList, usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
 import { useMemo } from 'react';
+import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import type { CommercialTransactionResource } from '../../shared/timci/commercialTransactionsApi.js';
 import { commercialTransactionShowPath } from '../../shared/timci/commercialTransactionsApi.js';
@@ -10,6 +11,7 @@ import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 import { COMMERCIAL_TX_CONFIG } from './types.js';
 import { commercialStatusTagColor, commercialStatusTitleKey } from './statusLabel.js';
 import { salePaymentSettlement, salePaymentSettlementLabel } from './salePaymentSettlement.js';
@@ -43,14 +45,12 @@ export function CommercialTransactionList({ resource }: Props) {
   const canView = codes.includes(`${resource}.view`);
   const canUpdate = codes.includes(`${resource}.update`);
 
+  const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { result: customersResult } = useList({
     resource: 'customers',
     pagination: { currentPage: 1, pageSize: 500 },
   });
-  const { result: currenciesResult } = useList({
-    resource: 'currencies',
-    pagination: { currentPage: 1, pageSize: 500 },
-  });
+  const { labelById: currencyLabelById } = useEntitySupportedCurrencySelect(tenantId);
 
   const customerNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -59,16 +59,6 @@ export function CommercialTransactionList({ resource }: Props) {
     }
     return map;
   }, [customersResult.data]);
-
-  const currencyLabelById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const c of currenciesResult.data ?? []) {
-      const name = typeof c.name === 'string' ? c.name.trim() : '';
-      const code = typeof c.code === 'string' ? c.code.trim() : '';
-      map.set(String(c.id), name && code ? `${name} (${code})` : name || code || String(c.id));
-    }
-    return map;
-  }, [currenciesResult.data]);
 
   const getRowShowPath = useMemo(
     () =>

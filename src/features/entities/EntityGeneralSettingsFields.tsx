@@ -9,6 +9,9 @@ type EntityGeneralSettingsFieldsProps = {
   form: FormInstance;
   countrySelect: SelectProps;
   currencySelect: SelectProps;
+  /** Global catalog. Used when showSupportedCurrencies is true (create, root edit, entity settings). */
+  allCurrencySelect?: SelectProps;
+  showSupportedCurrencies?: boolean;
   policyOptions: Array<{ value: string; label: string }>;
   sections?: EntityGeneralSettingsSection[];
   /** Required to load monetary policy options for default select. */
@@ -16,10 +19,19 @@ type EntityGeneralSettingsFieldsProps = {
   entityId?: string | null;
 };
 
+function addCurrencyToSupported(form: FormInstance, currencyId: string | undefined) {
+  if (!currencyId) return;
+  const current = (form.getFieldValue('supportedCurrencyIds') as string[] | undefined) ?? [];
+  if (current.includes(currencyId)) return;
+  form.setFieldsValue({ supportedCurrencyIds: [...current, currencyId] });
+}
+
 export function EntityGeneralSettingsFields({
   form,
   countrySelect,
   currencySelect,
+  allCurrencySelect,
+  showSupportedCurrencies = false,
   policyOptions,
   sections = ['contact', 'policies'],
   tenantId,
@@ -63,10 +75,50 @@ export function EntityGeneralSettingsFields({
           >
             <Select {...countrySelect} showSearch optionFilterProp="label" />
           </Form.Item>
+          {showSupportedCurrencies ? (
+            <Form.Item
+              label={translate('create.entity.supportedCurrencies')}
+              name="supportedCurrencyIds"
+              extra={translate('create.entity.supportedCurrenciesHint')}
+              rules={[
+                { required: true, message: translate('form.validation.requiredField') },
+                {
+                  validator: async (_, value: string[]) => {
+                    if (!Array.isArray(value) || value.length < 1) {
+                      throw new Error(translate('create.entity.supportedCurrenciesMinOne'));
+                    }
+                  },
+                },
+              ]}
+            >
+              <Select
+                {...(allCurrencySelect ?? currencySelect)}
+                mode="multiple"
+                showSearch
+                optionFilterProp="label"
+                filterOption={(input, option) => {
+                  const label = option?.label;
+                  const text = typeof label === 'string' ? label : String(label ?? '');
+                  return text.toLowerCase().includes(input.trim().toLowerCase());
+                }}
+              />
+            </Form.Item>
+          ) : null}
           <Form.Item
             label={translate('create.entity.defaultCurrency')}
             name="defaultCurrencyId"
-            rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+            rules={[
+              { required: true, message: translate('form.validation.requiredField') },
+              {
+                validator: async (_, value: string) => {
+                  if (!showSupportedCurrencies || !value) return;
+                  const accepted = form.getFieldValue('supportedCurrencyIds') as string[] | undefined;
+                  if (Array.isArray(accepted) && accepted.length > 0 && !accepted.includes(value)) {
+                    throw new Error(translate('create.entity.defaultCurrencyMustBeSupported'));
+                  }
+                },
+              },
+            ]}
           >
             <Select
               {...currencySelect}
@@ -77,12 +129,24 @@ export function EntityGeneralSettingsFields({
                 const text = typeof label === 'string' ? label : String(label ?? '');
                 return text.toLowerCase().includes(input.trim().toLowerCase());
               }}
+              onChange={(value) => addCurrencyToSupported(form, value as string | undefined)}
             />
           </Form.Item>
           <Form.Item
             label={translate('create.entity.baseCurrency')}
             name="baseCurrencyId"
-            rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+            rules={[
+              { required: true, message: translate('form.validation.requiredField') },
+              {
+                validator: async (_, value: string) => {
+                  if (!showSupportedCurrencies || !value) return;
+                  const accepted = form.getFieldValue('supportedCurrencyIds') as string[] | undefined;
+                  if (Array.isArray(accepted) && accepted.length > 0 && !accepted.includes(value)) {
+                    throw new Error(translate('create.entity.baseCurrencyMustBeSupported'));
+                  }
+                },
+              },
+            ]}
           >
             <Select
               {...currencySelect}
@@ -93,6 +157,7 @@ export function EntityGeneralSettingsFields({
                 const text = typeof label === 'string' ? label : String(label ?? '');
                 return text.toLowerCase().includes(input.trim().toLowerCase());
               }}
+              onChange={(value) => addCurrencyToSupported(form, value as string | undefined)}
             />
           </Form.Item>
         </>

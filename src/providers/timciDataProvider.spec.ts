@@ -87,4 +87,30 @@ describe('createTimciDataProvider', () => {
       expect(String(err.message)).toMatch(/Invalid resource id/i);
     }
   });
+
+  it('update entities PATCH includes supportedCurrencyIds', async () => {
+    const entityId = '01933a1b-2c3d-7e4f-8a0b-1c2d3e4f5a6b';
+    const usd = '01933a1b-2c3d-7001-8a0b-1c2d3e4f5a6b';
+    const eur = '01933a1b-2c3d-7009-8a0b-1c2d3e4f5a6b';
+    let body: unknown;
+    localStorage.setItem(TENANT_STORAGE_KEY, TENANT);
+    mswServer.use(
+      http.patch(`${API}/tenants/${TENANT}/entities/${entityId}`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ id: entityId, supportedCurrencyIds: [usd, eur] });
+      }),
+    );
+
+    const dp = createTimciDataProvider();
+    await dp.update({
+      resource: 'entities',
+      id: entityId,
+      variables: { address: 'Street 1', supportedCurrencyIds: [usd, eur] },
+    });
+
+    expect(body).toMatchObject({
+      address: 'Street 1',
+      supportedCurrencyIds: [usd, eur],
+    });
+  });
 });

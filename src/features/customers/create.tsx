@@ -15,7 +15,7 @@ import {
   type FormProps,
 } from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
-import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
+import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 import {
   fetchOverduePolicyCatalog,
   fetchPriceListsForEntity,
@@ -89,14 +89,7 @@ export function CustomerCreate() {
     queryOptions: { enabled: !!tenantId },
   });
 
-  const { selectProps: currencySelectRaw } = useSelect({
-    resource: 'currencies',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-  const currencySelect = stripSelectServerSearch(currencySelectRaw);
+  const { selectProps: currencySelect } = useEntitySupportedCurrencySelect(tenantId);
 
   const { result: docTypeResult } = useList<DocTypeRow>({
     resource: 'document_types',

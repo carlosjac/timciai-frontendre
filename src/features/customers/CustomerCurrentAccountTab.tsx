@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useList, useTranslate } from '@refinedev/core';
+import { useTranslate } from '@refinedev/core';
 import { Alert, Select, Space, Table, Tag, Typography, theme } from 'antd';
 import { useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -20,6 +20,7 @@ import {
 import { SalePaymentSettlementTag } from '../commercial-transactions/SalePaymentSettlementTag.js';
 import { UnallocatedRemainderTag } from '../commercial-transactions/UnallocatedRemainderTag.js';
 import { useCustomerAccountCurrencyParam } from './useCustomerAccountCurrencyParam.js';
+import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
 type CurrentAccountRow = {
   id: string;
@@ -92,21 +93,7 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
     [token.colorError, token.colorSuccess],
   );
 
-  const { result: currenciesResult } = useList({
-    resource: 'currencies',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-
-  const currencyLabelById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const c of currenciesResult.data ?? []) {
-      const name = typeof c.name === 'string' ? c.name.trim() : '';
-      const code = typeof c.code === 'string' ? c.code.trim() : '';
-      map.set(String(c.id), name && code ? `${name} (${code})` : name || code || String(c.id));
-    }
-    return map;
-  }, [currenciesResult.data]);
+  const { labelById: currencyLabelById } = useEntitySupportedCurrencySelect(tenantId);
 
   const accountsEnabled = Boolean(tenantId && customerId);
   const movementsEnabled = Boolean(tenantId && customerId && currencyId);

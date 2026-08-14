@@ -1,12 +1,14 @@
-import { useCreate, useInvalidate, useList, useOne, useTranslate, useUpdate } from '@refinedev/core';
+import { useCreate, useInvalidate, useOne, useTranslate, useUpdate } from '@refinedev/core';
 import { App, Button, DatePicker, Drawer, Form, Input, Select, Typography } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo } from 'react';
+import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
 const CREATE_FIELDS = ['currencyId', 'unitPriceAmount', 'validFrom', 'validTo'] as const;
 const EDIT_FIELDS = ['currencyId', 'unitPriceAmount', 'validFrom', 'validTo'] as const;
@@ -65,24 +67,9 @@ export function SellableItemPriceDrawer({
   });
   const entityLoading = entityQuery.isFetching;
 
-  const { query: currenciesQuery, result: currenciesResult } = useList({
-    resource: 'currencies',
-    pagination: { currentPage: 1, pageSize: 500 },
-    sorters: [{ field: 'name', order: 'asc' }],
-    queryOptions: { enabled: open },
-  });
-
-  const currencyOptions = useMemo(
-    () =>
-      (currenciesResult.data ?? []).map((item) => {
-        const name = typeof item.name === 'string' ? item.name.trim() : '';
-        const code = typeof item.code === 'string' ? item.code.trim() : '';
-        const label =
-          name && code ? `${name} (${code})` : name || code || String(item.id ?? '');
-        return { value: String(item.id ?? ''), label };
-      }),
-    [currenciesResult.data],
-  );
+  const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
+  const { options: currencyOptions, isLoading: currenciesLoading } =
+    useEntitySupportedCurrencySelect(open ? tenantId ?? entityId : null);
 
   const tenantDefaultCurrencyId = useMemo(() => {
     const id =
@@ -167,10 +154,7 @@ export function SellableItemPriceDrawer({
     }
   };
 
-  const loading =
-    currenciesQuery.isLoading ||
-    currenciesQuery.isFetching ||
-    (isEdit ? oneLoading : entityLoading);
+  const loading = currenciesLoading || (isEdit ? oneLoading : entityLoading);
 
   return (
     <Drawer

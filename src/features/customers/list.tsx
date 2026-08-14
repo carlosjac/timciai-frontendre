@@ -1,7 +1,9 @@
 import { EditButton } from '@refinedev/antd';
 import { useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { Tag } from 'antd';
+import { Button, Space, Tag } from 'antd';
+import { UnorderedListOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -10,6 +12,8 @@ import { timciPersonTypeLabel } from '../../shared/timci/personTypeLabel.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
+import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
+import { CustomerImportActions } from './CustomerImportActions.js';
 
 type CustomerRow = BaseRecord & {
   name: string;
@@ -32,6 +36,9 @@ export function CustomerList() {
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const canView = permData?.actionCodes?.includes('customers.view') ?? false;
   const canUpdate = permData?.actionCodes?.includes('customers.update') ?? false;
+  const canAdd = permData?.actionCodes?.includes('customers.add') ?? false;
+  const tenantId = getStoredTenantId();
+  const navigate = useNavigate();
 
   const getRowShowPath = useMemo(
     () =>
@@ -174,6 +181,18 @@ export function CustomerList() {
       requiresTenant
       pickerDateFormat={dateFormat}
       getRowShowPath={getRowShowPath}
+      extraHeaderButtons={
+        <Space wrap>
+          {canAdd ? <CustomerImportActions tenantId={tenantId} /> : null}
+          <Button
+            icon={<UnorderedListOutlined aria-hidden />}
+            disabled={!tenantId}
+            onClick={() => navigate('/customers/import-jobs')}
+          >
+            {translate('pages.customers.import.history')}
+          </Button>
+        </Space>
+      }
     />
   );
 }

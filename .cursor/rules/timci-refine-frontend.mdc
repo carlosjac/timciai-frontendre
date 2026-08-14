@@ -1,6 +1,6 @@
 ---
-description: Timci Refine admin — UI (es), código (en), WCAG nivel A en código nuevo, capas shared/features, TimciDataList, menu.*, registros inactivos no editables (§7.2).
-globs: frontendrefine/**/*
+description: Timci Refine admin — UI (es), código (en), WCAG nivel A en código nuevo, capas shared/features, TimciDataList, menu.*, registros inactivos no editables (§7.2), fechas con preferencia del usuario (§10), go back con flecha PageHeader (§11).
+globs: src/**/*.{ts,tsx}, timciai-frontendre/src/**/*.{ts,tsx}
 alwaysApply: false
 ---
 
@@ -95,6 +95,24 @@ En recursos con **soft delete** (`isActive`, `PATCH …/activate|deactivate`), u
 - **Stack:** Refine y Ant Design aportan parte del comportamiento; las piezas **custom** (`TimciDataList`, cabecera, filtros, etc.) son las que hay que revisar con más cuidado.
 - **Verificación:** antes de dar por cerrada una pantalla con interacción relevante, comprobar al menos **navegación solo teclado** y que iconos/botones sin texto tengan nombre para tecnologías de asistencia.
 
-## 10. Mantenimiento de esta regla
+## 10. Fechas (formato de preferencia del usuario)
+
+- **API / persistencia:** las fechas viajan y se guardan en ISO (`YYYY-MM-DD` date-only, ISO-8601 para timestamps). El submit de un `DatePicker` sigue enviando `YYYY-MM-DD`.
+- **Prohibido `Date` de JavaScript** (`new Date()`, `Date.now()`, tipar como `Date`, `toISOString().slice(0, 10)`). En backend: `DateOnly` / `DateTime` (`shared/lib/datatype/`). En este admin: strings ISO + `dayjs` en pickers y `formatTimciUserDateOnly` / `formatTimciUserDateTime` en pantalla.
+- **Pantalla:** todo lo que ve el usuario (formularios, listados, show, filtros, CSV, plantillas descargadas) usa **`useUserPreferences().dateFormat`** (`DD/MM/YYYY` | `MM/DD/YYYY` | `YYYY-MM-DD`).
+- **DatePicker / RangePicker:** `format={dateFormat}` (o `pickerDateFormat={dateFormat}` en `TimciDataList`). Nunca `format="YYYY-MM-DD"` fijo.
+- **Celdas y textos:** `formatTimciUserDateOnly` / `formatTimciUserDateTime` (`src/shared/timci/formatUserDateTime.ts`). En columnas de `TimciDataList`, `render` + `exportValue` con esos helpers para que el CSV coincida con la tabla.
+- Referencia: `features/customers/CustomerSettlementTab.tsx`, `features/customers/CustomerImportActions.tsx`, listados con `pickerDateFormat={dateFormat}`.
+
+## 11. Go back on custom screens (import, etc.)
+
+Screens that are not Refine `Edit`/`Show`/`Create` still use the **same back arrow** as those views (`PageHeader` + `ArrowLeftOutlined`, not a labelled «Volver» button).
+
+- Shared chrome: **`src/shared/timci/TimciPageBackHeader.tsx`**.
+- Pass `backPath` (the destination) and page `title`.
+- Icon-only control: accessible name via i18n (`import.job.back`).
+- Reference: customer **edit/show** header; import history and import result (`TimciImportJobList`, `TimciImportJobPanel`).
+
+## 12. Mantenimiento de esta regla
 
 - Nuevos estándares de UI o arquitectura: añadir subsección breve con título y viñetas.

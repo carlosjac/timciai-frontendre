@@ -12,6 +12,7 @@ import { EntityIdentityFields } from './EntityIdentityFields.js';
 import { EntityPaymentOptionsFields } from './EntityPaymentOptionsFields.js';
 import { EntityTaxManagementFields } from './EntityTaxManagementFields.js';
 import { useEntityFormResources } from './useEntityFormResources.js';
+import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
 type EntityCreateTab = 'identity' | 'general' | 'taxes' | 'payment-options';
 
@@ -32,9 +33,16 @@ export function EntityCreate() {
 
   const { formProps, saveButtonProps, onFinish, form } = useForm({ resource: 'entities' });
   const defaultCurrencyIdWatched = Form.useWatch('defaultCurrencyId', form);
+  const supportedCurrencyIdsWatched = Form.useWatch('supportedCurrencyIds', form) as
+    | string[]
+    | undefined;
 
   const { countrySelect, currencySelect, docTypes, policyOptions, policies } =
     useEntityFormResources(tenantId);
+  const acceptedCurrencySelect = filterSelectOptionsByIds(
+    currencySelect,
+    supportedCurrencyIdsWatched,
+  );
 
   useEffect(() => {
     if (policies.length === 0) return;
@@ -139,6 +147,11 @@ export function EntityCreate() {
               defaultOverdueNotificationPolicyKey: values.defaultOverdueNotificationPolicyKey,
               defaultPaymentTermDays: values.defaultPaymentTermDays,
               availableOverduePolicyKeys: values.availableOverduePolicyKeys,
+              supportedCurrencyIds: Array.isArray(values.supportedCurrencyIds)
+                ? values.supportedCurrencyIds.filter(
+                    (id) => id != null && String(id).trim() !== '',
+                  )
+                : [],
               addAdvertisement: values.addAdvertisement,
               fantasyName,
               taxManagementEnabled,
@@ -159,6 +172,7 @@ export function EntityCreate() {
               joined.includes('defaultCountry') ||
               joined.includes('defaultCurrency') ||
               joined.includes('baseCurrency') ||
+              joined.includes('supportedCurrency') ||
               joined.includes('Overdue') ||
               joined.includes('PaymentTerm') ||
               joined.includes('addAdvertisement')
@@ -213,7 +227,9 @@ export function EntityCreate() {
                     <EntityGeneralSettingsFields
                       form={form}
                       countrySelect={countrySelect}
-                      currencySelect={currencySelect}
+                      currencySelect={acceptedCurrencySelect}
+                      allCurrencySelect={currencySelect}
+                      showSupportedCurrencies
                       policyOptions={policyOptions}
                       tenantId={tenantId}
                     />
@@ -237,7 +253,7 @@ export function EntityCreate() {
                 children: (
                   <EntityPaymentOptionsFields
                     form={form}
-                    currencySelect={currencySelect}
+                    currencySelect={acceptedCurrencySelect}
                     defaultCurrencyId={defaultCurrencyIdWatched}
                     canActivatePaymentOption={false}
                     canDeactivatePaymentOption={false}

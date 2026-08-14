@@ -27,7 +27,7 @@ import { useTaxProfileSchema } from '../../shared/timci/tax/useTaxProfileSchema.
 import { filterAttributeDefsForRole } from '../../shared/timci/taxesApi.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { EntityAdminRedirect } from './EntityAdminRedirect.js';
-import type { EntityRecord } from './entity-types.js';
+import type { EntityRecord, PaymentOptionRow } from './entity-types.js';
 
 const descStyles = { label: { width: 220, maxWidth: 280, verticalAlign: 'top' as const } };
 
@@ -229,6 +229,11 @@ export function EntityShow() {
           <Descriptions.Item label={translate('create.entity.baseCurrency')}>
             {resolveCurrency(record?.baseCurrencyId)}
           </Descriptions.Item>
+          <Descriptions.Item label={translate('create.entity.supportedCurrencies')}>
+            {record?.supportedCurrencyIds?.length
+              ? record.supportedCurrencyIds.map((id) => resolveCurrency(id)).join(', ')
+              : '—'}
+          </Descriptions.Item>
           <Descriptions.Item label={translate('create.entity.defaultOverduePolicy')}>
             {resolvePolicy(record?.defaultOverdueNotificationPolicyKey)}
           </Descriptions.Item>
@@ -282,7 +287,7 @@ export function EntityShow() {
       key: 'payment-options',
       label: translate('pages.entities.tabs.paymentOptions'),
       children: (
-        <Table
+        <Table<PaymentOptionRow>
           size="small"
           rowKey={(row) => row.id ?? `opt-${row.ordinal}`}
           pagination={false}

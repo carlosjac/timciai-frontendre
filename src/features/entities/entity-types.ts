@@ -34,7 +34,9 @@ export type EntityRecord = {
   defaultOverdueNotificationPolicyKey?: string;
   defaultPaymentTermDays?: number;
   defaultMonetaryPolicyId?: string | null;
+  defaultMonetaryPolicyName?: string;
   availableOverduePolicyKeys?: string[];
+  supportedCurrencyIds?: string[];
   addAdvertisement?: boolean;
   fantasyName?: string | null;
   taxManagementEnabled?: boolean;
@@ -78,4 +80,5 @@ export const ENTITY_EDIT_FIELD_NAMES = [
   ...ENTITY_ADVERTISEMENT_FIELD_NAMES,
   ...ENTITY_TAX_FIELD_NAMES,
   ...ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
+  'supportedCurrencyIds',
 ] as const;

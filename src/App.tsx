@@ -127,6 +127,14 @@ const MonetaryPolicyEdit = lazyPage(
   'MonetaryPolicyEdit',
 );
 const CustomerList = lazyPage(() => import('./features/customers/list.js'), 'CustomerList');
+const CustomerImportJobsList = lazyPage(
+  () => import('./features/customers/import-jobs-list.js'),
+  'CustomerImportJobsList',
+);
+const CustomerImportJobShow = lazyPage(
+  () => import('./features/customers/import-job-show.js'),
+  'CustomerImportJobShow',
+);
 const CustomerCreate = lazyPage(() => import('./features/customers/create.js'), 'CustomerCreate');
 const CustomerShow = lazyPage(() => import('./features/customers/show.js'), 'CustomerShow');
 const CustomerEdit = lazyPage(() => import('./features/customers/edit.js'), 'CustomerEdit');
@@ -517,6 +525,14 @@ function TimciRefineTree() {
                 element={timciGuarded('monetary_policies', 'edit', <MonetaryPolicyEdit />)}
               />
               <Route path="/customers" element={timciGuarded('customers', 'list', <CustomerList />)} />
+              <Route
+                path="/customers/import-jobs"
+                element={timciGuarded('customers', 'list', <CustomerImportJobsList />)}
+              />
+              <Route
+                path="/customers/import-jobs/:jobId"
+                element={timciGuarded('customers', 'list', <CustomerImportJobShow />)}
+              />
               <Route
                 path="/customers/create"
                 element={timciGuarded('customers', 'create', <CustomerCreate />)}

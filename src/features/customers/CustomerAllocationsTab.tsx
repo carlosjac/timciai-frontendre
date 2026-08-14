@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useList, useTranslate } from '@refinedev/core';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslate } from '@refinedev/core';
 import { Alert, Button, Select, Space, Table, Typography } from 'antd';
 import { useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -15,6 +15,7 @@ import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { useCustomerAccountCurrencyParam } from './useCustomerAccountCurrencyParam.js';
+import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
 type CurrentAccountRow = {
   id: string;
@@ -40,21 +41,7 @@ export function CustomerAllocationsTab({ customerId }: Props) {
   const [rowsLoading, setRowsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const { result: currenciesResult } = useList({
-    resource: 'currencies',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-
-  const currencyLabelById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const c of currenciesResult.data ?? []) {
-      const name = typeof c.name === 'string' ? c.name.trim() : '';
-      const code = typeof c.code === 'string' ? c.code.trim() : '';
-      map.set(String(c.id), name && code ? `${name} (${code})` : name || code || String(c.id));
-    }
-    return map;
-  }, [currenciesResult.data]);
+  const { labelById: currencyLabelById } = useEntitySupportedCurrencySelect(tenantId);
 
   const accountsEnabled = Boolean(tenantId && customerId);
   const rowsEnabled = Boolean(tenantId && customerId && currencyId);

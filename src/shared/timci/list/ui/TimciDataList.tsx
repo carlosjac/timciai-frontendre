@@ -18,6 +18,7 @@ import {
   useState,
   type ComponentProps,
   type CSSProperties,
+  type ReactNode,
 } from 'react';
 import { useNavigate } from 'react-router';
 import type { TimciColumnDef } from '../domain/timci-column-def.js';
@@ -112,6 +113,8 @@ export type TimciDataListProps<T extends BaseRecord> = {
   getRowShowPath?: (record: T) => string | undefined;
   /** Incluye registros inactivos en el listado (envía includeInactive=true al API). */
   includeInactive?: boolean;
+  /** Extra actions in the list header (before column picker / export / create). */
+  extraHeaderButtons?: ReactNode;
 };
 
 function filterForField(filters: CrudFilter[] | undefined, field: string): LogicalFilter | undefined {
@@ -516,6 +519,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
           >
             {translate('list.export.button')}
           </Button>
+          {props.extraHeaderButtons}
           {defaultButtons}
         </Space>
       )}
