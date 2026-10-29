@@ -106,6 +106,9 @@ export function buildEntityUpdateBody(variables: Record<string, unknown>): Recor
   if (variables.taxManagementEnabled !== undefined) {
     payload.taxManagementEnabled = variables.taxManagementEnabled === true;
   }
+  if (variables.documentEmissionMode !== undefined) {
+    payload.documentEmissionMode = variables.documentEmissionMode;
+  }
   if (variables.taxProfile !== undefined) {
     // Profile-only updates (edit) omit the flag; do not clear profile unless flag is explicitly false.
     if (variables.taxManagementEnabled === false) {

@@ -71,4 +71,18 @@ describe('createTimciAccessControlProvider', () => {
     });
     await expect(ac.can!({ resource: 'users', action: 'list' })).resolves.toEqual({ can: false });
   });
+
+  it('gates documents list/show via menu.documents and documents.view', async () => {
+    withCodes(['menu.documents', 'documents.view']);
+    const ac = createTimciAccessControlProvider();
+    await expect(ac.can!({ resource: 'documents', action: 'list' })).resolves.toEqual({
+      can: true,
+    });
+    await expect(ac.can!({ resource: 'documents', action: 'show' })).resolves.toEqual({
+      can: true,
+    });
+    await expect(ac.can!({ resource: 'documents', action: 'create' })).resolves.toEqual({
+      can: false,
+    });
+  });
 });

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslate } from '@refinedev/core';
 import { Alert, Select, Space, Table, Tag, Typography, theme } from 'antd';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
   commercialResourceFromType,
@@ -28,6 +28,13 @@ type CurrentAccountRow = {
   balance: string;
 };
 
+type MovementIssuedDocument = {
+  id: string;
+  documentKind: string;
+  number: string;
+  status: string;
+};
+
 type MovementRow = {
   id: string;
   entityTxnNumber?: number | null;
@@ -41,7 +48,12 @@ type MovementRow = {
   runningBalance: string;
   registeredAt: string | null;
   reversesTransactionId?: string | null;
+  issuedDocument?: MovementIssuedDocument | null;
 };
+
+function documentShowPath(id: string): string {
+  return `/documents/show/${encodeURIComponent(id)}`;
+}
 
 type Props = {
   customerId: string;
@@ -275,6 +287,29 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
             dataIndex: 'concept',
             ellipsis: true,
             render: (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : '—'),
+          },
+          {
+            title: translate('pages.customers.currentAccountDocument'),
+            key: 'issuedDocument',
+            ellipsis: true,
+            render: (_: unknown, row: MovementRow) => {
+              const doc = row.issuedDocument;
+              if (!doc?.id || !doc.number) return '—';
+              const kindLabel = translate(
+                `documents.kinds.${doc.documentKind}`,
+                doc.documentKind,
+              );
+              const label = `${kindLabel} # ${doc.number}`;
+              return (
+                <Link
+                  to={documentShowPath(doc.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={label}
+                >
+                  {label}
+                </Link>
+              );
+            },
           },
           {
             title: translate('table.commercialTransactions.status'),

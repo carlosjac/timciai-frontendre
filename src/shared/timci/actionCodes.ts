@@ -136,6 +136,8 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
       return has('menu.credits');
     case 'collections':
       return has('menu.collections');
+    case 'documents':
+      return has('menu.documents');
     case 'users':
       return has('menu.users');
     case 'tenants':
@@ -175,6 +177,7 @@ export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'debits', path: '/debits' },
   { name: 'credits', path: '/credits' },
   { name: 'collections', path: '/collections' },
+  { name: 'documents', path: '/documents' },
   { name: 'users', path: '/users' },
   { name: 'sessions', path: '/sessions' },
   { name: 'tenants', path: '/tenants' },

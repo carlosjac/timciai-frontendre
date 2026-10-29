@@ -23,9 +23,12 @@ import { EntityGeneralSettingsFields } from './EntityGeneralSettingsFields.js';
 import { EntityIdentityFields } from './EntityIdentityFields.js';
 import { EntityPaymentOptionsFields } from './EntityPaymentOptionsFields.js';
 import { EntityTaxManagementFields } from './EntityTaxManagementFields.js';
+import { EntityDocumentEmissionFields } from './EntityDocumentEmissionFields.js';
+import { EntityDocumentLogoFields } from './EntityDocumentLogoFields.js';
 import { mapPaymentOptionsForSubmit } from './entity-payment-options-utils.js';
 import {
   ENTITY_ADVERTISEMENT_FIELD_NAMES,
+  ENTITY_DOCUMENTS_FIELD_NAMES,
   ENTITY_EDIT_FIELD_NAMES,
   ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
   ENTITY_IDENTITY_FIELD_NAMES,
@@ -39,10 +42,11 @@ import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedC
 const IDENTITY_FIELD_NAMES = [...ENTITY_IDENTITY_FIELD_NAMES] as string[];
 const PAYMENT_FIELD_NAMES = ['paymentOptions'];
 
-type EntityEditTab = 'identity' | 'general' | 'taxes' | 'payment-options';
+type EntityEditTab = 'identity' | 'general' | 'taxes' | 'documents' | 'payment-options';
 
 function resolveActiveTab(raw: string | null, canFullEdit: boolean): EntityEditTab {
   if (raw === 'payment-options') return 'payment-options';
+  if (raw === 'documents' && canFullEdit) return 'documents';
   if (raw === 'taxes' && canFullEdit) return 'taxes';
   if (raw === 'identity' && canFullEdit) return 'identity';
   if (raw === 'general') return 'general';
@@ -275,6 +279,20 @@ export function EntityEdit() {
     }
   };
 
+  const saveDocuments = async () => {
+    clearServerErrors(form);
+    try {
+      await form.validateFields([...ENTITY_DOCUMENTS_FIELD_NAMES]);
+      await submitRecord({
+        documentEmissionMode: form.getFieldValue('documentEmissionMode') ?? 'unofficial',
+      });
+      message.success(translate('pages.entities.savedDocuments'));
+    } catch (e) {
+      if (e && typeof e === 'object' && 'errorFields' in e) return;
+      applyServerError(form, e);
+    }
+  };
+
   const savePaymentOptions = async () => {
     clearServerErrors(form);
     try {
@@ -357,6 +375,19 @@ export function EntityEdit() {
                     {translate('pages.entities.saveTaxes')}
                   </Button>
                 ) : null}
+              </>
+            ),
+          },
+          {
+            key: 'documents',
+            label: translate('pages.entities.tabs.documents'),
+            children: (
+              <>
+                <EntityDocumentEmissionFields />
+                <Button type="primary" htmlType="button" onClick={() => void saveDocuments()}>
+                  {translate('pages.entities.saveDocuments')}
+                </Button>
+                <EntityDocumentLogoFields entityId={record?.id ?? tenantId} />
               </>
             ),
           },

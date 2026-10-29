@@ -45,6 +45,7 @@ import { commercialStatusTagColor, commercialStatusTitleKey } from './statusLabe
 import { CommercialTransactionAllocationsPanel } from './CommercialTransactionAllocationsPanel.js';
 import { CommercialTransactionIncomingAllocationsPanel } from './CommercialTransactionIncomingAllocationsPanel.js';
 import { CommercialTransactionItemsPanel } from './CommercialTransactionItemsPanel.js';
+import { CommercialTransactionDocumentsPanel } from './CommercialTransactionDocumentsPanel.js';
 import { ReplaceAllocationsDrawer } from './ReplaceAllocationsDrawer.js';
 import { commercialResourceCanHaveAllocations } from './commercialTransactionPanels.js';
 import {
@@ -629,6 +630,18 @@ export function CommercialTransactionShow({ resource }: Props) {
           schema={entityTax.schema}
         />
 
+        {record?.id &&
+        (record.status === 'registered' || record.status === 'voided') &&
+        (codes.includes('documents.view') ||
+          codes.includes('documents.manage') ||
+          codes.includes('menu.documents')) ? (
+          <CommercialTransactionDocumentsPanel
+            commercialTransactionId={record.id}
+            canManage={codes.includes('documents.manage')}
+            hideWhenEmpty
+          />
+        ) : null}
+
         <CommercialTransactionIncomingAllocationsPanel
           resource={resource}
           incomingAllocations={
@@ -637,6 +650,7 @@ export function CommercialTransactionShow({ resource }: Props) {
           targetTransactionId={record?.id}
           customerId={record?.customerId}
           currencyId={record?.currencyId}
+          hideWhenEmpty
         />
 
         <CommercialTransactionAllocationsPanel

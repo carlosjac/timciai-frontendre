@@ -27,14 +27,16 @@ import { useTaxProfileSchema } from '../../shared/timci/tax/useTaxProfileSchema.
 import { filterAttributeDefsForRole } from '../../shared/timci/taxesApi.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { EntityAdminRedirect } from './EntityAdminRedirect.js';
+import { EntityDocumentLogoFields } from './EntityDocumentLogoFields.js';
 import type { EntityRecord, PaymentOptionRow } from './entity-types.js';
 
 const descStyles = { label: { width: 220, maxWidth: 280, verticalAlign: 'top' as const } };
 
-type EntityShowTab = 'identity' | 'general' | 'taxes' | 'payment-options';
+type EntityShowTab = 'identity' | 'general' | 'taxes' | 'documents' | 'payment-options';
 
 function resolveActiveTab(raw: string | null, canFullEdit: boolean): EntityShowTab {
   if (raw === 'payment-options') return 'payment-options';
+  if (raw === 'documents' && canFullEdit) return 'documents';
   if (raw === 'taxes' && canFullEdit) return 'taxes';
   if (raw === 'identity' && canFullEdit) return 'identity';
   if (raw === 'general') return 'general';
@@ -279,6 +281,23 @@ export function EntityShow() {
                     })
                   : null}
               </Descriptions>
+            ),
+          },
+          {
+            key: 'documents',
+            label: translate('pages.entities.tabs.documents'),
+            children: (
+              <>
+                <Descriptions bordered column={1} size="middle" styles={descStyles}>
+                  <Descriptions.Item label={translate('create.entity.documentEmissionMode')}>
+                    {translate(
+                      `documents.mode.${record?.documentEmissionMode ?? 'unofficial'}`,
+                      record?.documentEmissionMode ?? 'unofficial',
+                    )}
+                  </Descriptions.Item>
+                </Descriptions>
+                <EntityDocumentLogoFields entityId={record?.id} readOnly />
+              </>
             ),
           },
         ]

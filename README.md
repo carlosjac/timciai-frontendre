@@ -28,12 +28,12 @@ Abre **http://localhost:5174** (puerto distinto del Vite del admin React Admin e
 
 ### Content-Security-Policy
 
-`index.html` incluye una CSP baseline **same-origin**: `script-src 'self'`, `connect-src 'self'`, `form-action 'self'`, `frame-ancestors 'none'`. Si en producción `VITE_API_URL` apunta a otro origen, amplía `connect-src` (meta o headers del reverse proxy) con ese host.
+`index.html` incluye una CSP baseline **same-origin**: `script-src 'self'`, `connect-src 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, y `frame-src`/`object-src` con `blob:` (visor PDF de comprobantes). Si en producción `VITE_API_URL` apunta a otro origen, amplía `connect-src` (meta o headers del reverse proxy) con ese host.
 
 Preferible reforzar la CSP en el hosting (Nginx/CDN) **además** de la meta, por ejemplo:
 
 ```nginx
-add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-src 'self' blob:; object-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'" always;
 ```
 
 Si la API es cross-origin, añade ese origen a `connect-src` en el mismo header (y en la meta si la mantienes).

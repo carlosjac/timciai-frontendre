@@ -23,6 +23,7 @@ import {
   FallOutlined,
   RiseOutlined,
   WalletOutlined,
+  FileDoneOutlined,
 } from '@ant-design/icons';
 import { App as AntdApp, ConfigProvider, theme as antdTheme } from 'antd';
 import esES from 'antd/locale/es_ES';
@@ -157,6 +158,8 @@ const CollectionCreate = lazyPage(
 );
 const CollectionShow = lazyPage(() => import('./features/collections/show.js'), 'CollectionShow');
 const CollectionEdit = lazyPage(() => import('./features/collections/edit.js'), 'CollectionEdit');
+const DocumentList = lazyPage(() => import('./features/documents/list.js'), 'DocumentList');
+const DocumentShow = lazyPage(() => import('./features/documents/show.js'), 'DocumentShow');
 const DocumentTypeList = lazyPage(
   () => import('./features/document-types/list.js'),
   'DocumentTypeList',
@@ -315,6 +318,12 @@ function TimciRefineTree() {
         show: '/collections/show/:id',
         edit: '/collections/edit/:id',
         meta: { label: esMessages.nav.collections, icon: <WalletOutlined /> },
+      },
+      {
+        name: 'documents',
+        list: '/documents',
+        show: '/documents/show/:id',
+        meta: { label: esMessages.nav.documents, icon: <FileDoneOutlined /> },
       },
       {
         name: 'price_list_items',
@@ -587,6 +596,14 @@ function TimciRefineTree() {
               <Route
                 path="/collections/edit/:id"
                 element={timciGuarded('collections', 'edit', <CollectionEdit />)}
+              />
+              <Route
+                path="/documents"
+                element={timciGuarded('documents', 'list', <DocumentList />)}
+              />
+              <Route
+                path="/documents/show/:id"
+                element={timciGuarded('documents', 'show', <DocumentShow />)}
               />
               <Route
                 path="/document-types"

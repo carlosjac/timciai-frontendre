@@ -11,13 +11,16 @@ import { EntityGeneralSettingsFields } from './EntityGeneralSettingsFields.js';
 import { EntityIdentityFields } from './EntityIdentityFields.js';
 import { EntityPaymentOptionsFields } from './EntityPaymentOptionsFields.js';
 import { EntityTaxManagementFields } from './EntityTaxManagementFields.js';
+import { EntityDocumentEmissionFields } from './EntityDocumentEmissionFields.js';
+import { EntityDocumentLogoFields } from './EntityDocumentLogoFields.js';
 import { useEntityFormResources } from './useEntityFormResources.js';
 import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
-type EntityCreateTab = 'identity' | 'general' | 'taxes' | 'payment-options';
+type EntityCreateTab = 'identity' | 'general' | 'taxes' | 'documents' | 'payment-options';
 
 function resolveActiveTab(raw: string | null): EntityCreateTab {
   if (raw === 'payment-options') return 'payment-options';
+  if (raw === 'documents') return 'documents';
   if (raw === 'taxes') return 'taxes';
   if (raw === 'general') return 'general';
   return 'identity';
@@ -92,6 +95,7 @@ export function EntityCreate() {
             defaultPaymentTermDays: 30,
             addAdvertisement: false,
             taxManagementEnabled: false,
+            documentEmissionMode: 'unofficial',
             paymentOptions: [
               { name: 'Principal', details: '-', currencyIds: [] as string[], isActive: true },
             ],
@@ -155,6 +159,7 @@ export function EntityCreate() {
               addAdvertisement: values.addAdvertisement,
               fantasyName,
               taxManagementEnabled,
+              documentEmissionMode: values.documentEmissionMode ?? 'unofficial',
               taxProfile: taxManagementEnabled
                 ? (normalizeTaxProfile(values.taxProfile) ?? {})
                 : null,
@@ -180,6 +185,8 @@ export function EntityCreate() {
               tab = 'general';
             } else if (joined.includes('tax') || joined.includes('taxProfile')) {
               tab = 'taxes';
+            } else if (joined.includes('documentEmission')) {
+              tab = 'documents';
             } else if (joined.includes('paymentOptions')) {
               tab = 'payment-options';
             }
@@ -246,6 +253,16 @@ export function EntityCreate() {
                 key: 'taxes',
                 label: translate('pages.entities.tabs.taxes'),
                 children: <EntityTaxManagementFields form={form} tenantId={tenantId} />,
+              },
+              {
+                key: 'documents',
+                label: translate('pages.entities.tabs.documents'),
+                children: (
+                  <>
+                    <EntityDocumentEmissionFields />
+                    <EntityDocumentLogoFields entityId={null} />
+                  </>
+                ),
               },
               {
                 key: 'payment-options',

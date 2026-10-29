@@ -40,6 +40,7 @@ export type EntityRecord = {
   addAdvertisement?: boolean;
   fantasyName?: string | null;
   taxManagementEnabled?: boolean;
+  documentEmissionMode?: 'none' | 'unofficial' | 'official';
   taxProfile?: Record<string, string> | null;
   isActive?: boolean;
   paymentOptions?: PaymentOptionRow[];
@@ -62,6 +63,8 @@ export const ENTITY_ADVERTISEMENT_FIELD_NAMES = ['addAdvertisement'] as const;
 
 export const ENTITY_TAX_FIELD_NAMES = ['taxManagementEnabled', 'taxProfile'] as const;
 
+export const ENTITY_DOCUMENTS_FIELD_NAMES = ['documentEmissionMode'] as const;
+
 export const ENTITY_GENERAL_SETTINGS_FIELD_NAMES = [
   'address',
   'email',
@@ -79,6 +82,7 @@ export const ENTITY_EDIT_FIELD_NAMES = [
   ...ENTITY_IDENTITY_FIELD_NAMES,
   ...ENTITY_ADVERTISEMENT_FIELD_NAMES,
   ...ENTITY_TAX_FIELD_NAMES,
+  ...ENTITY_DOCUMENTS_FIELD_NAMES,
   ...ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
   'supportedCurrencyIds',
 ] as const;

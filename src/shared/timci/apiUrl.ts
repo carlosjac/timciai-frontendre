@@ -23,6 +23,7 @@ const TENANT_RESOURCE_PATH: Record<string, string> = {
   debits: 'debits',
   credits: 'credits',
   collections: 'collections',
+  documents: 'documents',
 };
 
 function clearStoredTenantKeys(): void {
