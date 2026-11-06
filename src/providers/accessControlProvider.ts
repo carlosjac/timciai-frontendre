@@ -40,6 +40,13 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       if (action === 'show' && resource === 'monetary_policies') {
         return { can: codes.includes('monetary_policies.view') };
       }
+      if (resource === 'subscriptions') {
+        if (action === 'edit') return { can: codes.includes('subscriptions.update') };
+        if (action === 'show') return { can: codes.includes('subscriptions.view') };
+        if (action === 'list') {
+          return { can: codes.includes('subscriptions.list') || codes.includes('menu.subscriptions') };
+        }
+      }
       if (
         resource === 'sales' ||
         resource === 'debits' ||

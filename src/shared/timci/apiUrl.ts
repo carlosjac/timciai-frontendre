@@ -20,6 +20,7 @@ const TENANT_RESOURCE_PATH: Record<string, string> = {
   document_types: 'document-types',
   currencies: 'currencies',
   sales: 'sales',
+  subscriptions: 'subscriptions',
   debits: 'debits',
   credits: 'credits',
   collections: 'collections',

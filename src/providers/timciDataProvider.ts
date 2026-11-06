@@ -443,6 +443,23 @@ export function createTimciDataProvider(): DataProvider {
         });
         return { data: { ...(json as object), id } as TData };
       }
+      if (resource === 'subscriptions') {
+        const base = getResourceApiBase(resource);
+        if (!base) {
+          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        }
+        let idSegment: string;
+        try {
+          idSegment = requireTimciPathSegment(String(id));
+        } catch {
+          throw toHttpError(400, 'Invalid resource id.');
+        }
+        const { json } = await timciFetch(`${base}/${idSegment}`, {
+          method: 'PATCH',
+          body: JSON.stringify(variables),
+        });
+        return { data: { ...(json as object), id } as TData };
+      }
       if (isCommercialTransactionResource(resource)) {
         const base = getResourceApiBase(resource);
         if (!base) {

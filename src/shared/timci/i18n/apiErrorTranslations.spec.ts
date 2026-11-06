@@ -3,6 +3,12 @@ import { translateTimciApiErrorMessage } from './apiErrorTranslations.js';
 
 describe('translateTimciApiErrorMessage', () => {
   it('translates contact email format from the domain VO', () => {
+    expect(
+      translateTimciApiErrorMessage(
+        'VALIDATION',
+        'Subscription start date cannot be more than one year before today',
+      ),
+    ).toBe('La fecha desde puede tener como máximo un año de antigüedad');
     expect(translateTimciApiErrorMessage('VALIDATION', 'Email does not have a valid format')).toBe(
       'El email no tiene un formato válido',
     );

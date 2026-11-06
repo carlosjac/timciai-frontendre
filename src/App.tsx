@@ -20,6 +20,7 @@ import {
   ThunderboltOutlined,
   UserSwitchOutlined,
   ShoppingCartOutlined,
+  CalendarOutlined,
   FallOutlined,
   RiseOutlined,
   WalletOutlined,
@@ -143,6 +144,22 @@ const CustomerCreate = lazyPage(() => import('./features/customers/create.js'), 
 const CustomerShow = lazyPage(() => import('./features/customers/show.js'), 'CustomerShow');
 const CustomerEdit = lazyPage(() => import('./features/customers/edit.js'), 'CustomerEdit');
 const SaleList = lazyPage(() => import('./features/sales/list.js'), 'SaleList');
+const SubscriptionList = lazyPage(
+  () => import('./features/subscriptions/list.js'),
+  'SubscriptionList',
+);
+const SubscriptionCreate = lazyPage(
+  () => import('./features/subscriptions/create.js'),
+  'SubscriptionCreate',
+);
+const SubscriptionShow = lazyPage(
+  () => import('./features/subscriptions/show.js'),
+  'SubscriptionShow',
+);
+const SubscriptionEdit = lazyPage(
+  () => import('./features/subscriptions/edit.js'),
+  'SubscriptionEdit',
+);
 const SaleCreate = lazyPage(() => import('./features/sales/create.js'), 'SaleCreate');
 const SaleShow = lazyPage(() => import('./features/sales/show.js'), 'SaleShow');
 const SaleEdit = lazyPage(() => import('./features/sales/edit.js'), 'SaleEdit');
@@ -315,6 +332,14 @@ function TimciRefineTree() {
         show: '/sales/show/:id',
         edit: '/sales/edit/:id',
         meta: { label: esMessages.nav.sales, icon: <ShoppingCartOutlined /> },
+      },
+      {
+        name: 'subscriptions',
+        list: '/subscriptions',
+        create: '/subscriptions/create',
+        show: '/subscriptions/show/:id',
+        edit: '/subscriptions/edit/:id',
+        meta: { label: esMessages.nav.subscriptions, icon: <CalendarOutlined /> },
       },
       {
         name: 'debits',
@@ -594,6 +619,22 @@ function TimciRefineTree() {
                 element={timciGuarded('customers', 'edit', <CustomerEdit />)}
               />
               <Route path="/sales" element={timciGuarded('sales', 'list', <SaleList />)} />
+              <Route
+                path="/subscriptions"
+                element={timciGuarded('subscriptions', 'list', <SubscriptionList />)}
+              />
+              <Route
+                path="/subscriptions/create"
+                element={timciGuarded('subscriptions', 'create', <SubscriptionCreate />)}
+              />
+              <Route
+                path="/subscriptions/show/:id"
+                element={timciGuarded('subscriptions', 'show', <SubscriptionShow />)}
+              />
+              <Route
+                path="/subscriptions/edit/:id"
+                element={timciGuarded('subscriptions', 'edit', <SubscriptionEdit />)}
+              />
               <Route path="/sales/create" element={timciGuarded('sales', 'create', <SaleCreate />)} />
               <Route path="/sales/show/:id" element={timciGuarded('sales', 'show', <SaleShow />)} />
               <Route path="/sales/edit/:id" element={timciGuarded('sales', 'edit', <SaleEdit />)} />

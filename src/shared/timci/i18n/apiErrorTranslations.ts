@@ -226,6 +226,9 @@ export function normalizeValidationMessage(message: string): string {
   if (/body\/email must match format "email"/i.test(message)) return 'El email no tiene un formato válido';
 
   const trimmed = message.trim();
+  if (trimmed === 'Subscription start date cannot be more than one year before today') {
+    return 'La fecha desde puede tener como máximo un año de antigüedad';
+  }
   const formatMatch =
     trimmed.match(/^(.+) does not have a valid format$/i) ??
     trimmed.match(/^(.+) format is invalid$/i);

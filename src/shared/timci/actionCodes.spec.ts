@@ -29,6 +29,8 @@ describe('canCreateResource', () => {
     expect(canCreateResource('users', ['users.create'])).toBe(true);
     expect(canCreateResource('countries', ['countries.add'])).toBe(true);
     expect(canCreateResource('countries', ['menu.countries'])).toBe(false);
+    expect(canCreateResource('subscriptions', ['subscriptions.add'])).toBe(true);
+    expect(canSeeResourceMenuItem('subscriptions', ['menu.subscriptions'])).toBe(true);
   });
 });
 
