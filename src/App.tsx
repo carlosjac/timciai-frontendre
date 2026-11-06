@@ -24,6 +24,9 @@ import {
   RiseOutlined,
   WalletOutlined,
   FileDoneOutlined,
+  MailOutlined,
+  BellOutlined,
+  SendOutlined,
 } from '@ant-design/icons';
 import { App as AntdApp, ConfigProvider, theme as antdTheme } from 'antd';
 import esES from 'antd/locale/es_ES';
@@ -160,6 +163,24 @@ const CollectionShow = lazyPage(() => import('./features/collections/show.js'), 
 const CollectionEdit = lazyPage(() => import('./features/collections/edit.js'), 'CollectionEdit');
 const DocumentList = lazyPage(() => import('./features/documents/list.js'), 'DocumentList');
 const DocumentShow = lazyPage(() => import('./features/documents/show.js'), 'DocumentShow');
+const AlertList = lazyPage(() => import('./features/alerts/list.js'), 'AlertList');
+const AlertShow = lazyPage(() => import('./features/alerts/show.js'), 'AlertShow');
+const OutboundEmailList = lazyPage(
+  () => import('./features/outbound-emails/list.js'),
+  'OutboundEmailList',
+);
+const OutboundEmailShow = lazyPage(
+  () => import('./features/outbound-emails/show.js'),
+  'OutboundEmailShow',
+);
+const EmailBounceList = lazyPage(
+  () => import('./features/email-bounces/list.js'),
+  'EmailBounceList',
+);
+const EmailBounceShow = lazyPage(
+  () => import('./features/email-bounces/show.js'),
+  'EmailBounceShow',
+);
 const DocumentTypeList = lazyPage(
   () => import('./features/document-types/list.js'),
   'DocumentTypeList',
@@ -324,6 +345,24 @@ function TimciRefineTree() {
         list: '/documents',
         show: '/documents/show/:id',
         meta: { label: esMessages.nav.documents, icon: <FileDoneOutlined /> },
+      },
+      {
+        name: 'alerts',
+        list: '/alerts',
+        show: '/alerts/show/:id',
+        meta: { label: esMessages.nav.alerts, icon: <BellOutlined /> },
+      },
+      {
+        name: 'outboundEmails',
+        list: '/outbound-emails',
+        show: '/outbound-emails/show/:id',
+        meta: { label: esMessages.nav.outboundEmails, icon: <SendOutlined /> },
+      },
+      {
+        name: 'emailBounces',
+        list: '/email-bounces',
+        show: '/email-bounces/show/:id',
+        meta: { label: esMessages.nav.emailBounces, icon: <MailOutlined /> },
       },
       {
         name: 'price_list_items',
@@ -604,6 +643,30 @@ function TimciRefineTree() {
               <Route
                 path="/documents/show/:id"
                 element={timciGuarded('documents', 'show', <DocumentShow />)}
+              />
+              <Route
+                path="/alerts"
+                element={timciGuarded('alerts', 'list', <AlertList />)}
+              />
+              <Route
+                path="/alerts/show/:id"
+                element={timciGuarded('alerts', 'show', <AlertShow />)}
+              />
+              <Route
+                path="/outbound-emails"
+                element={timciGuarded('outboundEmails', 'list', <OutboundEmailList />)}
+              />
+              <Route
+                path="/outbound-emails/show/:id"
+                element={timciGuarded('outboundEmails', 'show', <OutboundEmailShow />)}
+              />
+              <Route
+                path="/email-bounces"
+                element={timciGuarded('emailBounces', 'list', <EmailBounceList />)}
+              />
+              <Route
+                path="/email-bounces/show/:id"
+                element={timciGuarded('emailBounces', 'show', <EmailBounceShow />)}
               />
               <Route
                 path="/document-types"

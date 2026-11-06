@@ -1,6 +1,6 @@
 import { Edit, useForm } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, Form, Input } from 'antd';
+import { Alert, Form, Input, message } from 'antd';
 import { useCallback, useEffect } from 'react';
 import {
   canManageAllEntities,
@@ -18,6 +18,7 @@ import {
   hydrateMonetaryPolicyParamsForForm,
   normalizeMonetaryPolicyParams,
 } from './monetaryPolicyParamsForm.js';
+import { relativeBandsSubmitErrorMessages } from './relativeBandsSubmitValidation.js';
 import { MonetaryPolicyNameField } from './MonetaryPolicyNameField.js';
 import { MonetaryPolicyParamsFields } from './MonetaryPolicyParamsFields.js';
 
@@ -104,13 +105,28 @@ export function MonetaryPolicyEdit() {
         layout="vertical"
         onFinish={async (values: Record<string, unknown>) => {
           clearServerErrors(form);
+          const params = normalizeMonetaryPolicyParams(
+            kind ?? '',
+            values.params as Record<string, unknown> | undefined,
+          );
+          const coverageMessages = relativeBandsSubmitErrorMessages(kind ?? '', params, translate);
+          if (coverageMessages.length > 0) {
+            form?.setFields([
+              {
+                name: ['params', 'bands'],
+                errors: coverageMessages,
+              },
+            ]);
+            message.error(
+              coverageMessages[0] ??
+                translate('pages.monetaryPolicies.params.incompleteCoverageTitle'),
+            );
+            return;
+          }
           try {
             await submitRecord({
               name: values.name,
-              params: normalizeMonetaryPolicyParams(
-                kind ?? '',
-                values.params as Record<string, unknown> | undefined,
-              ),
+              params,
             });
           } catch (e) {
             applyServerError(form, e);

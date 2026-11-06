@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslate } from '@refinedev/core';
-import { Alert, Select, Space, Table, Tag, Typography, theme } from 'antd';
+import { Alert, App, Button, Select, Space, Table, Tag, Typography, theme } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
   commercialResourceFromType,
   commercialTransactionShowPath,
+  downloadCustomerCurrentAccountStatementPdf,
   getCustomerCurrentAccountMovementsUrl,
   getCustomerCurrentAccountsUrl,
 } from '../../shared/timci/commercialTransactionsApi.js';
@@ -87,6 +89,7 @@ function BalanceAmount({
 export function CustomerCurrentAccountTab({ customerId }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
+  const { message } = App.useApp();
   const { token } = theme.useToken();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
@@ -95,6 +98,7 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
   const [currencyId, setCurrencyId] = useCustomerAccountCurrencyParam();
   const [movements, setMovements] = useState<MovementRow[]>([]);
   const [movementsLoading, setMovementsLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const balanceColors = useMemo(
@@ -170,6 +174,25 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
     [navigate],
   );
 
+  const downloadStatementPdf = useCallback(async () => {
+    if (!tenantId || !customerId || !currencyId) return;
+    setDownloadLoading(true);
+    try {
+      const ok = await downloadCustomerCurrentAccountStatementPdf(
+        tenantId,
+        customerId,
+        currencyId,
+      );
+      if (!ok) {
+        message.error(translate('pages.customers.currentAccountDownloadPdfError'));
+      }
+    } catch {
+      message.error(translate('pages.customers.currentAccountDownloadPdfError'));
+    } finally {
+      setDownloadLoading(false);
+    }
+  }, [currencyId, customerId, message, tenantId, translate]);
+
   if (!tenantId) {
     return <Alert type="warning" showIcon message={translate('tenant.selectFirst')} />;
   }
@@ -196,19 +219,30 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
         <Typography.Text strong>
           {translate('pages.customers.currentAccountCurrency')}
         </Typography.Text>
-        <Select
-          style={{ width: '100%', maxWidth: 480, display: 'block', marginTop: 8 }}
-          loading={accountsLoading}
-          options={accountOptions}
-          value={currencyId}
-          onChange={setCurrencyId}
-          placeholder={translate('pages.customers.currentAccountCurrencyPlaceholder')}
-          aria-label={translate('pages.customers.currentAccountCurrency')}
-          notFoundContent={
-            accountsLoading ? null : translate('pages.customers.currentAccountEmpty')
-          }
-          optionLabelProp="label"
-        />
+        <Space wrap style={{ width: '100%', marginTop: 8 }} align="start">
+          <Select
+            style={{ width: '100%', maxWidth: 480, minWidth: 240 }}
+            loading={accountsLoading}
+            options={accountOptions}
+            value={currencyId}
+            onChange={setCurrencyId}
+            placeholder={translate('pages.customers.currentAccountCurrencyPlaceholder')}
+            aria-label={translate('pages.customers.currentAccountCurrency')}
+            notFoundContent={
+              accountsLoading ? null : translate('pages.customers.currentAccountEmpty')
+            }
+            optionLabelProp="label"
+          />
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={() => void downloadStatementPdf()}
+            loading={downloadLoading}
+            disabled={!currencyId || downloadLoading}
+            aria-label={translate('pages.customers.currentAccountDownloadPdfAria')}
+          >
+            {translate('pages.customers.currentAccountDownloadPdf')}
+          </Button>
+        </Space>
       </div>
 
       <Table

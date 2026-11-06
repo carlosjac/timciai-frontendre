@@ -17,6 +17,11 @@ describe('canSeeResourceMenuItem', () => {
     expect(canSeeResourceMenuItem('userTenantRoles', ['menu.assignments'])).toBe(true);
     expect(canSeeResourceMenuItem('permissions', ['menu.permissions'])).toBe(true);
   });
+
+  it('maps alerts and outbound email menus', () => {
+    expect(canSeeResourceMenuItem('alerts', ['menu.alerts'])).toBe(true);
+    expect(canSeeResourceMenuItem('outboundEmails', ['menu.outboundEmails'])).toBe(true);
+  });
 });
 
 describe('canCreateResource', () => {

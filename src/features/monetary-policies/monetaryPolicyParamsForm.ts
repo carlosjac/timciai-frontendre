@@ -1,3 +1,8 @@
+import {
+  validateRelativeBandsCoverageForForm,
+  type CoverageBound,
+} from './relativeBandsCoverage.js';
+
 type BoundMode = 'number' | 'eom' | 'start_next_month' | 'open';
 const BOUND_SYMBOLS = ['eom', 'start_next_month'] as const;
 type BoundSymbol = (typeof BOUND_SYMBOLS)[number];
@@ -121,4 +126,49 @@ export function normalizeMonetaryPolicyParams(
   });
 
   return { anchor, bands };
+}
+
+export type RelativeBandsSubmitIssue =
+  | { code: 'bandsRequired' }
+  | { code: 'openFromRequired' }
+  | { code: 'openToRequired' }
+  | { code: 'overlapOrGap'; a?: number; b?: number }
+  | { code: 'rateRequired'; band: number };
+
+/**
+ * Validates normalized API-shaped relative_bands params (after `normalizeMonetaryPolicyParams`).
+ * Empty array = OK.
+ */
+export function validateNormalizedRelativeBandsParams(
+  params: Record<string, unknown> | undefined,
+): RelativeBandsSubmitIssue[] {
+  const bandsRaw = Array.isArray(params?.bands) ? params!.bands : [];
+  const coverageBands = bandsRaw.map((band) => {
+    if (!band || typeof band !== 'object') {
+      return { from: null as CoverageBound, to: null as CoverageBound };
+    }
+    const b = band as Record<string, unknown>;
+    return {
+      from: (b.from ?? null) as CoverageBound,
+      to: (b.to ?? null) as CoverageBound,
+    };
+  });
+  const issues: RelativeBandsSubmitIssue[] = validateRelativeBandsCoverageForForm(coverageBands).map(
+    (e) => {
+      if (e.code === 'overlapOrGap') return { code: 'overlapOrGap', a: e.a, b: e.b };
+      return { code: e.code };
+    },
+  );
+
+  bandsRaw.forEach((band, index) => {
+    if (!band || typeof band !== 'object') return;
+    const b = band as Record<string, unknown>;
+    if (b.effect === 'none') return;
+    const rate = b.rate;
+    if (rate == null || String(rate).trim() === '') {
+      issues.push({ code: 'rateRequired', band: index + 1 });
+    }
+  });
+
+  return issues;
 }

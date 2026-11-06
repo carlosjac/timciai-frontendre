@@ -4,6 +4,7 @@ import { MenuOutlined } from '@ant-design/icons';
 import { Button, Grid, Space } from 'antd';
 import { HeaderUserMenu } from './HeaderUserMenu.js';
 import { ImpersonationBanner } from './ImpersonationBanner.js';
+import { AlertsBanner } from '../features/alerts/AlertsBanner.js';
 import { TenantPicker } from './TenantPicker.js';
 
 export function AppHeader() {
@@ -17,6 +18,7 @@ export function AppHeader() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       <ImpersonationBanner />
+      <AlertsBanner />
       <div
         style={{
           display: 'flex',

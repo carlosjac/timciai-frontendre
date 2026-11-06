@@ -34,6 +34,9 @@ export const apiErrorMessagesEs: Record<string, string> = {
   NOT_IMPERSONATING: 'La sesión actual no es una impersonación',
   IMPERSONATOR_UNAVAILABLE: 'El usuario impersonador no está disponible',
   CONFLICT_NAME: 'Ya existe un registro con ese nombre',
+  INVALID_MONETARY_POLICY_KIND: 'Tipo de política monetaria no válido',
+  INVALID_MONETARY_POLICY_PARAMS:
+    'Los parámetros de la política monetaria son incompletos o inválidos. Revisá que las franjas cubran toda la línea de tiempo (desde «Sin límite» hasta «Sin límite»).',
   CONFLICT_INACTIVE_NAME:
     'Ya existe un registro inactivo con ese nombre. Búscalo en el listado (Activo: No) y reactívalo.',
   CONFLICT_ISO_CODE: 'Ya existe un país con ese código ISO',

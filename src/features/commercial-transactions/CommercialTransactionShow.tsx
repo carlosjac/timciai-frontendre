@@ -46,6 +46,8 @@ import { CommercialTransactionAllocationsPanel } from './CommercialTransactionAl
 import { CommercialTransactionIncomingAllocationsPanel } from './CommercialTransactionIncomingAllocationsPanel.js';
 import { CommercialTransactionItemsPanel } from './CommercialTransactionItemsPanel.js';
 import { CommercialTransactionDocumentsPanel } from './CommercialTransactionDocumentsPanel.js';
+import { CommercialTransactionOpenAlertsBanner } from './CommercialTransactionOpenAlertsBanner.js';
+import { CommercialTransactionOutboundEmailsPanel } from './CommercialTransactionOutboundEmailsPanel.js';
 import { ReplaceAllocationsDrawer } from './ReplaceAllocationsDrawer.js';
 import { commercialResourceCanHaveAllocations } from './commercialTransactionPanels.js';
 import {
@@ -133,6 +135,22 @@ export function CommercialTransactionShow({ resource }: Props) {
     queryOptions: { enabled: Boolean(record?.currencyId) },
     errorNotification: false,
   });
+  const showsMonetaryPolicy = resource === 'sales' || resource === 'debits';
+  const { result: monetaryPolicyResult } = useOne<{ name?: string }>({
+    resource: 'monetary_policies',
+    id: record?.monetaryPolicyId ?? '',
+    queryOptions: {
+      enabled: Boolean(showsMonetaryPolicy && record?.monetaryPolicyId),
+    },
+    errorNotification: false,
+  });
+  const monetaryPolicyLabel = useMemo(() => {
+    if (!showsMonetaryPolicy) return null;
+    const name = monetaryPolicyResult?.name?.trim();
+    if (name) return name;
+    const id = record?.monetaryPolicyId?.trim();
+    return id || '—';
+  }, [monetaryPolicyResult?.name, record?.monetaryPolicyId, showsMonetaryPolicy]);
   const { result: entityResult } = useOne<{ baseCurrencyId?: string }>({
     resource: 'entities',
     id: tenantId ?? '',
@@ -555,6 +573,13 @@ export function CommercialTransactionShow({ resource }: Props) {
               {formatTimciUserDateOnly(record.dueDate, { dateFormat, timeZone })}
             </Descriptions.Item>
           ) : null}
+          {showsMonetaryPolicy ? (
+            <Descriptions.Item
+              label={translate('pages.commercialTransactions.fields.monetaryPolicy')}
+            >
+              {monetaryPolicyLabel}
+            </Descriptions.Item>
+          ) : null}
           {record?.openAmount != null ? (
             <Descriptions.Item label={translate('pages.commercialTransactions.fields.openAmount')}>
               {formatTimciMoney(record.openAmount)}
@@ -631,6 +656,11 @@ export function CommercialTransactionShow({ resource }: Props) {
         />
 
         {record?.id &&
+        (codes.includes('alerts.view') || codes.includes('menu.alerts')) ? (
+          <CommercialTransactionOpenAlertsBanner commercialTransactionId={record.id} />
+        ) : null}
+
+        {record?.id &&
         (record.status === 'registered' || record.status === 'voided') &&
         (codes.includes('documents.view') ||
           codes.includes('documents.manage') ||
@@ -639,6 +669,18 @@ export function CommercialTransactionShow({ resource }: Props) {
             commercialTransactionId={record.id}
             canManage={codes.includes('documents.manage')}
             hideWhenEmpty
+          />
+        ) : null}
+
+        {record?.id &&
+        (codes.includes('outboundEmails.view') ||
+          codes.includes('menu.outboundEmails') ||
+          codes.includes('outboundEmails.manage')) ? (
+          <CommercialTransactionOutboundEmailsPanel
+            commercialTransactionId={record.id}
+            resource={resource}
+            transactionStatus={record.status}
+            canManage={codes.includes('outboundEmails.manage')}
           />
         ) : null}
 

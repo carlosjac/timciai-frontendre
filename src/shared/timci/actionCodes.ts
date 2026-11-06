@@ -138,6 +138,12 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
       return has('menu.collections');
     case 'documents':
       return has('menu.documents');
+    case 'alerts':
+      return has('menu.alerts');
+    case 'outboundEmails':
+      return has('menu.outboundEmails');
+    case 'emailBounces':
+      return has('menu.emailBounces');
     case 'users':
       return has('menu.users');
     case 'tenants':
@@ -178,6 +184,9 @@ export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'credits', path: '/credits' },
   { name: 'collections', path: '/collections' },
   { name: 'documents', path: '/documents' },
+  { name: 'alerts', path: '/alerts' },
+  { name: 'outboundEmails', path: '/outbound-emails' },
+  { name: 'emailBounces', path: '/email-bounces' },
   { name: 'users', path: '/users' },
   { name: 'sessions', path: '/sessions' },
   { name: 'tenants', path: '/tenants' },

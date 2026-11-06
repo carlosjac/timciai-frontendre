@@ -24,6 +24,9 @@ const TENANT_RESOURCE_PATH: Record<string, string> = {
   credits: 'credits',
   collections: 'collections',
   documents: 'documents',
+  alerts: 'alerts',
+  outboundEmails: 'outbound-emails',
+  emailBounces: 'email-bounces',
 };
 
 function clearStoredTenantKeys(): void {

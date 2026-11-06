@@ -190,7 +190,8 @@ export function MonetaryPolicyParamsFields({ disabled, kind }: Props) {
                 });
               });
 
-              return Promise.reject(messages);
+              // Ant Design only surfaces a string/Error — rejecting a string[] does not block submit.
+              return Promise.reject(new Error(messages.join(' ')));
             },
           },
         ]}
@@ -329,17 +330,49 @@ export function MonetaryPolicyParamsFields({ disabled, kind }: Props) {
               <Form.Item>
                 <Button
                   type="dashed"
-                  onClick={() =>
+                  onClick={() => {
+                    const current =
+                      (form.getFieldValue(['params', 'bands']) as
+                        | Array<Record<string, unknown>>
+                        | undefined) ?? [];
+                    // Keep full-timeline coverage: close previous open end, append open-ended band.
+                    if (current.length > 0) {
+                      const lastIdx = current.length - 1;
+                      const last = current[lastIdx] ?? {};
+                      const lastToMode = last.toMode;
+                      let nextFromValue = 1;
+                      if (lastToMode === 'open' || lastToMode == null) {
+                        const suggested =
+                          typeof last.fromValue === 'number' ? last.fromValue + 1 : 1;
+                        nextFromValue = suggested;
+                        form.setFieldValue(['params', 'bands', lastIdx, 'toMode'], 'number');
+                        form.setFieldValue(
+                          ['params', 'bands', lastIdx, 'toValue'],
+                          suggested - 1,
+                        );
+                      } else if (typeof last.toValue === 'number') {
+                        nextFromValue = last.toValue + 1;
+                      }
+                      add({
+                        fromMode: 'number',
+                        fromValue: nextFromValue,
+                        toMode: 'open',
+                        toValue: null,
+                        effect: 'discount',
+                        chargeMode: 'flat_percent',
+                        ratePercent: 10,
+                      });
+                      return;
+                    }
                     add({
-                      fromMode: 'number',
-                      fromValue: 0,
+                      fromMode: 'open',
+                      fromValue: null,
                       toMode: 'open',
                       toValue: null,
-                      effect: 'discount',
+                      effect: 'none',
                       chargeMode: 'flat_percent',
-                      ratePercent: 10,
-                    })
-                  }
+                    });
+                  }}
                   block
                   icon={<PlusOutlined />}
                 >

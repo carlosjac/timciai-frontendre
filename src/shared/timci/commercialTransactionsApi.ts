@@ -87,6 +87,14 @@ export function getCommercialTransactionVoidUrl(
   return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/${resource}/${requireTimciPathSegment(id)}/void`;
 }
 
+export function getCommercialTransactionResendNotificationUrl(
+  tenantId: string,
+  resource: CommercialTransactionResource,
+  id: string,
+): string {
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/${resource}/${requireTimciPathSegment(id)}/resend-notification`;
+}
+
 export function getCommercialTransactionReplaceAllocationsUrl(
   tenantId: string,
   resource: CommercialTransactionResource,
@@ -131,6 +139,41 @@ export function getCustomerCurrentAccountAllocationsUrl(
   currencyId: string,
 ): string {
   return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/allocations`;
+}
+
+export function getCustomerCurrentAccountStatementPdfUrl(
+  tenantId: string,
+  customerId: string,
+  currencyId: string,
+): string {
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/statement.pdf`;
+}
+
+/** Downloads current-account statement PDF; returns false if the request fails. */
+export async function downloadCustomerCurrentAccountStatementPdf(
+  tenantId: string,
+  customerId: string,
+  currencyId: string,
+): Promise<boolean> {
+  const url = getCustomerCurrentAccountStatementPdfUrl(tenantId, customerId, currencyId);
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: { 'X-Use-Session': 'true', Accept: 'application/pdf' },
+  });
+  if (!res.ok) return false;
+  const raw = await res.blob();
+  const blob =
+    raw.type === 'application/pdf' ? raw : new Blob([raw], { type: 'application/pdf' });
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const match = /filename="([^"]+)"/i.exec(disposition);
+  const fileName = match?.[1]?.trim() || `cuenta-corriente-${currencyId}.pdf`;
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(href);
+  return true;
 }
 
 export type CurrentAccountAllocationLinkDto = {

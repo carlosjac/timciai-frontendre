@@ -1,6 +1,6 @@
 import { Create, useForm } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, Form, Select } from 'antd';
+import { Alert, Form, Select, message } from 'antd';
 import { useEffect, useState } from 'react';
 import {
   canManageAllEntities,
@@ -12,6 +12,7 @@ import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAle
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { MonetaryPolicyParamsFields } from './MonetaryPolicyParamsFields.js';
 import { normalizeMonetaryPolicyParams } from './monetaryPolicyParamsForm.js';
+import { relativeBandsSubmitErrorMessages } from './relativeBandsSubmitValidation.js';
 import { MonetaryPolicyNameField } from './MonetaryPolicyNameField.js';
 
 const CREATE_KIND = 'relative_bands';
@@ -101,14 +102,33 @@ export function MonetaryPolicyCreate() {
             ]);
             return;
           }
+          const params = normalizeMonetaryPolicyParams(
+            CREATE_KIND,
+            values.params as Record<string, unknown> | undefined,
+          );
+          const coverageMessages = relativeBandsSubmitErrorMessages(
+            CREATE_KIND,
+            params,
+            translate,
+          );
+          if (coverageMessages.length > 0) {
+            form?.setFields([
+              {
+                name: ['params', 'bands'],
+                errors: coverageMessages,
+              },
+            ]);
+            message.error(
+              coverageMessages[0] ??
+                translate('pages.monetaryPolicies.params.incompleteCoverageTitle'),
+            );
+            return;
+          }
           try {
             await onFinish({
               kind: CREATE_KIND,
               name: values.name,
-              params: normalizeMonetaryPolicyParams(
-                CREATE_KIND,
-                values.params as Record<string, unknown> | undefined,
-              ),
+              params,
               entityId,
             });
           } catch (e) {

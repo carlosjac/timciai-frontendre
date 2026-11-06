@@ -115,6 +115,8 @@ export type TimciDataListProps<T extends BaseRecord> = {
   includeInactive?: boolean;
   /** Extra actions in the list header (before column picker / export / create). */
   extraHeaderButtons?: ReactNode;
+  /** Optional Ant Design row selection, used by bulk list actions. */
+  rowSelection?: TableProps<T>['rowSelection'];
 };
 
 function filterForField(filters: CrudFilter[] | undefined, field: string): LogicalFilter | undefined {
@@ -535,6 +537,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         {...tableRest}
         pagination={paginationWithEsLocale}
         rowKey={props.rowKey}
+        rowSelection={props.rowSelection}
         columns={antColumns}
         onChange={handleTableChange}
         onRow={tableOnRow}

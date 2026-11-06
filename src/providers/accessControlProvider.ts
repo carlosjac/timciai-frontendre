@@ -92,6 +92,29 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       if (action === 'show' && resource === 'documents') {
         return { can: codes.includes('documents.view') };
       }
+      if ((action === 'list' || action === 'show') && resource === 'alerts') {
+        return {
+          can: codes.includes('alerts.view') || codes.includes('menu.alerts'),
+        };
+      }
+      if (action === 'acknowledge' && resource === 'alerts') {
+        return { can: codes.includes('alerts.acknowledge') };
+      }
+      if ((action === 'list' || action === 'show') && resource === 'outboundEmails') {
+        return {
+          can:
+            codes.includes('outboundEmails.view') ||
+            codes.includes('menu.outboundEmails'),
+        };
+      }
+      if (action === 'list' && resource === 'emailBounces') {
+        return {
+          can: codes.includes('emailBounces.view') || codes.includes('menu.emailBounces'),
+        };
+      }
+      if (action === 'show' && resource === 'emailBounces') {
+        return { can: codes.includes('emailBounces.view') };
+      }
       if (action === 'show' && resource === 'tenants') {
         return { can: codes.includes('tenants.view') };
       }

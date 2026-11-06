@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState, type Key } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { Tag } from 'antd';
+import { App, Button, Tag } from 'antd';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
+import { getResourceApiBase } from '../../shared/timci/apiUrl.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
+import { timciFetch } from '../../shared/timci/http.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
@@ -15,6 +17,8 @@ type DocumentRow = BaseRecord & {
   issuedAt?: string | null;
   hasContent?: boolean;
   errorMessage?: string | null;
+  attemptCount?: number;
+  nextAttemptAt?: string | null;
 };
 
 function statusColor(status: string): string {
@@ -34,9 +38,36 @@ function statusColor(status: string): string {
 
 export function DocumentList() {
   const translate = useTranslate();
+  const { message } = App.useApp();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const canView = permData?.actionCodes?.includes('documents.view') ?? false;
+  const canManage = permData?.actionCodes?.includes('documents.manage') ?? false;
+  const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
+  const [retrying, setRetrying] = useState(false);
+
+  const retry = useCallback(async (ids: string[]) => {
+    const base = getResourceApiBase('documents');
+    if (!base || ids.length === 0) return;
+    setRetrying(true);
+    try {
+      if (ids.length === 1) {
+        await timciFetch(`${base}/${encodeURIComponent(ids[0]!)}/retry`, { method: 'POST' });
+      } else {
+        await timciFetch(`${base}/retry-batch`, {
+          method: 'POST',
+          body: JSON.stringify({ ids: ids.slice(0, 50) }),
+        });
+      }
+      message.success(translate('documents.retryOk'));
+      setSelectedKeys([]);
+      window.location.reload();
+    } catch {
+      message.error(translate('documents.actionError'));
+    } finally {
+      setRetrying(false);
+    }
+  }, [message, translate]);
 
   const getRowShowPath = useMemo(
     () =>
@@ -48,6 +79,21 @@ export function DocumentList() {
 
   const columnDefs = useMemo((): TimciColumnDef<DocumentRow>[] => {
     return [
+      {
+        key: 'actions',
+        dataIndex: 'id',
+        titleKey: 'table.documents.actions',
+        width: 110,
+        render: (_value: unknown, record: DocumentRow) =>
+          canManage && record.status === 'failed' ? (
+            <span data-timci-row-action onClick={(event) => event.stopPropagation()}>
+              <Button size="small" loading={retrying} onClick={() => void retry([record.id])}>
+                {translate('documents.retry')}
+              </Button>
+            </span>
+          ) : null,
+        exportValue: () => '',
+      },
       {
         key: 'documentKind',
         dataIndex: 'documentKind',
@@ -82,6 +128,29 @@ export function DocumentList() {
         exportValue: (r) => translate(`documents.statuses.${r.status}`, r.status),
       },
       {
+        key: 'errorMessage',
+        dataIndex: 'errorMessage',
+        titleKey: 'table.documents.errorMessage',
+        defaultVisible: false,
+      },
+      {
+        key: 'attemptCount',
+        dataIndex: 'attemptCount',
+        titleKey: 'table.documents.attemptCount',
+        defaultVisible: false,
+      },
+      {
+        key: 'nextAttemptAt',
+        dataIndex: 'nextAttemptAt',
+        titleKey: 'table.documents.nextAttemptAt',
+        sorter: true,
+        filter: { kind: 'date' },
+        defaultVisible: false,
+        render: (v: unknown) => formatTimciUserDateTime(v, { dateFormat, timeZone }),
+        exportValue: (r) =>
+          formatTimciUserDateTime(r.nextAttemptAt, { dateFormat, timeZone }) || '',
+      },
+      {
         key: 'issuedAt',
         dataIndex: 'issuedAt',
         titleKey: 'table.documents.issuedAt',
@@ -92,7 +161,7 @@ export function DocumentList() {
           formatTimciUserDateTime(r.issuedAt, { dateFormat, timeZone }) || '',
       },
     ];
-  }, [dateFormat, timeZone, translate]);
+  }, [canManage, dateFormat, retry, retrying, timeZone, translate]);
 
   return (
     <TimciDataList<DocumentRow>
@@ -104,6 +173,26 @@ export function DocumentList() {
       pickerDateFormat={dateFormat}
       initialSorters={[{ field: 'issuedAt', order: 'desc' }]}
       getRowShowPath={getRowShowPath}
+      rowSelection={
+        canManage
+          ? {
+              selectedRowKeys: selectedKeys,
+              onChange: setSelectedKeys,
+              getCheckboxProps: (record) => ({ disabled: record.status !== 'failed' }),
+            }
+          : undefined
+      }
+      extraHeaderButtons={
+        canManage ? (
+          <Button
+            disabled={selectedKeys.length === 0}
+            loading={retrying}
+            onClick={() => void retry(selectedKeys.map(String))}
+          >
+            {translate('documents.retrySelected', { count: selectedKeys.length })}
+          </Button>
+        ) : null
+      }
       listCreateButtonProps={{ hidden: true }}
     />
   );

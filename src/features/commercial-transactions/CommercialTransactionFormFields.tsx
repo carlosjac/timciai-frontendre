@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelect } from '@refinedev/antd';
 import { useList, useOne, useTranslate, type BaseRecord } from '@refinedev/core';
 import {
+  Alert,
   AutoComplete,
   Button,
   Card,
@@ -15,6 +16,7 @@ import {
   Switch,
 } from 'antd';
 import dayjs from 'dayjs';
+import { Link } from 'react-router';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
 import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
@@ -32,6 +34,8 @@ import {
 import {
   fetchUnitPriceFromPriceList,
 } from '../../shared/timci/priceListItemsApi.js';
+import { getV1Base } from '../../config.js';
+import { requireTimciPathSegment } from '../../shared/timci/pathSegment.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import { type AllocationCandidateRow } from './collectionAllocations.js';
 import { CollectionAllocationsTable } from './CollectionAllocationsTable.js';
@@ -386,6 +390,7 @@ export function CommercialTransactionFormFields({
   const itemsWatch = Form.useWatch('items', form);
   const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
   const [taxResult, setTaxResult] = useState<CalculateTaxesResult | null>(null);
+  const [emailDeliveryBlockers, setEmailDeliveryBlockers] = useState(0);
 
   const isSale = resource === 'sales';
   const isDebit = resource === 'debits';
@@ -393,6 +398,7 @@ export function CommercialTransactionFormFields({
   const isCollection = resource === 'collections';
   const needsMonetaryPolicy = isSale || isDebit;
   const needsAllocations = isCredit || isCollection || isDebit;
+  const mayNotifyCustomer = isSale || isDebit;
 
   const entityTax = useEntityTaxContext(tenantId, tenantId);
   const taxesOn = entityTax.taxManagementEnabled && !isCollection;
@@ -405,6 +411,29 @@ export function CommercialTransactionFormFields({
     queryOptions: { enabled: !!tenantId },
   });
   const customerSelect = stripSelectServerSearch(customerSelectRaw);
+
+  useEffect(() => {
+    if (!mayNotifyCustomer || !tenantId || !customerId) {
+      setEmailDeliveryBlockers(0);
+      return;
+    }
+    let cancelled = false;
+    const url =
+      `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}` +
+      `/customers/${requireTimciPathSegment(customerId)}/email-delivery-blockers`;
+    void timciFetch(url)
+      .then(({ json }) => {
+        if (cancelled) return;
+        const blockers = (json as { blockers?: unknown[] } | null)?.blockers;
+        setEmailDeliveryBlockers(Array.isArray(blockers) ? blockers.length : 0);
+      })
+      .catch(() => {
+        if (!cancelled) setEmailDeliveryBlockers(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId, mayNotifyCustomer, tenantId]);
 
   const { selectProps: currencySelect } = useEntitySupportedCurrencySelect(tenantId);
 
@@ -882,6 +911,22 @@ export function CommercialTransactionFormFields({
           aria-label={translate('pages.commercialTransactions.fields.customer')}
         />
       </Form.Item>
+
+      {mayNotifyCustomer && emailDeliveryBlockers > 0 && customerId ? (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={translate('pages.alerts.emailDeliveryWarning')}
+          action={
+            <Link to={`/customers/edit/${encodeURIComponent(customerId)}`}>
+              <Button size="small" type="link">
+                {translate('pages.alerts.emailDeliveryWarningLink')}
+              </Button>
+            </Link>
+          }
+        />
+      ) : null}
 
       <Form.Item
         label={translate('pages.commercialTransactions.fields.transactionDate')}
