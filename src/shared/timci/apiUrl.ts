@@ -66,6 +66,9 @@ export function setStoredTenantId(id: string): void {
     return;
   }
   localStorage.setItem(TENANT_STORAGE_KEY, id.trim());
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('timci-tenant-changed'));
+  }
 }
 
 /**

@@ -184,6 +184,10 @@ export const esMessages = {
       banner: 'Hay {{count}} alerta(s) pendiente(s)',
       open: 'Ver alertas',
     },
+    testMode: {
+      banner:
+        'Modo prueba. Los correos salen solo al buzón de prueba y los comprobantes llevan marca de prueba. Al pasar a producción se borran las operaciones de práctica.',
+    },
   },
   list: {
     /** Texto de la tabla Ant Design cuando no hay filas (sustituye el “No data” en inglés). */
@@ -467,6 +471,16 @@ export const esMessages = {
         'Quedará inactiva hasta que se reactive. No se borran los datos asociados.',
       inactiveCannotEdit:
         'No se puede editar una entidad inactiva. Actívala desde la vista del registro.',
+      operatingMode: 'Modo de operación',
+      operatingModeTest: 'Prueba',
+      operatingModeProduction: 'Producción',
+      promote: 'Pasar a producción',
+      promoteTitle: 'Pasar a producción',
+      promoteBody:
+        'Se borran las operaciones, los saldos, los comprobantes, la numeración y los correos de esta entidad. Se conservan los clientes, los productos, las listas de precios y las suscripciones. A partir de ahí los correos van a los contactos del cliente. No hay vuelta atrás.',
+      promoteConfirmLabel: 'Escribí el nombre de la entidad para confirmar',
+      promoted: 'La entidad pasó a producción',
+      promoteError: 'No se pudo pasar a producción',
       limitedEditHint:
         'Como administrador solo puedes modificar dirección, contacto, valores por defecto y políticas de mora.',
       paymentOptionActivate: 'Activar opción',
@@ -1208,6 +1222,7 @@ export const esMessages = {
       documentType: 'Tipo de documento',
       documentNumber: 'Número de documento',
       personType: 'Tipo de persona',
+      operatingMode: 'Modo de operación',
       active: 'Activo',
       yes: 'Sí',
       no: 'No',
@@ -1360,6 +1375,9 @@ export const esMessages = {
       country: 'País',
       address: 'Dirección',
       email: 'Correo',
+      testNotificationEmail: 'Correo de prueba',
+      testNotificationEmailHint:
+        'Opcional. En modo prueba, Para y Cc de todos los correos son esta dirección. Si queda vacío, se usa el correo de la entidad.',
       phone: 'Teléfono',
       defaultCountry: 'País por defecto',
       defaultCurrency: 'Moneda por defecto',

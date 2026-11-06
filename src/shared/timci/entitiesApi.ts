@@ -13,6 +13,10 @@ export function getEntityDeactivateUrl(tenantId: string, id: string): string {
   return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(id)}/deactivate`;
 }
 
+export function getEntityPromoteToProductionUrl(tenantId: string, id: string): string {
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/entities/${requireTimciPathSegment(id)}/promote-to-production`;
+}
+
 export function getEntityPaymentOptionActivateUrl(
   tenantId: string,
   entityId: string,
@@ -73,6 +77,11 @@ export function buildEntityUpdateBody(variables: Record<string, unknown>): Recor
   if (variables.countryId !== undefined) payload.countryId = variables.countryId;
   if (variables.address !== undefined) payload.address = String(variables.address).trim();
   if (variables.email !== undefined) payload.email = String(variables.email).trim();
+  if (variables.testNotificationEmail !== undefined) {
+    const raw = variables.testNotificationEmail;
+    payload.testNotificationEmail =
+      typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : null;
+  }
   if (variables.phone !== undefined) payload.phone = String(variables.phone).trim();
   if (variables.defaultCountryId !== undefined) payload.defaultCountryId = variables.defaultCountryId;
   if (variables.defaultCurrencyId !== undefined) payload.defaultCurrencyId = variables.defaultCurrencyId;

@@ -17,6 +17,7 @@ type EntityGeneralSettingsFieldsProps = {
   /** Required to load monetary policy options for default select. */
   tenantId?: string | null;
   entityId?: string | null;
+  showTestNotificationEmail?: boolean;
 };
 
 function addCurrencyToSupported(form: FormInstance, currencyId: string | undefined) {
@@ -36,6 +37,7 @@ export function EntityGeneralSettingsFields({
   sections = ['contact', 'policies'],
   tenantId,
   entityId,
+  showTestNotificationEmail = false,
 }: EntityGeneralSettingsFieldsProps) {
   const translate = useTranslate();
   const show = (section: EntityGeneralSettingsSection) => sections.includes(section);
@@ -61,6 +63,16 @@ export function EntityGeneralSettingsFields({
           >
             <Input type="email" />
           </Form.Item>
+          {showTestNotificationEmail ? (
+            <Form.Item
+              label={translate('create.entity.testNotificationEmail')}
+              name="testNotificationEmail"
+              extra={translate('create.entity.testNotificationEmailHint')}
+              rules={[{ type: 'email', message: translate('pages.login.errors.validEmail') }]}
+            >
+              <Input type="email" autoComplete="off" />
+            </Form.Item>
+          ) : null}
           <Form.Item
             label={translate('create.entity.phone')}
             name="phone"

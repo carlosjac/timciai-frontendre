@@ -5,6 +5,7 @@ import { Button, Grid, Space } from 'antd';
 import { HeaderUserMenu } from './HeaderUserMenu.js';
 import { ImpersonationBanner } from './ImpersonationBanner.js';
 import { AlertsBanner } from '../features/alerts/AlertsBanner.js';
+import { TestModeBanner } from './TestModeBanner.js';
 import { TenantPicker } from './TenantPicker.js';
 
 export function AppHeader() {
@@ -18,6 +19,7 @@ export function AppHeader() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       <ImpersonationBanner />
+      <TestModeBanner />
       <AlertsBanner />
       <div
         style={{

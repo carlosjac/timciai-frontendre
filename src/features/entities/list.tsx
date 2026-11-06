@@ -21,6 +21,7 @@ type EntityRow = BaseRecord & {
   documentTypeName?: string;
   documentNumber?: string | null;
   personType?: string;
+  operatingMode?: 'test' | 'production';
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -118,6 +119,22 @@ export function EntityList() {
         sorter: true,
         render: (v: unknown) => timciPersonTypeLabel(translate, v),
         exportValue: (r) => timciPersonTypeLabel(translate, r.personType),
+      },
+      {
+        key: 'operatingMode',
+        dataIndex: 'operatingMode',
+        titleKey: 'table.entities.operatingMode',
+        sorter: true,
+        render: (v: unknown) =>
+          v === 'test' ? (
+            <Tag>{translate('pages.entities.operatingModeTest')}</Tag>
+          ) : (
+            <Tag>{translate('pages.entities.operatingModeProduction')}</Tag>
+          ),
+        exportValue: (r) =>
+          r.operatingMode === 'test'
+            ? translate('pages.entities.operatingModeTest')
+            : translate('pages.entities.operatingModeProduction'),
       },
       {
         key: 'isActive',

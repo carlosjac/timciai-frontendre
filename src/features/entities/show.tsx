@@ -27,6 +27,7 @@ import { useTaxProfileSchema } from '../../shared/timci/tax/useTaxProfileSchema.
 import { filterAttributeDefsForRole } from '../../shared/timci/taxesApi.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { EntityAdminRedirect } from './EntityAdminRedirect.js';
+import { PromoteToProductionButton } from './PromoteToProductionButton.js';
 import { EntityDocumentLogoFields } from './EntityDocumentLogoFields.js';
 import type { EntityRecord, PaymentOptionRow } from './entity-types.js';
 
@@ -62,6 +63,7 @@ export function EntityShow() {
   const canUpdate = codes.includes('entities.update');
   const canActivate = codes.includes('entities.activate');
   const canDeactivate = codes.includes('entities.deactivate');
+  const canPromote = codes.includes('entities.promoteToProduction');
 
   const activeTab = resolveActiveTab(searchParams.get('tab'), canFullEditEntity);
   const defaultTab: EntityShowTab = canFullEditEntity ? 'identity' : 'general';
@@ -180,6 +182,11 @@ export function EntityShow() {
                 <Descriptions.Item label={translate('table.entities.name')}>
                   {record?.name ?? '—'}
                 </Descriptions.Item>
+                <Descriptions.Item label={translate('pages.entities.operatingMode')}>
+                  {record?.operatingMode === 'test'
+                    ? translate('pages.entities.operatingModeTest')
+                    : translate('pages.entities.operatingModeProduction')}
+                </Descriptions.Item>
                 <Descriptions.Item label={translate('create.entity.country')}>
                   {resolveCountry(record?.countryId)}
                 </Descriptions.Item>
@@ -216,9 +223,21 @@ export function EntityShow() {
           <Descriptions.Item label={translate('table.entities.address')}>
             {record?.address ?? '—'}
           </Descriptions.Item>
+          <Descriptions.Item label={translate('pages.entities.operatingMode')}>
+            {record?.operatingMode === 'test'
+              ? translate('pages.entities.operatingModeTest')
+              : translate('pages.entities.operatingModeProduction')}
+          </Descriptions.Item>
           <Descriptions.Item label={translate('table.entities.email')}>
             {record?.email ?? '—'}
           </Descriptions.Item>
+          {record?.operatingMode === 'test' ? (
+            <Descriptions.Item label={translate('create.entity.testNotificationEmail')}>
+              {record.testNotificationEmail?.trim()
+                ? record.testNotificationEmail
+                : (record.email ?? '—')}
+            </Descriptions.Item>
+          ) : null}
           <Descriptions.Item label={translate('table.entities.phone')}>
             {record?.phone ?? '—'}
           </Descriptions.Item>
@@ -368,6 +387,18 @@ export function EntityShow() {
         )}
       >
         <TimciFormInactiveRecordBanner isActive={record?.isActive} />
+        {record?.operatingMode === 'test' && canPromote && record.id && tenantId ? (
+          <div style={{ marginBottom: 16 }}>
+            <PromoteToProductionButton
+              tenantId={tenantId}
+              entityId={record.id}
+              entityName={record.name ?? ''}
+              onPromoted={() => {
+                void query?.refetch?.();
+              }}
+            />
+          </div>
+        ) : null}
         <Tabs
           activeKey={activeTab}
           onChange={(key) =>

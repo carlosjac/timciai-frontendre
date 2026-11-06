@@ -41,6 +41,9 @@ export type EntityRecord = {
   fantasyName?: string | null;
   taxManagementEnabled?: boolean;
   documentEmissionMode?: 'none' | 'unofficial' | 'official';
+  operatingMode?: 'test' | 'production';
+  testNotificationEmail?: string | null;
+  productionStartedAt?: string | null;
   taxProfile?: Record<string, string> | null;
   isActive?: boolean;
   paymentOptions?: PaymentOptionRow[];
@@ -68,6 +71,7 @@ export const ENTITY_DOCUMENTS_FIELD_NAMES = ['documentEmissionMode'] as const;
 export const ENTITY_GENERAL_SETTINGS_FIELD_NAMES = [
   'address',
   'email',
+  'testNotificationEmail',
   'phone',
   'defaultCountryId',
   'defaultCurrencyId',

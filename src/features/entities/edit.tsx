@@ -1,6 +1,6 @@
 import { Edit, useForm } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, App, Button, Form, Tabs, Typography } from 'antd';
+import { Alert, App, Button, Form, Input, Tabs, Typography } from 'antd';
 import { useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -180,9 +180,12 @@ export function EntityEdit() {
             'supportedCurrencyIds',
           ] as string[])
         : ([...ENTITY_GENERAL_SETTINGS_FIELD_NAMES] as string[]);
-      const values = (await form.validateFields(fieldNames)) as {
+      const generalFields =
+        record?.operatingMode === 'test' ? fieldNames : fieldNames.filter((name) => name !== 'testNotificationEmail');
+      const values = (await form.validateFields(generalFields)) as {
         address: string;
         email: string;
+        testNotificationEmail?: string;
         phone: string;
         defaultCountryId: string;
         defaultCurrencyId: string;
@@ -198,6 +201,15 @@ export function EntityEdit() {
       await submitRecord({
         address: values.address,
         email: values.email,
+        ...(record?.operatingMode === 'test'
+          ? {
+              testNotificationEmail:
+                typeof values.testNotificationEmail === 'string' &&
+                values.testNotificationEmail.trim() !== ''
+                  ? values.testNotificationEmail.trim()
+                  : null,
+            }
+          : {}),
         phone: values.phone,
         defaultCountryId: values.defaultCountryId,
         defaultCurrencyId: values.defaultCurrencyId,
@@ -343,6 +355,7 @@ export function EntityEdit() {
             policyOptions={policyOptions}
             tenantId={tenantId}
             entityId={record?.id ?? tenantId}
+            showTestNotificationEmail={record?.operatingMode === 'test'}
           />
           {canFullEditEntity ? (
             <EntityIdentityFields
@@ -438,6 +451,16 @@ export function EntityEdit() {
           layout="vertical"
           onValuesChange={() => clearServerErrors(form)}
         >
+          <Form.Item label={translate('pages.entities.operatingMode')}>
+            <Input
+              value={
+                record?.operatingMode === 'test'
+                  ? translate('pages.entities.operatingModeTest')
+                  : translate('pages.entities.operatingModeProduction')
+              }
+              readOnly
+            />
+          </Form.Item>
           <Tabs
             activeKey={activeTab}
             onChange={(key) =>

@@ -11,6 +11,7 @@ import {
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { EntityGeneralSettingsFields } from './EntityGeneralSettingsFields.js';
+import { PromoteToProductionButton } from './PromoteToProductionButton.js';
 import { EntityPaymentOptionsFields } from './EntityPaymentOptionsFields.js';
 import { mapPaymentOptionsForSubmit } from './entity-payment-options-utils.js';
 import {
@@ -112,9 +113,14 @@ export function EntitySettingsPage() {
   const saveGeneral = async () => {
     clearServerErrors(form);
     try {
-      const values = (await form.validateFields(GENERAL_FIELD_NAMES)) as {
+      const generalFields =
+        record?.operatingMode === 'test'
+          ? GENERAL_FIELD_NAMES
+          : GENERAL_FIELD_NAMES.filter((name) => name !== 'testNotificationEmail');
+      const values = (await form.validateFields(generalFields)) as {
         address: string;
         email: string;
+        testNotificationEmail?: string;
         phone: string;
         defaultCountryId: string;
         defaultCurrencyId: string;
@@ -128,6 +134,15 @@ export function EntitySettingsPage() {
       await submitRecord({
         address: values.address,
         email: values.email,
+        ...(record?.operatingMode === 'test'
+          ? {
+              testNotificationEmail:
+                typeof values.testNotificationEmail === 'string' &&
+                values.testNotificationEmail.trim() !== ''
+                  ? values.testNotificationEmail.trim()
+                  : null,
+            }
+          : {}),
         phone: values.phone,
         defaultCountryId: values.defaultCountryId,
         defaultCurrencyId: values.defaultCurrencyId,
@@ -189,7 +204,23 @@ export function EntitySettingsPage() {
                       policyOptions={policyOptions}
                       tenantId={tenantId}
                       entityId={tenantId}
+                      showTestNotificationEmail={record?.operatingMode === 'test'}
                     />
+                    {record?.operatingMode === 'test' &&
+                    codes.includes('entities.promoteToProduction') &&
+                    record.id &&
+                    tenantId ? (
+                      <div style={{ marginBottom: 16 }}>
+                        <PromoteToProductionButton
+                          tenantId={tenantId}
+                          entityId={record.id}
+                          entityName={record.name ?? ''}
+                          onPromoted={() => {
+                            void query?.refetch?.();
+                          }}
+                        />
+                      </div>
+                    ) : null}
                     <Button type="primary" htmlType="button" onClick={() => void saveGeneral()}>
                       {translate('pages.entitySettings.saveGeneral')}
                     </Button>

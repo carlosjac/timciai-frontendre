@@ -141,6 +141,11 @@ export function EntityCreate() {
               countryId: values.countryId,
               address: values.address,
               email: values.email,
+              testNotificationEmail:
+                typeof values.testNotificationEmail === 'string' &&
+                values.testNotificationEmail.trim() !== ''
+                  ? values.testNotificationEmail.trim()
+                  : null,
               phone: values.phone,
               defaultCountryId: values.defaultCountryId,
               defaultCurrencyId: values.defaultCurrencyId,
@@ -237,6 +242,7 @@ export function EntityCreate() {
                       currencySelect={acceptedCurrencySelect}
                       allCurrencySelect={currencySelect}
                       showSupportedCurrencies
+                      showTestNotificationEmail
                       policyOptions={policyOptions}
                       tenantId={tenantId}
                     />
