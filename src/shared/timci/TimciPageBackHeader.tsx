@@ -27,7 +27,7 @@ export function TimciPageBackHeader({ backPath, title, tags, children }: Props) 
       headerButtons={() => null}
       headerProps={{
         onBack: () => navigate(backPath),
-        tags,
+        tags: tags == null ? undefined : (tags as never),
         backIcon: (
           <Button
             type="text"

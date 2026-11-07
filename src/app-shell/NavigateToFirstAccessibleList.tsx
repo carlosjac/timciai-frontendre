@@ -7,7 +7,7 @@ import {
 } from '../shared/timci/actionCodes.js';
 
 /**
- * Redirige a la primera ruta de listado permitida por `action-codes` (índice y catch-all).
+ * Inicio (`/`) y el logo: el tablero si el usuario tiene `menu.bi`; si no, el primer listado permitido.
  */
 export function NavigateToFirstAccessibleList() {
   const { data, isLoading, isFetching } = usePermissions<TimciPermissionsData>({});

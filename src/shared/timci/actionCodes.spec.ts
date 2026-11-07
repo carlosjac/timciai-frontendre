@@ -48,6 +48,11 @@ describe('getFirstAccessibleListPath', () => {
     expect(getFirstAccessibleListPath(['menu.countries', 'menu.users'])).toBe('/countries');
   });
 
+  it('opens the dashboard when the user can see it', () => {
+    expect(getFirstAccessibleListPath(['menu.bi', 'menu.countries'])).toBe('/bi');
+    expect(getFirstAccessibleListPath(['menu.sales', 'menu.bi', 'menu.customers'])).toBe('/bi');
+  });
+
   it('falls back to preferences', () => {
     expect(getFirstAccessibleListPath([])).toBe('/preferences');
   });

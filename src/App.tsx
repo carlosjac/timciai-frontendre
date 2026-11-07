@@ -28,6 +28,7 @@ import {
   MailOutlined,
   BellOutlined,
   SendOutlined,
+  DashboardOutlined,
 } from '@ant-design/icons';
 import { App as AntdApp, ConfigProvider, theme as antdTheme } from 'antd';
 import esES from 'antd/locale/es_ES';
@@ -131,6 +132,7 @@ const MonetaryPolicyEdit = lazyPage(
   () => import('./features/monetary-policies/edit.js'),
   'MonetaryPolicyEdit',
 );
+const DashboardPage = lazyPage(() => import('./features/dashboard/DashboardPage.js'), 'DashboardPage');
 const CustomerList = lazyPage(() => import('./features/customers/list.js'), 'CustomerList');
 const CustomerImportJobsList = lazyPage(
   () => import('./features/customers/import-jobs-list.js'),
@@ -250,6 +252,11 @@ function TimciRefineTree() {
 
   const resources = useMemo(
     () => [
+      {
+        name: 'dashboard',
+        list: '/bi',
+        meta: { label: esMessages.nav.dashboard, icon: <DashboardOutlined /> },
+      },
       {
         name: 'countries',
         list: '/countries',
@@ -476,6 +483,7 @@ function TimciRefineTree() {
               }
             >
               <Route index element={<NavigateToFirstAccessibleList />} />
+              <Route path="/bi" element={timciGuarded('dashboard', 'list', <DashboardPage />)} />
               <Route path="/users" element={timciGuarded('users', 'list', <UserList />)} />
               <Route path="/users/create" element={timciGuarded('users', 'create', <UserCreate />)} />
               <Route path="/users/show/:id" element={timciGuarded('users', 'show', <UserShow />)} />

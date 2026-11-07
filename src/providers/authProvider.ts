@@ -4,6 +4,7 @@ import { timciFetch } from '../shared/timci/http.js';
 import { translateEs } from '../i18n/index.js';
 import {
   fetchTimciActionCodes,
+  getFirstAccessibleListPath,
   invalidateTimciActionCodes,
   type TimciPermissionsData,
 } from '../shared/timci/actionCodes.js';
@@ -36,8 +37,12 @@ export function createTimciAuthProvider(): AuthProvider {
       });
       invalidateTimciActionCodes();
       consumePostLogoutLoginHome();
-      // Home when no `?to=` (e.g. after logout). Deep links keep `?to=` via Authenticated.
-      return { success: true, redirectTo: '/' };
+      const codes = await fetchTimciActionCodes();
+      // Home when no `?to=` (e.g. after logout). With menu.bi that home is the dashboard.
+      // Deep links keep `?to=` via Authenticated. Empty codes mean the lookup failed: `/` retries it.
+      const redirectTo = codes.length > 0 ? getFirstAccessibleListPath(codes) : '/';
+
+      return { success: true, redirectTo };
     },
 
     logout: async () => {

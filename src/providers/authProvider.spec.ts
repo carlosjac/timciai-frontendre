@@ -51,13 +51,28 @@ describe('createTimciAuthProvider', () => {
     expect(result.error).toBeInstanceOf(Error);
   });
 
-  it('login succeeds against API and redirects home', async () => {
+  it('login succeeds and opens the dashboard when the user can see it', async () => {
     mswServer.use(
       http.post(`${API}/auth/login`, () => HttpResponse.json({ ok: true })),
+      http.get(`${API}/authorization/me/action-codes`, () =>
+        HttpResponse.json({ actionCodes: ['menu.bi', 'menu.countries'] }),
+      ),
     );
     const auth = createTimciAuthProvider();
     const result = await auth.login!({ email: 'a@b.c', password: 'secret' });
-    expect(result).toEqual({ success: true, redirectTo: '/' });
+    expect(result).toEqual({ success: true, redirectTo: '/bi' });
+  });
+
+  it('login falls back to the first permitted list without the dashboard', async () => {
+    mswServer.use(
+      http.post(`${API}/auth/login`, () => HttpResponse.json({ ok: true })),
+      http.get(`${API}/authorization/me/action-codes`, () =>
+        HttpResponse.json({ actionCodes: ['menu.countries'] }),
+      ),
+    );
+    const auth = createTimciAuthProvider();
+    const result = await auth.login!({ email: 'a@b.c', password: 'secret' });
+    expect(result).toEqual({ success: true, redirectTo: '/countries' });
   });
 
   it('logout clears tenant and marks post-logout home', async () => {

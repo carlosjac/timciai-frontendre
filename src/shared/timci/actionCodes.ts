@@ -164,6 +164,8 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
       return has('menu.sessions');
     case 'rateSnapshots':
       return has('menu.rate_snapshots');
+    case 'dashboard':
+      return has('menu.bi');
     default:
       return false;
   }
@@ -173,6 +175,7 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
  * Orden alineado al menú de timci-admin: operación primero, luego seguridad.
  */
 export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
+  { name: 'dashboard', path: '/bi' },
   { name: 'countries', path: '/countries' },
   { name: 'currencies', path: '/currencies' },
   { name: 'rateSnapshots', path: '/rate-snapshots' },
