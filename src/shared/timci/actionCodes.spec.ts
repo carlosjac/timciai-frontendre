@@ -49,6 +49,8 @@ describe('getFirstAccessibleListPath', () => {
   });
 
   it('opens the dashboard when the user can see it', () => {
+    expect(canSeeResourceMenuItem('reports', ['menu.reports'])).toBe(true);
+    expect(canSeeResourceMenuItem('reports', ['menu.bi'])).toBe(false);
     expect(getFirstAccessibleListPath(['menu.bi', 'menu.countries'])).toBe('/bi');
     expect(getFirstAccessibleListPath(['menu.sales', 'menu.bi', 'menu.customers'])).toBe('/bi');
   });

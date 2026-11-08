@@ -1,8 +1,9 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Column } from '@ant-design/charts';
 import { Card, Statistic, Table, Typography } from 'antd';
 import { Link } from 'react-router';
 import { useTranslate } from '@refinedev/core';
+import { TimciHelpButton } from '../../shared/timci/help/TimciHelpButton.js';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import type { CurrencySlice, DebtorRow, EntityDashboard, PlatformDashboard, QueueRow } from './api.js';
 import type { ListLimit } from './model.js';
@@ -300,10 +301,22 @@ export function WidgetBody(props: {
 
 export function WidgetCard(props: {
   title: string;
+  help?: string;
+  extra?: ReactNode;
   children: ReactElement;
 }): ReactElement {
   return (
-    <Card title={props.title} size="small" style={{ height: '100%', overflow: 'auto' }}>
+    <Card
+      title={
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          {props.title}
+          {props.help ? <TimciHelpButton topic={props.title} text={props.help} /> : null}
+        </span>
+      }
+      extra={props.extra}
+      size="small"
+      style={{ height: '100%', overflow: 'auto' }}
+    >
       {props.children}
     </Card>
   );

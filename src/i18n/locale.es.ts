@@ -10,6 +10,9 @@ export const esMessages = {
     edit: 'Editar',
     delete: 'Eliminar',
   },
+  help: {
+    open: 'Ayuda sobre {{topic}}',
+  },
   notifications: {
     success: 'Operación completada correctamente',
     error: 'Se produjo un error',
@@ -160,6 +163,7 @@ export const esMessages = {
     outboundEmails: 'Emails salientes',
     emailBounces: 'Rebotes de email',
     dashboard: 'Tablero',
+    reports: 'Informes',
     preferences: 'Preferencias',
     changePassword: 'Cambiar contraseña',
   },
@@ -178,6 +182,7 @@ export const esMessages = {
     loading: 'Cargando tablero…',
     loadError: 'No se pudo cargar el tablero.',
     empty: 'Sin datos',
+    openReport: 'Ver detalle',
     noAccess: 'No tenés acceso al tablero.',
     periodDays: 'Últimos {{count}} días',
     today: 'Hoy',
@@ -269,6 +274,178 @@ export const esMessages = {
       readiness: 'Listas para operar',
       activity: 'Actividad',
       health: 'Salud',
+    },
+    help: {
+      today:
+        'Lo vencido al día de hoy, en la moneda elegida. El importe es la suma de saldos abiertos de ventas y débitos cuya fecha de vencimiento ya pasó. Clientes vencidos: cuántos tienen algo vencido. Atraso más largo: los días del documento vencido más viejo. No usa el período de arriba.',
+      collectionPace:
+        'Qué parte de lo facturado en el período ya se cobró. Es el cobrado dividido por las ventas registradas de ese período, en esta moneda. 100 % significa que entró tanto dinero como se vendió. No incluye notas de débito ni de crédito.',
+      openAmount:
+        'Lo que los clientes todavía deben en esta moneda. Suma el saldo abierto de ventas y débitos registrados, vencidos y por vencer. Es la deuda de hoy: el período de arriba no la recorta.',
+      invoiced:
+        'Ventas registradas en el período, en esta moneda. No suma notas de débito, créditos ni cobros. Una venta anulada deja de contar.',
+      collected:
+        'Cobros registrados en el período, en esta moneda. Es el dinero que ingresó, aunque todavía no se haya aplicado a una factura. Un cobro anulado no entra.',
+      customerCredit:
+        'Dinero o crédito a favor del cliente que todavía no se aplicó a una deuda. Son cobros y notas de crédito con un resto sin imputar. No es el saldo de la cuenta corriente.',
+      aging:
+        'Reparte la deuda abierta según cuántos días pasaron del vencimiento, a hoy. Al día: todavía no venció. Después, tramos de 1 a 30, 31 a 60, 61 a 90 y más de 90 días. Muestra qué tan vieja es la deuda, no cuánto se vendió en el período.',
+      periodNet:
+        'Movimientos del período en esta moneda. Ventas, notas de débito y notas de crédito registradas. El neto es ventas más débitos menos créditos. Los ajustes de política son descuentos y recargos que se generaron al cobrar. Las anulaciones son documentos anulados en el período.',
+      subscriptions:
+        'Abonos. Con próximo cobro: tienen fecha para la próxima factura. Vencen en 7 días: esa fecha cae dentro de la semana. Detenidas: la última facturación falló.',
+      tax:
+        'IVA de ventas, débitos y créditos del período, agrupado por alícuota. Las notas de crédito restan. Los cobros no tienen IVA acá.',
+      overdue60:
+        'Cuántos clientes tienen su deuda vencida más vieja con 60 días o más de atraso, en esta moneda.',
+      collectionQueue:
+        'Clientes con deuda vencida, ordenados para gestionar primero. El motivo dice por qué están: no se les cobró en los últimos 30 días, el atraso llega a 60 días, o el monto vencido es de los más altos. El importe es solo lo vencido.',
+      topDebtors:
+        'Clientes que más deben en esta moneda. Suma todo el saldo abierto, vencido y por vencer. La lista muestra solo la cantidad elegida.',
+      oldestDebtors:
+        'Clientes con deuda vencida, empezando por el vencimiento más antiguo.',
+      bouncedEmails:
+        'Mails que el servidor del destinatario rechazó de forma permanente y que todavía nadie marcó como revisados. No dependen del período.',
+      tenants:
+        'Organizaciones activas. El texto de abajo cuenta las inactivas. No incluye la organización interna de la plataforma.',
+      users:
+        'Usuarios activos. El texto de abajo son los que no tienen ningún rol asignado en una organización.',
+      sessions: 'Sesiones de acceso que siguen vigentes.',
+      entitiesInTest: 'Entidades activas que siguen en modo prueba y todavía no pasaron a producción.',
+      readiness:
+        'Qué le falta a cada entidad para operar: cómo emite comprobantes, si tiene los datos de IVA cuando la gestión de impuestos está activa, un medio de pago activo y un logo.',
+      activity:
+        'Ventas y cobros registrados en el período, en todas las entidades. Suscripciones con error: abonos cuya última facturación falló. Tenants en silencio: organizaciones activas sin ningún comprobante registrado en los últimos 30 días.',
+      health:
+        'Antigüedad de la última cotización de monedas. Alertas abiertas de emisión de comprobantes y de envío de mail. Comprobantes emitidos, pendientes y fallidos. Estos números no se recortan por el período.',
+    },
+  },
+  reports: {
+    title: 'Informes',
+    report: 'Informe',
+    export: 'Exportar Excel',
+    exportError: 'No se pudo exportar el informe.',
+    loading: 'Cargando informe…',
+    loadError: 'No se pudo cargar el informe.',
+    empty: 'Sin datos',
+    currency: 'Moneda',
+    currencyAll: 'Todas las monedas',
+    bucket: 'Antigüedad',
+    bucketAll: 'Todos los cubos',
+    periodDays: 'Últimos {{count}} días',
+    asOfNote: 'Este informe es el saldo a la fecha. El período no lo filtra.',
+    yes: 'Sí',
+    no: 'No',
+    kind: {
+      aging: 'Antigüedad de saldos',
+      invoiced: 'Facturado del período',
+      collected: 'Diario de cobranzas',
+      tax: 'Impuestos por alícuota',
+      period: 'Ventas y cobranzas',
+      allocations: 'Imputaciones',
+      unallocated: 'Remanentes sin imputar',
+      adjustments: 'Ajustes y anulaciones',
+      portfolio: 'Cartera por cliente',
+      management: 'Gestión de cobranza',
+    },
+    help: {
+      aging:
+        'Cada venta o débito que todavía tiene saldo, y el tramo según los días de atraso a hoy. Al día significa que todavía no venció. El total de cada tramo es el mismo número que el gráfico de antigüedad del tablero.',
+      invoiced:
+        'Cada venta registrada en el período. La suma es el facturado del tablero. No incluye notas de débito ni de crédito.',
+      collected:
+        'Cada cobro registrado en el período, con el medio de pago. La suma es el cobrado del tablero. Sirve para cerrar la caja del período.',
+      tax:
+        'IVA de cada venta, débito o crédito del período, separado por alícuota. El total de cada alícuota es el mismo que el panel de IVA del tablero. Las notas de crédito restan.',
+      period:
+        'Ventas y cobranzas del período. Por cliente: cuánto se le facturó y cuánto pagó. Por ítem: cantidad e importe de lo vendido.',
+      allocations:
+        'Qué cobro o nota de crédito se aplicó a qué venta o débito. Aplicado es lo que se descontó de esa deuda. Ajuste es el descuento o recargo que se generó al cancelarla. Parcial: el documento de destino sigue con saldo. Cierre: quedó en cero.',
+      unallocated:
+        'Cobros y notas de crédito que todavía tienen un resto sin aplicar a ninguna deuda. Fuera de FIFO: ese resto no se aplica solo a la próxima venta; hay que imputarlo a mano. El total es el saldo a favor del tablero.',
+      adjustments:
+        'Descuentos y recargos creados al cobrar, con el cobro que los originó. Con signo: el crédito resta y el débito suma, igual que el ajuste del tablero. Anulaciones: documentos anulados en el período y el comprobante que los revirtió.',
+      portfolio:
+        'Saldo de la cuenta corriente de cada cliente y moneda. Positivo: el cliente debe. Negativo: tiene saldo a favor. Es el saldo de la cuenta, no el detalle de cada comprobante, y no se filtra por el período.',
+      management:
+        'Recordatorios de deuda enviados en el período. Rebotes duros: mails rechazados de forma permanente. Suscripciones: abonos, con la próxima fecha de facturación, si vence en 7 días y si la última facturación falló.',
+    },
+    totals: {
+      open: 'Abierto',
+      invoiced: 'Facturado',
+      collected: 'Cobrado',
+      sales: 'Ventas',
+      policy: 'Ajustes',
+      voids: 'Anulaciones',
+      unallocated: 'Remanente',
+      applied: 'Aplicado',
+      balance: 'Saldo',
+    },
+    sections: {
+      byCustomer: 'Por cliente',
+      byItem: 'Por ítem',
+      policy: 'Ajustes de política',
+      voids: 'Anulaciones',
+      reminders: 'Recordatorios enviados',
+      bounces: 'Rebotes duros',
+      subscriptions: 'Suscripciones',
+    },
+    types: {
+      sale: 'Venta',
+      debit: 'Débito',
+      credit: 'Crédito',
+      collection: 'Cobro',
+    },
+    application: {
+      partial: 'Parcial',
+      closed: 'Cierre',
+    },
+    columns: {
+      customer: 'Cliente',
+      document: 'Comprobante',
+      type: 'Tipo',
+      currency: 'Moneda',
+      open: 'Abierto',
+      due: 'Vencimiento',
+      days: 'Días',
+      bucket: 'Cubo',
+      concept: 'Concepto',
+      date: 'Fecha',
+      amount: 'Importe',
+      paymentOption: 'Medio de pago',
+      percent: 'Alícuota',
+      tax: 'IVA',
+      sales: 'Ventas',
+      collected: 'Cobranzas',
+      item: 'Ítem',
+      quantity: 'Cantidad',
+      source: 'Origen',
+      sourceNumber: 'Nº origen',
+      sourceAmount: 'Importe origen',
+      target: 'Destino',
+      targetNumber: 'Nº destino',
+      applied: 'Aplicado',
+      targetOpen: 'Abierto destino',
+      adjustment: 'Ajuste',
+      application: 'Estado',
+      allocated: 'Imputado',
+      unallocated: 'Remanente',
+      hold: 'Fuera de FIFO',
+      signed: 'Con signo',
+      triggeredBy: 'Disparado por',
+      reverse: 'Reverso',
+      balance: 'Saldo',
+      email: 'Email',
+      subtype: 'Subtipo',
+      diagnostic: 'Diagnóstico',
+      starts: 'Inicio',
+      ends: 'Fin',
+      nextBilling: 'Próximo cobro',
+      months: 'Meses',
+      withNext: 'Con próximo cobro',
+      dueSoon: 'En 7 días',
+      stopped: 'Detenida',
+      error: 'Error',
     },
   },
   tenant: {

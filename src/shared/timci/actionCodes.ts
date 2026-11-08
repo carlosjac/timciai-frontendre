@@ -166,6 +166,8 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
       return has('menu.rate_snapshots');
     case 'dashboard':
       return has('menu.bi');
+    case 'reports':
+      return has('menu.reports');
     default:
       return false;
   }
@@ -176,6 +178,7 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
  */
 export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'dashboard', path: '/bi' },
+  { name: 'reports', path: '/reports/aging' },
   { name: 'countries', path: '/countries' },
   { name: 'currencies', path: '/currencies' },
   { name: 'rateSnapshots', path: '/rate-snapshots' },

@@ -3,8 +3,10 @@ import { Responsive, useContainerWidth, type Layout, type LayoutItem } from 'rea
 import 'react-grid-layout/css/styles.css';
 import { useGetIdentity, useTranslate } from '@refinedev/core';
 import { Alert, Button, Card, Modal, Select, Space, Statistic, Typography } from 'antd';
+import { Link } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { fetchTimciActionCodes } from '../../shared/timci/actionCodes.js';
+import { TimciHelpButton } from '../../shared/timci/help/TimciHelpButton.js';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import {
   fetchEntityDashboard,
@@ -32,6 +34,37 @@ import { WidgetBody, WidgetCard } from './widgets.js';
 
 const PERIODS = [7, 30, 90] as const;
 
+function sameLayout(current: DashboardLayoutState['layout'], next: DashboardLayoutState['layout']): boolean {
+  if (current.length !== next.length) return false;
+
+  return current.every((item, index) => {
+    const other = next[index];
+
+    return (
+      other != null &&
+      item.i === other.i &&
+      item.x === other.x &&
+      item.y === other.y &&
+      item.w === other.w &&
+      item.h === other.h
+    );
+  });
+}
+const REPORT_WIDGETS = new Set(['aging', 'invoiced', 'collected', 'tax']);
+
+function reportDetailHref(
+  type: string,
+  currencyId: string | undefined,
+  from: string | undefined,
+  to: string | undefined,
+  enabled: boolean,
+): string | undefined {
+  if (!enabled || !currencyId || !from || !to || !REPORT_WIDGETS.has(type)) return undefined;
+  const params = new URLSearchParams({ from, to, currencyId });
+
+  return `/reports/${type}?${params.toString()}`;
+}
+
 function applySize(layout: DashboardLayoutState['layout'], instance: WidgetInstance): DashboardLayoutState['layout'] {
   const units = sizeUnits(instance.size);
 
@@ -43,11 +76,15 @@ export function DashboardPage(): ReactElement {
   const identity = useGetIdentity<{ id: string }>();
   const userId = identity.data?.id ?? 'anonymous';
   const [profile, setProfile] = useState<DashboardProfile | null | undefined>(undefined);
+  const [canOpenReports, setCanOpenReports] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     void fetchTimciActionCodes().then((codes) => {
-      if (!cancelled) setProfile(dashboardProfile(codes));
+      if (!cancelled) {
+        setProfile(dashboardProfile(codes));
+        setCanOpenReports(codes.includes('menu.reports'));
+      }
     });
 
     return () => {
@@ -62,10 +99,18 @@ export function DashboardPage(): ReactElement {
     return <Alert type="info" showIcon message={translate('dashboard.noAccess')} />;
   }
 
-  return <DashboardLoaded userId={userId} profile={profile} />;
+  return <DashboardLoaded userId={userId} profile={profile} canOpenReports={canOpenReports} />;
 }
 
-function DashboardLoaded({ userId, profile }: { userId: string; profile: DashboardProfile }): ReactElement {
+function DashboardLoaded({
+  userId,
+  profile,
+  canOpenReports,
+}: {
+  userId: string;
+  profile: DashboardProfile;
+  canOpenReports: boolean;
+}): ReactElement {
   const translate = useTranslate();
   const [days, setDays] = useState<(typeof PERIODS)[number]>(30);
   const [tenantId, setTenantId] = useState(() => getStoredTenantId());
@@ -134,6 +179,7 @@ function DashboardLoaded({ userId, profile }: { userId: string; profile: Dashboa
       entity={entity}
       platform={platform}
       error={error}
+      canOpenReports={canOpenReports}
     />
   );
 }
@@ -146,6 +192,7 @@ function DashboardBoard(props: {
   entity: EntityDashboard | null;
   platform: PlatformDashboard | null;
   error: string | null;
+  canOpenReports: boolean;
 }): ReactElement {
   const translate = useTranslate();
   const { userId, profile, entity, platform, error } = props;
@@ -165,14 +212,17 @@ function DashboardBoard(props: {
   );
 
   const onLayoutChange = useCallback(
-    (next: Layout) => {
-      const layout = next.map((item: LayoutItem) => ({
+    (_current: Layout, allLayouts?: Partial<Record<string, Layout>>) => {
+      const source = allLayouts?.lg;
+      if (!source) return;
+      const layout = source.map((item: LayoutItem) => ({
         i: item.i,
         x: item.x,
         y: item.y,
         w: item.w,
         h: item.h,
       }));
+      if (sameLayout(layoutState.layout, layout)) return;
       persist({ ...layoutState, layout });
     },
     [layoutState, persist]
@@ -208,6 +258,7 @@ function DashboardBoard(props: {
           <Space direction="vertical" style={{ width: '100%' }}>
             <Space wrap>
               <Typography.Text strong>{translate('dashboard.today')}</Typography.Text>
+              <TimciHelpButton topic={translate('dashboard.today')} text={translate('dashboard.help.today')} />
               <Select
                 aria-label={translate('dashboard.currency')}
                 value={todayCurrency.id}
@@ -229,7 +280,7 @@ function DashboardBoard(props: {
         {mounted ? (
           <Responsive
             width={width}
-            layouts={{ lg: layoutState.layout, md: layoutState.layout, sm: layoutState.layout }}
+            layouts={{ lg: layoutState.layout }}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
             rowHeight={36}
@@ -240,9 +291,30 @@ function DashboardBoard(props: {
               const code = currencies.find((item) => item.id === instance.currencyId)?.code;
               const title = def ? translate(def.titleKey) : instance.type;
 
+              const detailHref = reportDetailHref(
+                instance.type,
+                instance.currencyId,
+                entity?.from,
+                entity?.to,
+                props.canOpenReports,
+              );
+
               return (
                 <div key={instance.id}>
-                  <WidgetCard title={code ? `${title} (${code})` : title}>
+                  <WidgetCard
+                    title={code ? `${title} (${code})` : title}
+                    help={def ? translate(`dashboard.help.${instance.type}`) : undefined}
+                    extra={
+                      detailHref ? (
+                        <span
+                          onMouseDown={(event) => event.stopPropagation()}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Link to={detailHref}>{translate('dashboard.openReport')}</Link>
+                        </span>
+                      ) : undefined
+                    }
+                  >
                     <WidgetBody
                       type={instance.type}
                       currencyId={instance.currencyId}

@@ -110,7 +110,8 @@ export function packLayout(instances: WidgetInstance[]): StoredLayoutItem[] {
 }
 
 function storageKey(userId: string, profile: DashboardProfile): string {
-  return `timci-dashboard:${userId}:${profile}`;
+  // v2: v1 stored the responsive compaction (narrow breakpoint) as the only layout.
+  return `timci-dashboard:v2:${userId}:${profile}`;
 }
 
 export function loadLayout(userId: string, profile: DashboardProfile): DashboardLayoutState | null {
