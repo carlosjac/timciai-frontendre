@@ -1,4 +1,4 @@
-import { useLink, useMenu, usePermissions, type TreeMenuItem } from '@refinedev/core';
+import { useLink, useMenu, usePermissions, useTranslate, type TreeMenuItem } from '@refinedev/core';
 import { ThemedTitle, useThemedLayoutContext, type RefineThemedLayoutSiderProps } from '@refinedev/antd';
 import {
   BarsOutlined,
@@ -10,6 +10,7 @@ import { Button, ConfigProvider, Drawer, Grid, Layout, Menu, Spin, theme, type M
 import { useContext, useMemo, type CSSProperties } from 'react';
 import {
   canSeeResourceMenuItem,
+  menuLayoutForCodes,
   type TimciPermissionsData,
 } from '../shared/timci/actionCodes.js';
 
@@ -47,6 +48,15 @@ function filterMenuTreeByCodes(tree: TreeMenuItem[], codes: string[]): TreeMenuI
     } else if (canSeeResourceMenuItem(item.name, codes)) {
       out.push(item);
     }
+  }
+  return out;
+}
+
+function flattenMenu(tree: TreeMenuItem[]): TreeMenuItem[] {
+  const out: TreeMenuItem[] = [];
+  for (const item of tree) {
+    if (item.children.length > 0) out.push(...flattenMenu(item.children));
+    else out.push(item);
   }
   return out;
 }
@@ -113,6 +123,7 @@ export function TimciThemedSider({
 
   const direction = useContext(ConfigProvider.ConfigContext)?.direction;
   const Link = useLink();
+  const translate = useTranslate();
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta });
   const { data: permData, isLoading, isFetching } = usePermissions<TimciPermissionsData>({});
   const breakpoint = Grid.useBreakpoint();
@@ -129,18 +140,53 @@ export function TimciThemedSider({
     return filterMenuTreeByCodes(menuItems, c);
   }, [menuItems, permData?.actionCodes, permissionsWaiting]);
 
-  const menuItemsProp = useMemo(
-    () =>
-      treeToMenuItems(visibleTree, {
-        selectedKey,
-        siderCollapsed,
-        activeItemDisabled,
-        Link,
-      }),
-    [visibleTree, selectedKey, siderCollapsed, activeItemDisabled, Link],
-  );
+  const menuItemsProp = useMemo(() => {
+    const codes = permData?.actionCodes ?? [];
+    const layout = menuLayoutForCodes(codes);
+    const flat = flattenMenu(visibleTree);
+    const byName = new Map(flat.map((item) => [item.name, item]));
+    const used = new Set<string>();
+    const ctx = { selectedKey, siderCollapsed, activeItemDisabled, Link };
+    const take = (name: string) => {
+      const item = byName.get(name);
+      if (!item || used.has(name)) return undefined;
+      used.add(name);
+      return item;
+    };
+    const loose = layout.loose.flatMap((name) => {
+      const item = take(name);
+      return item ? [item] : [];
+    });
+    const groups = layout.groups.flatMap((group) => {
+      const children = group.names.flatMap((name) => {
+        const item = take(name);
+        return item ? [item] : [];
+      });
+      if (children.length === 0) return [];
+      return [
+        {
+          key: group.key,
+          icon: <UnorderedListOutlined aria-hidden />,
+          label: translate(group.labelKey),
+          children: treeToMenuItems(children, ctx),
+        },
+      ];
+    });
+    const rest = flat.filter((item) => !used.has(item.name));
+    return [...treeToMenuItems(loose, ctx), ...groups, ...treeToMenuItems(rest, ctx)];
+  }, [visibleTree, permData?.actionCodes, selectedKey, siderCollapsed, activeItemDisabled, Link, translate]);
 
-  const defaultExpandMenuItems = siderItemsAreCollapsed ? [] : visibleTree.map(({ key }) => key);
+  const openGroupKeys = useMemo(() => {
+    const codes = permData?.actionCodes ?? [];
+    const layout = menuLayoutForCodes(codes);
+    const flat = flattenMenu(visibleTree);
+    const selected = flat.find((item) => item.key === selectedKey);
+    if (!selected) return [];
+    const group = layout.groups.find((entry) => entry.names.includes(selected.name));
+    return group ? [group.key] : [];
+  }, [visibleTree, permData?.actionCodes, selectedKey]);
+
+  const defaultExpandMenuItems = siderItemsAreCollapsed ? openGroupKeys : visibleTree.map(({ key }) => key);
 
   const renderMenu = () => (
     <Menu

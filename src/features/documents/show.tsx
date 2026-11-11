@@ -1,6 +1,6 @@
 import { Show } from '@refinedev/antd';
 import { useShow, useTranslate } from '@refinedev/core';
-import { App as AntdApp, Button, Descriptions, Spin, Tag, Typography } from 'antd';
+import { Button, Descriptions, Spin, Tag, Typography } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
@@ -11,6 +11,7 @@ import {
 } from '../../shared/timci/documentsApi.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 function statusColor(status: string): string {
   switch (status) {
@@ -48,7 +49,7 @@ function commercialTransactionShowPath(
 
 export function DocumentShow() {
   const translate = useTranslate();
-  const { message } = AntdApp.useApp();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const { query } = useShow<IssuedDocumentRecord>({ resource: 'documents' });
   const record = query?.data?.data;
@@ -104,7 +105,7 @@ export function DocumentShow() {
     setDownloading(true);
     try {
       const ok = await downloadIssuedDocumentPdf(String(record.id));
-      if (!ok) message.error(translate('documents.downloadError'));
+      if (!ok) notify.error(translate('documents.downloadError'));
     } finally {
       setDownloading(false);
     }
@@ -233,7 +234,7 @@ export function DocumentShow() {
                 minHeight: 520,
                 border: '1px solid var(--ant-color-border, #d9d9d9)',
                 borderRadius: 8,
-                background: '#fff',
+                background: 'var(--ant-color-bg-container)',
               }}
             />
           )}

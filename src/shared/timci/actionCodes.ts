@@ -173,9 +173,6 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
   }
 }
 
-/**
- * Orden alineado al menú de timci-admin: operación primero, luego seguridad.
- */
 export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'dashboard', path: '/bi' },
   { name: 'reports', path: '/reports/aging' },
@@ -207,10 +204,82 @@ export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'permissions', path: '/permissions' },
 ];
 
+/**
+ * Orden de llegada y de menú. Los ítems sueltos van primero; los grupos, después.
+ * Root: quien tiene menu.allEntities, o no opera la cuenta corriente de una entidad.
+ * Administrador de entidad: menu.sales / menu.customers / menu.collections, sin menu.allEntities.
+ */
+export type TimciMenuGroup = { key: string; labelKey: string; names: string[] };
+
+export type TimciMenuLayout = { loose: string[]; groups: TimciMenuGroup[] };
+
+export const ENTITY_ADMIN_MENU: TimciMenuLayout = {
+  loose: ['dashboard', 'customers', 'sales', 'collections', 'debits', 'credits', 'alerts'],
+  groups: [
+    {
+      key: 'configuration',
+      labelKey: 'nav.groupConfiguration',
+      names: [
+        'entity_settings',
+        'sellable_items',
+        'price_lists',
+        'monetary_policies',
+        'subscriptions',
+      ],
+    },
+    {
+      key: 'followUp',
+      labelKey: 'nav.groupFollowUp',
+      names: ['reports', 'documents', 'outboundEmails', 'emailBounces'],
+    },
+  ],
+};
+
+export const ROOT_MENU: TimciMenuLayout = {
+  loose: ['dashboard', 'entities', 'tenants', 'users', 'userTenantRoles'],
+  groups: [
+    {
+      key: 'catalogs',
+      labelKey: 'nav.groupCatalogs',
+      names: ['countries', 'currencies', 'document_types', 'rateSnapshots'],
+    },
+    {
+      key: 'mail',
+      labelKey: 'nav.groupMail',
+      names: ['alerts', 'outboundEmails', 'emailBounces'],
+    },
+    {
+      key: 'access',
+      labelKey: 'nav.groupAccess',
+      names: ['roles', 'actions', 'permissions', 'sessions'],
+    },
+  ],
+};
+
+export function menuLayoutForCodes(codes: string[]): TimciMenuLayout {
+  const entityOps =
+    codes.includes('menu.sales') ||
+    codes.includes('menu.customers') ||
+    codes.includes('menu.collections');
+  if (codes.includes('menu.allEntities') || !entityOps) return ROOT_MENU;
+  return ENTITY_ADMIN_MENU;
+}
+
+export function orderedResourceNames(codes: string[]): string[] {
+  const layout = menuLayoutForCodes(codes);
+  const placed = new Set<string>([
+    ...layout.loose,
+    ...layout.groups.flatMap((group) => group.names),
+  ]);
+  const rest = TIMCI_RESOURCE_LIST_ORDER.map((row) => row.name).filter((name) => !placed.has(name));
+  return [...layout.loose, ...layout.groups.flatMap((group) => group.names), ...rest];
+}
+
 /** Primera lista a la que el usuario tiene acceso; si ninguna, preferencias (siempre en cabecera). */
 export function getFirstAccessibleListPath(actionCodes: string[]): string {
-  for (const { name, path } of TIMCI_RESOURCE_LIST_ORDER) {
-    if (canSeeResourceMenuItem(name, actionCodes)) return path;
+  for (const name of orderedResourceNames(actionCodes)) {
+    const row = TIMCI_RESOURCE_LIST_ORDER.find((item) => item.name === name);
+    if (row && canSeeResourceMenuItem(name, actionCodes)) return row.path;
   }
   return '/preferences';
 }

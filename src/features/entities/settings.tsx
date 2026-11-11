@@ -1,6 +1,6 @@
 import { List, useForm } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, App, Button, Card, Form, Spin, Tabs } from 'antd';
+import { Alert, Button, Card, Form, Spin, Tabs } from 'antd';
 import { Navigate, useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
@@ -23,6 +23,7 @@ import {
 import { useEntityFormResources } from './useEntityFormResources.js';
 import { useEntityPaymentOptionToggle } from './useEntityPaymentOptionToggle.js';
 import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 const GENERAL_FIELD_NAMES = [
   ...ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
@@ -32,7 +33,7 @@ const PAYMENT_FIELD_NAMES = ['paymentOptions'];
 
 export function EntitySettingsPage() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const [searchParams, setSearchParams] = useSearchParams();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
@@ -48,6 +49,7 @@ export function EntitySettingsPage() {
     searchParams.get('tab') === 'payment-options' ? 'payment-options' : 'general';
 
   const { formProps, form, onFinish: submitRecord, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'entities',
     action: 'edit',
     id: tenantId ?? undefined,
@@ -155,7 +157,7 @@ export function EntitySettingsPage() {
           ? values.supportedCurrencyIds.filter((id) => id != null && String(id).trim() !== '')
           : [],
       });
-      message.success(translate('pages.entitySettings.savedGeneral'));
+      notify.success(translate('pages.entitySettings.savedGeneral'));
     } catch (e) {
       applyServerError(form, e);
     }
@@ -169,7 +171,7 @@ export function EntitySettingsPage() {
         form.getFieldValue('paymentOptions') as PaymentOptionRow[] | undefined,
       );
       await submitRecord({ paymentOptions });
-      message.success(translate('pages.entitySettings.savedPaymentOptions'));
+      notify.success(translate('pages.entitySettings.savedPaymentOptions'));
     } catch (e) {
       applyServerError(form, e);
     }

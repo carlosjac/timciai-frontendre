@@ -8,7 +8,7 @@ const ROLE_CREATE_FIELDS = ['name'] as const;
 
 export function RoleCreate() {
   const translate = useTranslate();
-  const { formProps, saveButtonProps, onFinish, form } = useForm({ resource: 'roles' });
+  const { formProps, saveButtonProps, onFinish, form } = useForm({ errorNotification: false, resource: 'roles' });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
     formFieldNames: ROLE_CREATE_FIELDS,
   });

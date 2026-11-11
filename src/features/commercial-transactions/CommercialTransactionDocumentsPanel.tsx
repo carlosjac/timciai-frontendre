@@ -1,5 +1,5 @@
 import { useTranslate } from '@refinedev/core';
-import { App as AntdApp, Button, Space, Table, Tag, Typography } from 'antd';
+import { Button, Space, Table, Tag, Typography } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { getV1Base } from '../../config.js';
@@ -9,6 +9,7 @@ import {
   type IssuedDocumentRecord,
 } from '../../shared/timci/documentsApi.js';
 import { timciFetch } from '../../shared/timci/http.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 function documentShowPath(id: string): string {
   return `/documents/show/${encodeURIComponent(id)}`;
@@ -42,7 +43,7 @@ export function CommercialTransactionDocumentsPanel({
   hideWhenEmpty = false,
 }: Props) {
   const translate = useTranslate();
-  const { message } = AntdApp.useApp();
+  const notify = useTimciNotify();
   const tenantId = getStoredTenantId();
   const [rows, setRows] = useState<IssuedDocumentRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,12 +58,12 @@ export function CommercialTransactionDocumentsPanel({
       const { json } = await timciFetch(url);
       setRows(Array.isArray(json) ? (json as IssuedDocumentRecord[]) : []);
     } catch (e) {
-      message.error(e instanceof Error ? e.message : translate('documents.loadError'));
+      notify.error(e instanceof Error ? e.message : translate('documents.loadError'));
     } finally {
       setLoading(false);
       setLoadedOnce(true);
     }
-  }, [tenantId, commercialTransactionId, message, translate]);
+  }, [tenantId, commercialTransactionId, notify, translate]);
 
   useEffect(() => {
     void load();
@@ -70,7 +71,7 @@ export function CommercialTransactionDocumentsPanel({
 
   const download = async (id: string) => {
     const ok = await downloadIssuedDocumentPdf(id);
-    if (!ok) message.error(translate('documents.downloadError'));
+    if (!ok) notify.error(translate('documents.downloadError'));
   };
 
   const postAction = async (id: string, action: 'retry' | 'skip') => {
@@ -79,10 +80,10 @@ export function CommercialTransactionDocumentsPanel({
     const url = `${base}/tenants/${encodeURIComponent(tenantId)}/documents/${encodeURIComponent(id)}/${action}`;
     try {
       await timciFetch(url, { method: 'POST' });
-      message.success(translate(`documents.${action}Ok`));
+      notify.success(translate(`documents.${action}Ok`));
       await load();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : translate('documents.actionError'));
+      notify.error(e instanceof Error ? e.message : translate('documents.actionError'));
     }
   };
 

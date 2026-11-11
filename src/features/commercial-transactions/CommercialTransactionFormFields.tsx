@@ -14,12 +14,17 @@ import {
   Row,
   Select,
   Switch,
+  Typography,
 } from 'antd';
 import dayjs from 'dayjs';
 import { Link } from 'react-router';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
 import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import {
+  fetchActiveMonetaryPolicies,
+  type MonetaryPolicyListItem,
+} from '../../shared/timci/monetaryPoliciesApi.js';
 import {
   fetchPriceListsForEntity,
   type PriceListRow,
@@ -111,6 +116,29 @@ function sellableRowTaxAttributes(row: SellableRow): Record<string, string> | un
   return Object.keys(attrs).length > 0 ? attrs : undefined;
 }
 
+function MoneyFigure({
+  label,
+  value,
+  strong = false,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+}) {
+  return (
+    <div style={{ minWidth: strong ? 140 : 96 }}>
+      <div style={{ fontSize: 12, color: 'var(--ant-color-text-secondary)' }}>{label}</div>
+      <Typography.Text
+        strong={strong}
+        style={{ display: 'block', textAlign: 'right', fontSize: strong ? 20 : 14 }}
+        aria-label={label}
+      >
+        {value.trim() !== '' ? value : '—'}
+      </Typography.Text>
+    </div>
+  );
+}
+
 function SaleItemComputedAmounts({
   itemIndex,
   taxesOn,
@@ -157,52 +185,33 @@ function SaleItemComputedAmounts({
   return (
     <>
       <Col xs={12} sm={8} md={6} lg={4}>
-        <Form.Item label={translate('pages.commercialTransactions.fields.discountAmount')}>
-          <Input
-            readOnly
-            value={computed?.discountAmount ?? ''}
-            placeholder="—"
-            aria-label={translate('pages.commercialTransactions.fields.discountAmount')}
-          />
-        </Form.Item>
+        <MoneyFigure
+          label={translate('pages.commercialTransactions.fields.discountAmount')}
+          value={computed?.discountAmount ?? ''}
+        />
       </Col>
       <Col xs={12} sm={8} md={6} lg={4}>
-        <Form.Item label={netLabel}>
-          <Input
-            readOnly
-            value={
-              taxesOn
-                ? formatTimciMoneyOrEmpty(net) || (computed?.subtotal ?? '')
-                : (computed?.subtotal ?? '')
-            }
-            placeholder="—"
-            aria-label={netLabel}
-          />
-        </Form.Item>
+        <MoneyFigure
+          label={netLabel}
+          value={
+            taxesOn
+              ? formatTimciMoneyOrEmpty(net) || (computed?.subtotal ?? '')
+              : (computed?.subtotal ?? '')
+          }
+        />
       </Col>
       {taxesOn ? (
         <>
           {taxFields.map((field) => (
             <Col key={field.key} xs={12} sm={8} md={6} lg={4}>
-              <Form.Item label={field.label}>
-                <Input
-                  readOnly
-                  value={formatTimciMoneyOrEmpty(field.value)}
-                  placeholder="—"
-                  aria-label={field.label}
-                />
-              </Form.Item>
+              <MoneyFigure label={field.label} value={formatTimciMoneyOrEmpty(field.value)} />
             </Col>
           ))}
           <Col xs={12} sm={8} md={6} lg={4}>
-            <Form.Item label={translate('pages.commercialTransactions.fields.gross')}>
-              <Input
-                readOnly
-                value={formatTimciMoneyOrEmpty(gross)}
-                placeholder="—"
-                aria-label={translate('pages.commercialTransactions.fields.gross')}
-              />
-            </Form.Item>
+            <MoneyFigure
+              label={translate('pages.commercialTransactions.fields.gross')}
+              value={formatTimciMoneyOrEmpty(gross)}
+            />
           </Col>
         </>
       ) : null}
@@ -265,53 +274,20 @@ function SaleItemsTotal({
     >
       {taxesOn ? (
         <>
-          <Form.Item
-            label={<span style={{ fontWeight: 600 }}>{translate('tax.net')}</span>}
-            style={{ marginBottom: 0, minWidth: 140 }}
-          >
-            <Input
-              readOnly
-              value={formatTimciMoneyOrEmpty(taxResult?.netAmount)}
-              placeholder="—"
-              aria-label={translate('tax.net')}
-              style={{ textAlign: 'right' }}
-            />
-          </Form.Item>
+          <MoneyFigure
+            label={translate('tax.net')}
+            value={formatTimciMoneyOrEmpty(taxResult?.netAmount)}
+          />
           {taxFields.map((field) => (
-            <Form.Item
+            <MoneyFigure
               key={field.key}
-              label={<span style={{ fontWeight: 600 }}>{field.label}</span>}
-              style={{ marginBottom: 0, minWidth: 140 }}
-            >
-              <Input
-                readOnly
-                value={formatTimciMoneyOrEmpty(field.value)}
-                placeholder="—"
-                aria-label={field.label}
-                style={{ textAlign: 'right' }}
-              />
-            </Form.Item>
+              label={field.label}
+              value={formatTimciMoneyOrEmpty(field.value)}
+            />
           ))}
         </>
       ) : null}
-      <Form.Item
-        label={<span style={{ fontWeight: 600 }}>{totalLabel}</span>}
-        style={{ marginBottom: 0, minWidth: 200 }}
-        labelCol={{ style: { textAlign: 'right' } }}
-      >
-        <Input
-          readOnly
-          value={total}
-          placeholder="—"
-          aria-label={totalLabel}
-          style={{
-            textAlign: 'right',
-            fontWeight: 700,
-            fontSize: 18,
-            background: 'rgba(0, 0, 0, 0.02)',
-          }}
-        />
-      </Form.Item>
+      <MoneyFigure label={totalLabel} value={total} strong />
     </div>
   );
 }
@@ -345,25 +321,14 @@ function DocumentTaxAmountFields({
     <Row gutter={16}>
       {taxFields.map((field) => (
         <Col key={field.key} xs={24} sm={8}>
-          <Form.Item label={field.label}>
-            <Input
-              readOnly
-              value={formatTimciMoneyOrEmpty(field.value)}
-              placeholder="—"
-              aria-label={field.label}
-            />
-          </Form.Item>
+          <MoneyFigure label={field.label} value={formatTimciMoneyOrEmpty(field.value)} />
         </Col>
       ))}
       <Col xs={24} sm={8}>
-        <Form.Item label={translate('pages.commercialTransactions.fields.gross')}>
-          <Input
-            readOnly
-            value={formatTimciMoneyOrEmpty(taxResult?.grossAmount)}
-            placeholder="—"
-            aria-label={translate('pages.commercialTransactions.fields.gross')}
-          />
-        </Form.Item>
+        <MoneyFigure
+          label={translate('pages.commercialTransactions.fields.gross')}
+          value={formatTimciMoneyOrEmpty(taxResult?.grossAmount)}
+        />
       </Col>
     </Row>
   );
@@ -382,6 +347,11 @@ export function CommercialTransactionFormFields({
   const priceListId = Form.useWatch('priceListId', form) as string | undefined;
   const transactionDate = Form.useWatch('transactionDate', form) as string | undefined;
   const fxRateManual = Form.useWatch('fxRateManual', form) as boolean | undefined;
+  const fxRate = Form.useWatch('fxRate', form) as string | number | undefined;
+  const monetaryPolicyId = Form.useWatch('monetaryPolicyId', form) as string | undefined;
+  const holdFromAutoAllocation = Form.useWatch('holdFromAutoAllocation', form) as
+    | boolean
+    | undefined;
   const entityTxnNumber = Form.useWatch('entityTxnNumber', form) as number | undefined;
   const amountWatch = Form.useWatch('amount', form);
   const taxAttributesWatch = Form.useWatch('taxAttributes', form) as
@@ -389,6 +359,8 @@ export function CommercialTransactionFormFields({
     | undefined;
   const itemsWatch = Form.useWatch('items', form);
   const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
+  const [monetaryPolicies, setMonetaryPolicies] = useState<MonetaryPolicyListItem[]>([]);
+  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const [taxResult, setTaxResult] = useState<CalculateTaxesResult | null>(null);
   const [emailDeliveryBlockers, setEmailDeliveryBlockers] = useState(0);
 
@@ -435,7 +407,19 @@ export function CommercialTransactionFormFields({
     };
   }, [customerId, mayNotifyCustomer, tenantId]);
 
-  const { selectProps: currencySelect } = useEntitySupportedCurrencySelect(tenantId);
+  const { selectProps: currencySelect, labelById: currencyLabelById } =
+    useEntitySupportedCurrencySelect(tenantId);
+
+  useEffect(() => {
+    if (!tenantId || !needsMonetaryPolicy) return;
+    let cancelled = false;
+    void fetchActiveMonetaryPolicies(tenantId, tenantId).then((rows) => {
+      if (!cancelled) setMonetaryPolicies(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [needsMonetaryPolicy, tenantId]);
 
   const { result: entityRecord } = useOne<EntityWithPaymentOptions>({
     resource: 'entities',
@@ -928,149 +912,48 @@ export function CommercialTransactionFormFields({
         />
       ) : null}
 
-      <Form.Item
-        label={translate('pages.commercialTransactions.fields.transactionDate')}
-        name="transactionDate"
-        rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        getValueProps={(v) => ({
-          value: v ? dayjs(String(v).slice(0, 10)) : undefined,
-        })}
-        normalize={(v) => (v ? dayjs(v).format('YYYY-MM-DD') : undefined)}
-        initialValue={dayjs().format('YYYY-MM-DD')}
-      >
-        <DatePicker
-          style={{ width: '100%' }}
-          format={pickerDateFormat}
-          allowClear={false}
-          locale={antdDatePickerLocaleEs}
-        />
-      </Form.Item>
-
-      {needsMonetaryPolicy && (
-        <Form.Item
-          label={translate('pages.commercialTransactions.fields.dueDate')}
-          name="dueDate"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-          getValueProps={(v) => ({
-            value: v ? dayjs(String(v).slice(0, 10)) : undefined,
-          })}
-          normalize={(v) => (v ? dayjs(v).format('YYYY-MM-DD') : undefined)}
-        >
-          <DatePicker
-            style={{ width: '100%' }}
-            format={pickerDateFormat}
-            allowClear={false}
-            locale={antdDatePickerLocaleEs}
-            aria-label={translate('pages.commercialTransactions.fields.dueDate')}
-          />
-        </Form.Item>
-      )}
-
-      <Form.Item
-        label={translate('pages.commercialTransactions.fields.currency')}
-        name="currencyId"
-        rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-      >
-        <Select
-          {...currencySelect}
-          showSearch
-          optionFilterProp="label"
-          placeholder={translate('pages.commercialTransactions.fields.currencyPlaceholder')}
-          aria-label={translate('pages.commercialTransactions.fields.currency')}
-          onChange={(value) => {
-            if (!isSale || !priceListId || !value) return;
-            const items =
-              (form.getFieldValue('items') as Array<{ sellableItemId?: string }>) ?? [];
-            items.forEach((item, index) => {
-              if (item?.sellableItemId) {
-                void applyListPriceToItem(index, String(item.sellableItemId), {
-                  currencyId: String(value),
-                });
-              }
-            });
-          }}
-        />
-      </Form.Item>
-
-      <Form.Item name="fxRateAsOf" hidden>
-        <Input />
-      </Form.Item>
-
-      <Form.Item label={translate('pages.commercialTransactions.fields.fxRate')} name="fxRate">
-        <Input
-          inputMode="decimal"
-          placeholder="1"
-          onChange={() => {
-            if (fxRateManual !== true) {
-              form.setFieldValue('fxRateManual', true);
-            }
-          }}
-        />
-      </Form.Item>
-
-      <Form.Item
-        label={translate('pages.commercialTransactions.fields.fxRateManual')}
-        name="fxRateManual"
-        valuePropName="checked"
-        initialValue={false}
-      >
-        <Switch />
-      </Form.Item>
-
-      {!isSale && (
-        <Form.Item
-          label={
-            taxesOn && (isDebit || isCredit)
-              ? translate('pages.commercialTransactions.fields.amountNet')
-              : translate('pages.commercialTransactions.fields.amount')
-          }
-          name="amount"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-          extra={
-            isCollection
-              ? translate('pages.commercialTransactions.fields.collectionAmountSettlementHint')
-              : undefined
-          }
-        >
-          <InputNumber style={{ width: '100%' }} min={0} stringMode />
-        </Form.Item>
-      )}
-
-      {taxesOn && (isDebit || isCredit) ? (
-        <>
-          <LineTaxFields
-            schema={entityTax.schema}
-            namePrefix="taxAttributes"
-            disabled={entityTax.schemaLoading}
-            fallbackLabelKey="pages.commercialTransactions.fields.taxCategory"
-          />
-          <DocumentTaxAmountFields schema={entityTax.schema} taxResult={taxResult} />
-        </>
-      ) : null}
-
-      {(isDebit || isCredit) && (
-        <Form.Item
-          label={translate('pages.commercialTransactions.fields.concept')}
-          name="concept"
-          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-        >
-          <Input.TextArea rows={2} maxLength={500} showCount />
-        </Form.Item>
-      )}
-
-      {(isCollection || isCredit) && (
-        <Form.Item
-          label={translate('pages.commercialTransactions.fields.holdFromAutoAllocation')}
-          name="holdFromAutoAllocation"
-          valuePropName="checked"
-          initialValue={false}
-          extra={translate('pages.commercialTransactions.fields.holdFromAutoAllocationHint')}
-        >
-          <Switch
-            aria-label={translate('pages.commercialTransactions.fields.holdFromAutoAllocation')}
-          />
-        </Form.Item>
-      )}
+      <Row gutter={16}>
+        <Col xs={24} sm={12}>
+          <Form.Item
+            label={translate('pages.commercialTransactions.fields.transactionDate')}
+            name="transactionDate"
+            rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+            getValueProps={(v) => ({
+              value: v ? dayjs(String(v).slice(0, 10)) : undefined,
+            })}
+            normalize={(v) => (v ? dayjs(v).format('YYYY-MM-DD') : undefined)}
+            initialValue={dayjs().format('YYYY-MM-DD')}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              format={pickerDateFormat}
+              allowClear={false}
+              locale={antdDatePickerLocaleEs}
+            />
+          </Form.Item>
+        </Col>
+        {needsMonetaryPolicy ? (
+          <Col xs={24} sm={12}>
+            <Form.Item
+              label={translate('pages.commercialTransactions.fields.dueDate')}
+              name="dueDate"
+              rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+              getValueProps={(v) => ({
+                value: v ? dayjs(String(v).slice(0, 10)) : undefined,
+              })}
+              normalize={(v) => (v ? dayjs(v).format('YYYY-MM-DD') : undefined)}
+            >
+              <DatePicker
+                style={{ width: '100%' }}
+                format={pickerDateFormat}
+                allowClear={false}
+                locale={antdDatePickerLocaleEs}
+                aria-label={translate('pages.commercialTransactions.fields.dueDate')}
+              />
+            </Form.Item>
+          </Col>
+        ) : null}
+      </Row>
 
       {isSale && (
         <Form.Item
@@ -1099,14 +982,46 @@ export function CommercialTransactionFormFields({
         </Form.Item>
       )}
 
-      {needsMonetaryPolicy && (
-        <MonetaryPolicyDefaultSelect
-          entityId={tenantId}
-          tenantId={tenantId}
-          name="monetaryPolicyId"
-          labelKey="pages.commercialTransactions.fields.monetaryPolicy"
-        />
+      {!isSale && (
+        <Form.Item
+          label={
+            taxesOn && (isDebit || isCredit)
+              ? translate('pages.commercialTransactions.fields.amountNet')
+              : translate('pages.commercialTransactions.fields.amount')
+          }
+          name="amount"
+          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+          extra={
+            isCollection
+              ? translate('pages.commercialTransactions.fields.collectionAmountSettlementHint')
+              : undefined
+          }
+        >
+          <InputNumber style={{ width: '100%' }} min={0} stringMode />
+        </Form.Item>
       )}
+
+      {(isDebit || isCredit) && (
+        <Form.Item
+          label={translate('pages.commercialTransactions.fields.concept')}
+          name="concept"
+          rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+        >
+          <Input.TextArea rows={2} maxLength={500} showCount />
+        </Form.Item>
+      )}
+
+      {taxesOn && (isDebit || isCredit) ? (
+        <>
+          <LineTaxFields
+            schema={entityTax.schema}
+            namePrefix="taxAttributes"
+            disabled={entityTax.schemaLoading}
+            fallbackLabelKey="pages.commercialTransactions.fields.taxCategory"
+          />
+          <DocumentTaxAmountFields schema={entityTax.schema} taxResult={taxResult} />
+        </>
+      ) : null}
 
       {isCollection && (
         <Form.Item
@@ -1277,6 +1192,145 @@ export function CommercialTransactionFormFields({
           </Form.List>
         </Card>
       )}
+
+      {(() => {
+        const yesNo = (value: boolean | undefined) =>
+          value === true ? translate('table.users.yes') : translate('table.users.no');
+        const fxText = fxRate == null || String(fxRate).trim() === '' ? '—' : String(fxRate);
+        const pairs: Array<[string, string]> = [
+          [
+            'pages.commercialTransactions.fields.currency',
+            currencyId
+              ? currencyLabelById.get(String(currencyId)) || String(currencyId)
+              : '—',
+          ],
+          ['pages.commercialTransactions.fields.fxRate', fxText],
+          ['pages.commercialTransactions.fields.fxRateManual', yesNo(fxRateManual)],
+        ];
+        if (needsMonetaryPolicy) {
+          pairs.push([
+            'pages.commercialTransactions.fields.monetaryPolicy',
+            monetaryPolicies.find((policy) => policy.id === monetaryPolicyId)?.name?.trim() || '—',
+          ]);
+        }
+        if (isCollection || isCredit) {
+          pairs.push([
+            'pages.commercialTransactions.fields.holdFromAutoAllocation',
+            yesNo(holdFromAutoAllocation),
+          ]);
+        }
+        const moreOptionsReady =
+          Boolean(currencyId) && (!needsMonetaryPolicy || Boolean(monetaryPolicyId));
+        const showSummary = moreOptionsReady && !moreOptionsOpen;
+        return (
+          <>
+            {showSummary ? (
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'baseline',
+                  gap: '4px 16px',
+                  marginBottom: 16,
+                }}
+              >
+                {pairs.map(([labelKey, value]) => (
+                  <span key={labelKey}>
+                    <Typography.Text type="secondary">{translate(labelKey)}</Typography.Text>
+                    {': '}
+                    <Typography.Text>{value}</Typography.Text>
+                  </span>
+                ))}
+                <Button
+                  type="link"
+                  onClick={() => setMoreOptionsOpen(true)}
+                  style={{ paddingInline: 0, height: 'auto' }}
+                >
+                  {translate('pages.commercialTransactions.changeMoreOptions')}
+                </Button>
+              </div>
+            ) : null}
+            <div hidden={showSummary}>
+              <Form.Item
+                label={translate('pages.commercialTransactions.fields.currency')}
+                name="currencyId"
+                rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+              >
+                <Select
+                  {...currencySelect}
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder={translate('pages.commercialTransactions.fields.currencyPlaceholder')}
+                  aria-label={translate('pages.commercialTransactions.fields.currency')}
+                  onChange={(value) => {
+                    if (!isSale || !priceListId || !value) return;
+                    const items =
+                      (form.getFieldValue('items') as Array<{ sellableItemId?: string }>) ?? [];
+                    items.forEach((item, index) => {
+                      if (item?.sellableItemId) {
+                        void applyListPriceToItem(index, String(item.sellableItemId), {
+                          currencyId: String(value),
+                        });
+                      }
+                    });
+                  }}
+                />
+              </Form.Item>
+
+              <Form.Item name="fxRateAsOf" hidden>
+                <Input />
+              </Form.Item>
+
+              <Form.Item label={translate('pages.commercialTransactions.fields.fxRate')} name="fxRate">
+                <Input
+                  inputMode="decimal"
+                  placeholder="1"
+                  onChange={() => {
+                    if (fxRateManual !== true) {
+                      form.setFieldValue('fxRateManual', true);
+                    }
+                  }}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={translate('pages.commercialTransactions.fields.fxRateManual')}
+                name="fxRateManual"
+                valuePropName="checked"
+                initialValue={false}
+              >
+                <Switch />
+              </Form.Item>
+
+              {needsMonetaryPolicy ? (
+                <MonetaryPolicyDefaultSelect
+                  entityId={tenantId}
+                  tenantId={tenantId}
+                  name="monetaryPolicyId"
+                  labelKey="pages.commercialTransactions.fields.monetaryPolicy"
+                />
+              ) : null}
+
+              {isCollection || isCredit ? (
+                <Form.Item
+                  label={translate('pages.commercialTransactions.fields.holdFromAutoAllocation')}
+                  name="holdFromAutoAllocation"
+                  valuePropName="checked"
+                  initialValue={false}
+                  extra={translate('pages.commercialTransactions.fields.holdFromAutoAllocationHint')}
+                >
+                  <Switch
+                    aria-label={translate(
+                      'pages.commercialTransactions.fields.holdFromAutoAllocation',
+                    )}
+                  />
+                </Form.Item>
+              ) : null}
+            </div>
+          </>
+        );
+      })()}
+
 
       {needsAllocations && (
         <Card

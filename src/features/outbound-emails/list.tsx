@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { App, Button, Space, Tag } from 'antd';
+import { Button, Space, Tag } from 'antd';
 import type { Key } from 'react';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { getResourceApiBase } from '../../shared/timci/apiUrl.js';
@@ -9,6 +9,7 @@ import { timciFetch } from '../../shared/timci/http.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type EmailAddress = { email: string; name?: string };
 
@@ -36,7 +37,7 @@ function recipients(row: OutboundEmailRow): string {
 
 export function OutboundEmailList() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const codes = permData?.actionCodes ?? [];
@@ -59,16 +60,16 @@ export function OutboundEmailList() {
             body: JSON.stringify({ ids: ids.slice(0, 50) }),
           });
         }
-        message.success(translate('pages.outboundEmails.retrySuccess'));
+        notify.success(translate('pages.outboundEmails.retrySuccess'));
         setSelectedKeys([]);
         window.location.reload();
       } catch {
-        message.error(translate('pages.outboundEmails.retryError'));
+        notify.error(translate('pages.outboundEmails.retryError'));
       } finally {
         setRetrying(false);
       }
     },
-    [message, translate],
+    [notify, translate],
   );
 
   const columnDefs = useMemo((): TimciColumnDef<OutboundEmailRow>[] => [

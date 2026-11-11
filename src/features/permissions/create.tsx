@@ -6,9 +6,10 @@ import {
   type BaseRecord,
   type HttpError,
 } from '@refinedev/core';
-import { App, Form, Select, Typography } from 'antd';
+import { Form, Select, Typography } from 'antd';
 import { useState } from 'react';
 import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type ActionRow = BaseRecord & { code?: string; name?: string };
 
@@ -17,7 +18,7 @@ const PERMISSION_CREATE_FORM_ID = 'timci-permission-create-form';
 export function PermissionCreate() {
   const translate = useTranslate();
   const { list } = useNavigation();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
@@ -76,13 +77,13 @@ export function PermissionCreate() {
           values: { roleId, tenantId, actionId },
         });
       }
-      message.success(
+      notify.success(
         translate('create.permission.bulkSuccess', { count: String(actionIds.length) }),
       );
       list('permissions');
     } catch (err) {
       const http = err as HttpError;
-      message.error(
+      notify.error(
         typeof http?.message === 'string' && http.message !== ''
           ? http.message
           : translate('notifications.error'),

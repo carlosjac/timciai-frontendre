@@ -7,11 +7,12 @@ import {
   useTranslate,
   type BaseRecord,
 } from '@refinedev/core';
-import { App, Button, Modal, Tag } from 'antd';
+import { Button, Modal, Tag } from 'antd';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type SessionRow = BaseRecord & {
   id: string;
@@ -33,7 +34,7 @@ export function SessionList() {
   const dataProvider = useDataProvider();
   const invalidate = useInvalidate();
   const { mutate: logout } = useLogout();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { data: canDelete, isSuccess: canDeleteLoaded } = useCan({
     resource: 'sessions',
     action: 'delete',
@@ -138,14 +139,14 @@ export function SessionList() {
     setRevoking(true);
     try {
       await dataProvider().deleteOne({ resource: 'sessions', id });
-      message.success(translate('pages.sessions.revoked'));
+      notify.success(translate('pages.sessions.revoked'));
       setRevokeTarget(null);
       await invalidate({ resource: 'sessions', invalidates: ['list'] });
       if (isOwn) {
         setTimeout(() => logout(), 1000);
       }
     } catch (e: unknown) {
-      message.error(
+      notify.error(
         e instanceof Error ? e.message : translate('pages.sessions.revokeError'),
       );
     } finally {

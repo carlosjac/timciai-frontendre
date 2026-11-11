@@ -19,7 +19,11 @@ export function CommercialTransactionCreate({ resource }: Props) {
   const { dateFormat } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const config = COMMERCIAL_TX_CONFIG[resource];
-  const { formProps, saveButtonProps, onFinish, form } = useForm({ resource });
+  const { formProps, saveButtonProps, onFinish, form } = useForm({
+    errorNotification: false,
+    resource,
+    redirect: 'show',
+  });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors();
 
   if (!tenantId) {

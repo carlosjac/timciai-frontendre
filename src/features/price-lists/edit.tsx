@@ -30,6 +30,7 @@ export function PriceListEdit() {
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'price_lists',
     action: 'edit',
   });

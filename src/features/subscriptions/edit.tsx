@@ -13,6 +13,7 @@ export function SubscriptionEdit() {
   const { dateFormat } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { formProps, saveButtonProps, onFinish, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'subscriptions',
     action: 'edit',
   });

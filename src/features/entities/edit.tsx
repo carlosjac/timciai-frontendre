@@ -1,6 +1,6 @@
 import { Edit, useForm } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, App, Button, Form, Input, Tabs, Typography } from 'antd';
+import { Alert, Button, Form, Input, Tabs, Typography } from 'antd';
 import { useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -38,6 +38,7 @@ import {
 import { useEntityFormResources } from './useEntityFormResources.js';
 import { useEntityPaymentOptionToggle } from './useEntityPaymentOptionToggle.js';
 import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 const IDENTITY_FIELD_NAMES = [...ENTITY_IDENTITY_FIELD_NAMES] as string[];
 const PAYMENT_FIELD_NAMES = ['paymentOptions'];
@@ -56,7 +57,7 @@ function resolveActiveTab(raw: string | null, canFullEdit: boolean): EntityEditT
 export function EntityEdit() {
   const translate = useTranslate();
   const { dateFormat, timeZone } = useUserPreferences();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const navigate = useNavigate();
   const { id: routeId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -73,6 +74,7 @@ export function EntityEdit() {
   const activeTab = resolveActiveTab(searchParams.get('tab'), canFullEditEntity);
 
   const { formProps, onFinish: submitRecord, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'entities',
     action: 'edit',
     redirect: false,
@@ -123,11 +125,11 @@ export function EntityEdit() {
     if (record.isActive === false) {
       const entityId = record.id ?? routeId;
       if (entityId) {
-        message.warning(translate('pages.entities.inactiveCannotEdit'));
+        notify.warning(translate('pages.entities.inactiveCannotEdit'));
         navigate(`/entities/show/${encodeURIComponent(String(entityId))}`, { replace: true });
       }
     }
-  }, [formLoading, message, navigate, record, routeId, translate]);
+  }, [formLoading, notify, navigate, record, routeId, translate]);
 
   if (!tenantId) {
     return (
@@ -164,7 +166,7 @@ export function EntityEdit() {
         documentNumber: values.documentNumber,
         fantasyName,
       });
-      message.success(translate('pages.entities.savedIdentity'));
+      notify.success(translate('pages.entities.savedIdentity'));
     } catch (e) {
       applyServerError(form, e);
     }
@@ -229,7 +231,7 @@ export function EntityEdit() {
             }
           : {}),
       });
-      message.success(translate('pages.entities.savedGeneral'));
+      notify.success(translate('pages.entities.savedGeneral'));
     } catch (e) {
       applyServerError(form, e);
     }
@@ -245,12 +247,12 @@ export function EntityEdit() {
 
       const countryId = form.getFieldValue('countryId') as string | undefined;
       if (!countryId) {
-        message.warning(translate('tax.pickCountryFirst'));
+        notify.warning(translate('tax.pickCountryFirst'));
         return;
       }
       const countryCode = resolveIsoCode(countryId);
       if (!countryCode) {
-        message.warning(translate('tax.countryIsoMissing'));
+        notify.warning(translate('tax.countryIsoMissing'));
         return;
       }
       if (taxProfileSchemaLoading) {
@@ -284,7 +286,7 @@ export function EntityEdit() {
       await submitRecord({
         taxProfile: normalizeTaxProfile(taxProfile) ?? {},
       });
-      message.success(translate('pages.entities.savedTaxes'));
+      notify.success(translate('pages.entities.savedTaxes'));
     } catch (e) {
       if (e && typeof e === 'object' && 'errorFields' in e) return;
       applyServerError(form, e);
@@ -298,7 +300,7 @@ export function EntityEdit() {
       await submitRecord({
         documentEmissionMode: form.getFieldValue('documentEmissionMode') ?? 'unofficial',
       });
-      message.success(translate('pages.entities.savedDocuments'));
+      notify.success(translate('pages.entities.savedDocuments'));
     } catch (e) {
       if (e && typeof e === 'object' && 'errorFields' in e) return;
       applyServerError(form, e);
@@ -313,7 +315,7 @@ export function EntityEdit() {
         form.getFieldValue('paymentOptions') as PaymentOptionRow[] | undefined,
       );
       await submitRecord({ paymentOptions });
-      message.success(translate('pages.entities.savedPaymentOptions'));
+      notify.success(translate('pages.entities.savedPaymentOptions'));
     } catch (e) {
       applyServerError(form, e);
     }

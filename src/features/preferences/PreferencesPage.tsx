@@ -1,6 +1,6 @@
 import { List } from '@refinedev/antd';
 import { useTranslate } from '@refinedev/core';
-import { App, Button, Card, Form, Radio, Select, Typography } from 'antd';
+import { Button, Card, Form, Radio, Select, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo } from 'react';
 import { useUserPreferences } from './useUserPreferences.js';
@@ -14,6 +14,7 @@ import {
 } from './storage.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 const DATE_FORMAT_LABEL_KEYS: Record<(typeof ALLOWED_DATE_FORMATS)[number], string> = {
   'DD/MM/YYYY': 'pages.preferences.dateFormats.ddmmyyyy',
@@ -32,7 +33,7 @@ const PREF_FIELD_NAMES: readonly string[] = ['timeZone', 'dateFormat', 'theme'];
 
 export function PreferencesPage() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const prefs = useUserPreferences();
   const [form] = Form.useForm<FormValues>();
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
@@ -73,7 +74,7 @@ export function PreferencesPage() {
     clearServerErrors(form);
     try {
       prefs.setPreferences(values);
-      message.success(translate('pages.preferences.saved'));
+      notify.success(translate('pages.preferences.saved'));
     } catch (e: unknown) {
       applyServerError(form, e);
     }

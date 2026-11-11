@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { App, Modal } from 'antd';
+import { Modal } from 'antd';
 import { useInvalidate, useTranslate } from '@refinedev/core';
 import {
   getEntityPaymentOptionActivateUrl,
@@ -7,6 +7,7 @@ import {
 } from '../../shared/timci/entitiesApi.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import type { PaymentOptionRow } from './entity-types.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type UseEntityPaymentOptionToggleParams = {
   tenantId: string | null;
@@ -20,7 +21,7 @@ export function useEntityPaymentOptionToggle({
   onRefetch,
 }: UseEntityPaymentOptionToggleParams) {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const invalidate = useInvalidate();
   const [paymentToggleOpen, setPaymentToggleOpen] = useState(false);
   const [paymentToggleLoading, setPaymentToggleLoading] = useState(false);
@@ -45,7 +46,7 @@ export function useEntityPaymentOptionToggle({
         ? getEntityPaymentOptionDeactivateUrl(tenantId, entityId, paymentToggleTarget.id)
         : getEntityPaymentOptionActivateUrl(tenantId, entityId, paymentToggleTarget.id);
       await timciFetch(url, { method: 'PATCH' });
-      message.success(
+      notify.success(
         paymentToggleTarget.isActive
           ? translate('pages.entities.paymentOptionDeactivated')
           : translate('pages.entities.paymentOptionActivated'),
@@ -57,14 +58,14 @@ export function useEntityPaymentOptionToggle({
       });
       await onRefetch?.();
     } catch (e: unknown) {
-      message.error(
+      notify.error(
         e instanceof Error ? e.message : translate('pages.entities.paymentOptionToggleError'),
       );
     } finally {
       setPaymentToggleLoading(false);
       setPaymentToggleTarget(null);
     }
-  }, [entityId, invalidate, message, onRefetch, paymentToggleTarget, tenantId, translate]);
+  }, [entityId, invalidate, notify, onRefetch, paymentToggleTarget, tenantId, translate]);
 
   const paymentToggleLabel = paymentToggleTarget?.isActive
     ? translate('pages.entities.paymentOptionDeactivate')

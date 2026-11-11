@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { App, Button, Tag } from 'antd';
+import { Button, Tag } from 'antd';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { getResourceApiBase } from '../../shared/timci/apiUrl.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
@@ -8,6 +8,7 @@ import { timciFetch } from '../../shared/timci/http.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type AlertRow = BaseRecord & {
   id: string;
@@ -28,7 +29,7 @@ function severityColor(severity: string): string {
 
 export function AlertList() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const codes = permData?.actionCodes ?? [];
@@ -41,13 +42,13 @@ export function AlertList() {
       if (!base) return;
       try {
         await timciFetch(`${base}/${encodeURIComponent(id)}/acknowledge`, { method: 'POST' });
-        message.success(translate('pages.alerts.acknowledged'));
+        notify.success(translate('pages.alerts.acknowledged'));
         window.location.reload();
       } catch {
-        message.error(translate('pages.alerts.acknowledgeError'));
+        notify.error(translate('pages.alerts.acknowledgeError'));
       }
     },
-    [message, translate],
+    [notify, translate],
   );
 
   const columnDefs = useMemo((): TimciColumnDef<AlertRow>[] => [

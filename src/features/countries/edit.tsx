@@ -30,6 +30,7 @@ export function CountryEdit() {
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'countries',
     action: 'edit',
   });

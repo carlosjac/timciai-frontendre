@@ -3,7 +3,6 @@ import { useTranslate } from '@refinedev/core';
 import { Alert, Form } from 'antd';
 import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { App as AntdApp } from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
   commercialTransactionShowPath,
@@ -14,6 +13,7 @@ import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormSe
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { CommercialTransactionFormFields } from './CommercialTransactionFormFields.js';
 import { COMMERCIAL_TX_CONFIG, type CommercialTransactionRecord } from './types.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type Props = {
   resource: CommercialTransactionResource;
@@ -22,12 +22,13 @@ type Props = {
 export function CommercialTransactionEdit({ resource }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
-  const { message } = AntdApp.useApp();
+  const notify = useTimciNotify();
   const { dateFormat } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const config = COMMERCIAL_TX_CONFIG[resource];
 
   const { formProps, saveButtonProps, onFinish, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource,
     action: 'edit',
   });
@@ -42,9 +43,9 @@ export function CommercialTransactionEdit({ resource }: Props) {
   useEffect(() => {
     if (formLoading || !record?.id) return;
     if (record.status === 'draft') return;
-    message.warning(translate('pages.commercialTransactions.onlyDraftCanEdit'));
+    notify.warning(translate('pages.commercialTransactions.onlyDraftCanEdit'));
     navigate(showPathForId(String(record.id)), { replace: true });
-  }, [formLoading, message, navigate, record, showPathForId, translate]);
+  }, [formLoading, notify, navigate, record, showPathForId, translate]);
 
   if (!tenantId) {
     return (

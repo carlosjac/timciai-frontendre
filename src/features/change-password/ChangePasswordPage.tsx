@@ -1,12 +1,13 @@
 import { List } from '@refinedev/antd';
 import { useLogout, useTranslate } from '@refinedev/core';
-import { App, Button, Card, Form, Input, Typography } from 'antd';
+import { Button, Card, Form, Input, Typography } from 'antd';
 import { useState } from 'react';
 import { getV1Base } from '../../config.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import { isTimciPasswordPolicyValid } from '../../shared/timci/passwordPolicy.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type ChangePasswordForm = {
   currentPassword: string;
@@ -23,7 +24,7 @@ const CHANGE_PW_FIELD_NAMES: readonly string[] = [
 
 export function ChangePasswordPage() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { mutate: logout } = useLogout();
   const [form] = Form.useForm<ChangePasswordForm>();
   const [submitting, setSubmitting] = useState(false);
@@ -42,7 +43,7 @@ export function ChangePasswordPage() {
           newPassword: values.newPassword,
         }),
       });
-      message.success(translate('pages.changePassword.success'));
+      notify.success(translate('pages.changePassword.success'));
       form.resetFields();
       logout();
     } catch (e: unknown) {

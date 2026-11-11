@@ -27,6 +27,7 @@ export function TenantEdit() {
   const { dateFormat, timeZone } = useUserPreferences();
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'tenants',
     action: 'edit',
   });

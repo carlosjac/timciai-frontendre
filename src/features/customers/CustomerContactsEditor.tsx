@@ -1,5 +1,5 @@
 import { useTranslate } from '@refinedev/core';
-import { App, Button, Form, Input, Space, Switch } from 'antd';
+import { Button, Form, Input, Space, Switch } from 'antd';
 import { useEffect, useState } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
@@ -11,6 +11,7 @@ import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAle
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import type { CustomerContactView } from './CustomerContactsReadonlyTab.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 const CONTACT_FIELDS = [
   'name',
@@ -46,7 +47,7 @@ export function CustomerContactsEditor({
   onSaved,
 }: CustomerContactsEditorProps) {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
@@ -75,7 +76,7 @@ export function CustomerContactsEditor({
   const onSave = async () => {
     const tenantId = getStoredTenantId();
     if (!tenantId) {
-      message.warning(translate('tenant.selectFirst'));
+      notify.warning(translate('tenant.selectFirst'));
       return;
     }
     try {
@@ -87,7 +88,7 @@ export function CustomerContactsEditor({
         method: 'PATCH',
         body: JSON.stringify(body),
       });
-      message.success(translate('notifications.success'));
+      notify.success(translate('notifications.success'));
       await onSaved?.();
     } catch (e) {
       if (e && typeof e === 'object' && 'errorFields' in e) return;

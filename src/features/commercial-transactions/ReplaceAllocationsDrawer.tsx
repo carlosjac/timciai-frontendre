@@ -1,5 +1,5 @@
 import { useList, useTranslate, type BaseRecord } from '@refinedev/core';
-import { App, Button, Drawer, Form, Grid, Space } from 'antd';
+import { Button, Drawer, Form, Grid, Space } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import type { CommercialTransactionResource } from '../../shared/timci/commercialTransactionsApi.js';
 import { getCommercialTransactionReplaceAllocationsUrl } from '../../shared/timci/commercialTransactionsApi.js';
@@ -9,6 +9,7 @@ import { formatTimciMoneyOrEmpty } from '../../shared/timci/formatMoney.js';
 import { type AllocationCandidateRow } from './collectionAllocations.js';
 import { CollectionAllocationsTable } from './CollectionAllocationsTable.js';
 import type { AllocationFormRow, CommercialTransactionRecord } from './types.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type Props = {
   open: boolean;
@@ -39,7 +40,7 @@ export function ReplaceAllocationsDrawer({
   onSuccess,
 }: Props) {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const screens = Grid.useBreakpoint();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const [form] = Form.useForm<{ amount?: string; allocations?: AllocationFormRow[] }>();
@@ -149,7 +150,7 @@ export function ReplaceAllocationsDrawer({
           body: JSON.stringify({ allocations: payload }),
         },
       );
-      message.success(translate('pages.commercialTransactions.replaceAllocationsSuccess'));
+      notify.success(translate('pages.commercialTransactions.replaceAllocationsSuccess'));
       onSuccess();
       onClose();
     } catch (e) {
@@ -157,7 +158,7 @@ export function ReplaceAllocationsDrawer({
         e instanceof Error && e.message
           ? e.message
           : translate('pages.commercialTransactions.replaceAllocationsError');
-      message.error(msg);
+      notify.error(msg);
     } finally {
       setSaving(false);
     }

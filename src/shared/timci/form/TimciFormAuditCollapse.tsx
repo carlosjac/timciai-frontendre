@@ -116,8 +116,11 @@ export function TimciFormAuditCollapse(props: TimciFormAuditCollapseProps) {
 
   return (
     <Collapse
-      bordered={false}
-      style={{ marginTop: 16, maxWidth: props.maxWidth ?? 640, ...props.style }}
+      style={{
+        marginTop: 16,
+        ...(props.maxWidth != null ? { maxWidth: props.maxWidth } : {}),
+        ...props.style,
+      }}
       items={[
         {
           key: 'audit',

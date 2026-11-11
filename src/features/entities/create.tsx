@@ -1,7 +1,7 @@
 import { Create, useForm } from '@refinedev/antd';
 import { useTranslate } from '@refinedev/core';
 import { useEffect } from 'react';
-import { Alert, App, Form, Input, Tabs, Typography } from 'antd';
+import { Alert, Form, Input, Tabs, Typography } from 'antd';
 import { useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { normalizeRichTextField } from '../../shared/timci/form/index.js';
@@ -15,6 +15,7 @@ import { EntityDocumentEmissionFields } from './EntityDocumentEmissionFields.js'
 import { EntityDocumentLogoFields } from './EntityDocumentLogoFields.js';
 import { useEntityFormResources } from './useEntityFormResources.js';
 import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type EntityCreateTab = 'identity' | 'general' | 'taxes' | 'documents' | 'payment-options';
 
@@ -28,7 +29,7 @@ function resolveActiveTab(raw: string | null): EntityCreateTab {
 
 export function EntityCreate() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const [searchParams, setSearchParams] = useSearchParams();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
@@ -109,7 +110,7 @@ export function EntityCreate() {
 
             const taxManagementEnabled = values.taxManagementEnabled === true;
             if (taxManagementEnabled && !values.countryId) {
-              message.warning(translate('tax.pickCountryFirst'));
+              notify.warning(translate('tax.pickCountryFirst'));
               throw new Error(translate('tax.pickCountryFirst'));
             }
 

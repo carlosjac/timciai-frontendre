@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { Button, Space, Tag, message } from 'antd';
+import { Button, Space, Tag } from 'antd';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
@@ -8,6 +8,7 @@ import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { getResourceApiBase } from '../../shared/timci/apiUrl.js';
 import { timciFetch } from '../../shared/timci/http.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type EmailBounceRow = BaseRecord & {
   email: string;
@@ -22,6 +23,7 @@ type EmailBounceRow = BaseRecord & {
 
 export function EmailBounceList() {
   const translate = useTranslate();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const canAck = permData?.actionCodes?.includes('emailBounces.acknowledge') ?? false;
@@ -41,10 +43,10 @@ export function EmailBounceList() {
     if (!base) return;
     try {
       await timciFetch(`${base}/${encodeURIComponent(id)}/acknowledge`, { method: 'POST' });
-      message.success(translate('pages.emailBounces.acknowledged'));
+      notify.success(translate('pages.emailBounces.acknowledged'));
       window.location.reload();
     } catch {
-      message.error(translate('pages.emailBounces.acknowledgeError'));
+      notify.error(translate('pages.emailBounces.acknowledgeError'));
     }
   };
 

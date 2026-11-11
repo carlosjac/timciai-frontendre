@@ -1,6 +1,6 @@
 import { Show } from '@refinedev/antd';
 import { useList, usePermissions, useShow, useTranslate } from '@refinedev/core';
-import { Alert, Descriptions, Tabs, Tag } from 'antd';
+import { Alert, Collapse, Descriptions, Tabs, Tag } from 'antd';
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -132,7 +132,7 @@ export function CustomerShow() {
   return (
     <>
       <Show
-        title={translate('pages.customers.showTitle')}
+        title={record?.name?.trim() || translate('pages.customers.showTitle')}
         isLoading={isLoading}
         canEdit={canEditRecord}
         canDelete={false}
@@ -175,12 +175,6 @@ export function CustomerShow() {
                     <Descriptions.Item label={translate('create.customer.country')}>
                       {record?.countryName?.trim() || record?.countryId || '—'}
                     </Descriptions.Item>
-                    <Descriptions.Item label={translate('create.customer.priceList')}>
-                      {record?.priceListName?.trim() || record?.priceListId || '—'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={translate('create.customer.defaultCurrency')}>
-                      {currencyLabel}
-                    </Descriptions.Item>
                     <Descriptions.Item label={translate('create.customer.personType')}>
                       {timciPersonTypeLabel(translate, record?.personType)}
                     </Descriptions.Item>
@@ -190,17 +184,6 @@ export function CustomerShow() {
                     <Descriptions.Item label={translate('create.customer.documentNumber')}>
                       {record?.documentNumber?.trim() || '—'}
                     </Descriptions.Item>
-                    <Descriptions.Item label={translate('create.customer.defaultOverduePolicy')}>
-                      {record?.defaultOverdueNotificationPolicyKey?.trim() || '—'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={translate('create.customer.defaultPaymentTermDays')}>
-                      {record?.defaultPaymentTermDays ?? '—'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={translate('create.customer.defaultMonetaryPolicy')}>
-                      {record?.defaultMonetaryPolicyName?.trim() ||
-                        record?.defaultMonetaryPolicyId ||
-                        '—'}
-                    </Descriptions.Item>
                     <Descriptions.Item label={translate('table.customers.active')}>
                       {record?.isActive ? (
                         <Tag color="green">{translate('table.users.yes')}</Tag>
@@ -209,6 +192,36 @@ export function CustomerShow() {
                       )}
                     </Descriptions.Item>
                   </Descriptions>
+                  <Collapse
+                    style={{ marginTop: 16 }}
+                    items={[
+                      {
+                        key: 'terms',
+                        label: translate('pages.customers.howSold'),
+                        children: (
+                          <Descriptions bordered column={1} size="small">
+                            <Descriptions.Item label={translate('create.customer.priceList')}>
+                              {record?.priceListName?.trim() || record?.priceListId || '—'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label={translate('create.customer.defaultCurrency')}>
+                              {currencyLabel}
+                            </Descriptions.Item>
+                            <Descriptions.Item label={translate('create.customer.defaultOverduePolicy')}>
+                              {record?.defaultOverdueNotificationPolicyKey?.trim() || '—'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label={translate('create.customer.defaultPaymentTermDays')}>
+                              {record?.defaultPaymentTermDays ?? '—'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label={translate('create.customer.defaultMonetaryPolicy')}>
+                              {record?.defaultMonetaryPolicyName?.trim() ||
+                                record?.defaultMonetaryPolicyId ||
+                                '—'}
+                            </Descriptions.Item>
+                          </Descriptions>
+                        ),
+                      },
+                    ]}
+                  />
                   {record && (
                     <TimciFormAuditCollapse
                       dateFormat={dateFormat}

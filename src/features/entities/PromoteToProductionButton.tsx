@@ -1,8 +1,9 @@
 import { useTranslate } from '@refinedev/core';
-import { App, Button, Input, Modal } from 'antd';
+import { Button, Input, Modal } from 'antd';
 import { useState } from 'react';
 import { timciFetch } from '../../shared/timci/http.js';
 import { getEntityPromoteToProductionUrl } from '../../shared/timci/entitiesApi.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type PromoteToProductionButtonProps = {
   tenantId: string;
@@ -18,7 +19,7 @@ export function PromoteToProductionButton({
   onPromoted,
 }: PromoteToProductionButtonProps) {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const [open, setOpen] = useState(false);
   const [confirmation, setConfirmation] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -38,13 +39,13 @@ export function PromoteToProductionButton({
         method: 'POST',
         body: JSON.stringify({ confirmationName: confirmation.trim() }),
       });
-      message.success(translate('pages.entities.promoted'));
+      notify.success(translate('pages.entities.promoted'));
       close();
       window.dispatchEvent(new CustomEvent('timci-tenant-changed'));
       onPromoted();
     } catch (error) {
       const text = error instanceof Error ? error.message : translate('pages.entities.promoteError');
-      message.error(text || translate('pages.entities.promoteError'));
+      notify.error(text || translate('pages.entities.promoteError'));
     } finally {
       setSubmitting(false);
     }

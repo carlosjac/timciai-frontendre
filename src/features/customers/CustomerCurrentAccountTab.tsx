@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslate } from '@refinedev/core';
-import { Alert, App, Button, Select, Space, Table, Tag, Typography, theme } from 'antd';
+import { Alert, Button, Select, Space, Table, Tag, Typography, theme } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -23,6 +23,7 @@ import { SalePaymentSettlementTag } from '../commercial-transactions/SalePayment
 import { UnallocatedRemainderTag } from '../commercial-transactions/UnallocatedRemainderTag.js';
 import { useCustomerAccountCurrencyParam } from './useCustomerAccountCurrencyParam.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type CurrentAccountRow = {
   id: string;
@@ -89,7 +90,7 @@ function BalanceAmount({
 export function CustomerCurrentAccountTab({ customerId }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { token } = theme.useToken();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
@@ -184,14 +185,14 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
         currencyId,
       );
       if (!ok) {
-        message.error(translate('pages.customers.currentAccountDownloadPdfError'));
+        notify.error(translate('pages.customers.currentAccountDownloadPdfError'));
       }
     } catch {
-      message.error(translate('pages.customers.currentAccountDownloadPdfError'));
+      notify.error(translate('pages.customers.currentAccountDownloadPdfError'));
     } finally {
       setDownloadLoading(false);
     }
-  }, [currencyId, customerId, message, tenantId, translate]);
+  }, [currencyId, customerId, notify, tenantId, translate]);
 
   if (!tenantId) {
     return <Alert type="warning" showIcon message={translate('tenant.selectFirst')} />;

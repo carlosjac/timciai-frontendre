@@ -11,6 +11,7 @@ export function CurrencyCreate() {
   const translate = useTranslate();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { formProps, saveButtonProps, onFinish: submitRecord, form } = useForm({
+    errorNotification: false,
     resource: 'currencies',
   });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({

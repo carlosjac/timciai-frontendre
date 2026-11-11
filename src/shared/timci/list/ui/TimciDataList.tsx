@@ -6,7 +6,7 @@ import {
   type CrudSort,
   type LogicalFilter,
 } from '@refinedev/core';
-import { Alert, App, Button, Checkbox, Popover, Space, Table, theme } from 'antd';
+import { Alert, Button, Checkbox, Popover, Space, Table, theme } from 'antd';
 import esES from 'antd/locale/es_ES';
 import { DownloadOutlined, FilterOutlined, SettingOutlined } from '@ant-design/icons';
 import type { ColumnsType, TableProps } from 'antd/es/table';
@@ -44,6 +44,7 @@ import { getStoredTenantId } from '../../apiUrl.js';
 import { isLogicalFilter } from '../../listQuery.js';
 import { AppliedFiltersBar } from './applied-filters-bar.js';
 import { ColumnFilterDropdown } from './column-filter-dropdown.js';
+import { useTimciNotify } from '../../notifyTimci.js';
 import {
   timciAuditColumnKind,
   timciAuditUserDisplayText,
@@ -135,7 +136,7 @@ function isRowNavigationTarget(element: EventTarget | null): boolean {
 export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>) {
   const translate = useTranslate();
   const navigate = useNavigate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { token } = theme.useToken();
   const pickerDateFormat = props.pickerDateFormat ?? 'DD/MM/YYYY';
   const columnStorageKey =
@@ -289,13 +290,13 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
 
       const csv = rowsToCsv(rows, csvCols);
       downloadTextFile(`${props.resource}-export.csv`, csv);
-      message.success(translate('list.export.success'));
+      notify.success(translate('list.export.success'));
     } catch {
-      message.error(translate('list.export.error'));
+      notify.error(translate('list.export.error'));
     } finally {
       setExporting(false);
     }
-  }, [filters, message, listQueryMeta, props.columnDefs, props.includeInactive, props.resource, sorters, translate, visibleKeys]);
+  }, [filters, notify, listQueryMeta, props.columnDefs, props.includeInactive, props.resource, sorters, translate, visibleKeys]);
 
   const antColumns: ColumnsType<T> = useMemo(() => {
     const primarySort = sorters?.[0];
@@ -479,7 +480,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         const next = withPinnedListColumns(new Set(vals as string[]), columnKeys);
         const togglableCount = [...next].filter((k) => !isPinnedListColumn(k)).length;
         if (togglableCount === 0) {
-          message.warning(translate('list.columnsMinOne'));
+          notify.warning(translate('list.columnsMinOne'));
           return;
         }
         persistVisible(next);

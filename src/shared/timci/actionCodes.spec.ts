@@ -45,7 +45,7 @@ describe('entity gates', () => {
 describe('getFirstAccessibleListPath', () => {
   it('returns first matching list path in order', () => {
     expect(getFirstAccessibleListPath(['menu.users'])).toBe('/users');
-    expect(getFirstAccessibleListPath(['menu.countries', 'menu.users'])).toBe('/countries');
+    expect(getFirstAccessibleListPath(['menu.countries', 'menu.users'])).toBe('/users');
   });
 
   it('opens the dashboard when the user can see it', () => {

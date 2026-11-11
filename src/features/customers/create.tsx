@@ -23,7 +23,17 @@ import {
   type PriceListRow,
 } from '../../shared/timci/auxiliaryApi.js';
 import { MonetaryPolicyDefaultSelect } from '../monetary-policies/MonetaryPolicyDefaultSelect.js';
+import {
+  fetchActiveMonetaryPolicies,
+  type MonetaryPolicyListItem,
+} from '../../shared/timci/monetaryPoliciesApi.js';
 import { CustomerTaxProfileFields } from './CustomerTaxProfileFields.js';
+import {
+  customerDefaultsPatchFromEntity,
+  isUnsetCustomerDefault,
+  overduePoliciesForEntity,
+  type EntityCustomerDefaultSource,
+} from './customerEntityDefaults.js';
 import { normalizeTaxProfile } from '../../shared/timci/taxesApi.js';
 import { useEntityTaxContext } from '../../shared/timci/tax/useEntityTaxContext.js';
 type DocTypeRow = BaseRecord & {
@@ -33,11 +43,7 @@ type DocTypeRow = BaseRecord & {
   appliesTo?: string;
 };
 
-type EntityDefaults = {
-  defaultCountryId?: string;
-  defaultCurrencyId?: string;
-  defaultMonetaryPolicyId?: string | null;
-};
+type EntityDefaults = EntityCustomerDefaultSource;
 
 const emptyContactRow = () => ({
   name: '',
@@ -58,10 +64,6 @@ function firstErrorTab(
   return hasContactError ? 'contacts' : 'data';
 }
 
-function isEmptyFieldValue(v: unknown): boolean {
-  return v == null || (typeof v === 'string' && v.trim() === '');
-}
-
 export function CustomerCreate() {
   const translate = useTranslate();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
@@ -69,9 +71,15 @@ export function CustomerCreate() {
   const entityId = tenantId;
   const [policies, setPolicies] = useState<OverduePolicyItem[]>([]);
   const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
+  const [monetaryPolicies, setMonetaryPolicies] = useState<MonetaryPolicyListItem[]>([]);
   const [activeTab, setActiveTab] = useState('data');
+  const [termsOpen, setTermsOpen] = useState(false);
 
   const { formProps, saveButtonProps, onFinish, form } = useForm({ resource: 'customers' });
+  const watchedCurrencyId = Form.useWatch('defaultCurrencyId', form);
+  const watchedTerm = Form.useWatch('defaultPaymentTermDays', form);
+  const watchedPolicy = Form.useWatch('defaultOverdueNotificationPolicyKey', form);
+  const watchedMonetaryPolicyId = Form.useWatch('defaultMonetaryPolicyId', form);
   const { taxManagementEnabled } = useEntityTaxContext(tenantId, entityId);
 
   const { result: entityRecord } = useOne<EntityDefaults>({
@@ -89,7 +97,8 @@ export function CustomerCreate() {
     queryOptions: { enabled: !!tenantId },
   });
 
-  const { selectProps: currencySelect } = useEntitySupportedCurrencySelect(tenantId);
+  const { selectProps: currencySelect, labelById: currencyLabelById } =
+    useEntitySupportedCurrencySelect(tenantId);
 
   const { result: docTypeResult } = useList<DocTypeRow>({
     resource: 'document_types',
@@ -107,6 +116,17 @@ export function CustomerCreate() {
   useEffect(() => {
     if (!tenantId || !entityId) return;
     let cancelled = false;
+    void fetchActiveMonetaryPolicies(tenantId, entityId).then((rows) => {
+      if (!cancelled) setMonetaryPolicies(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId, entityId]);
+
+  useEffect(() => {
+    if (!tenantId || !entityId) return;
+    let cancelled = false;
     void fetchPriceListsForEntity(tenantId, entityId).then((rows) => {
       if (cancelled) return;
       setPriceLists(rows);
@@ -115,7 +135,7 @@ export function CustomerCreate() {
         form?.setFieldValue('priceListId', rows.length === 1 ? rows[0].id : undefined);
         return;
       }
-      if (isEmptyFieldValue(current) && rows.length === 1) {
+      if (isUnsetCustomerDefault(current) && rows.length === 1) {
         form?.setFieldValue('priceListId', rows[0].id);
       }
     });
@@ -126,45 +146,33 @@ export function CustomerCreate() {
 
   useEffect(() => {
     if (!form || !entityRecord) return;
-    const patch: Record<string, string> = {};
-    const countryId =
-      entityRecord.defaultCountryId != null ? String(entityRecord.defaultCountryId).trim() : '';
-    const currencyId =
-      entityRecord.defaultCurrencyId != null ? String(entityRecord.defaultCurrencyId).trim() : '';
-    const monetaryPolicyId =
-      entityRecord.defaultMonetaryPolicyId != null
-        ? String(entityRecord.defaultMonetaryPolicyId).trim()
-        : '';
-    if (countryId && isEmptyFieldValue(form.getFieldValue('countryId'))) {
-      patch.countryId = countryId;
-    }
-    if (currencyId && isEmptyFieldValue(form.getFieldValue('defaultCurrencyId'))) {
-      patch.defaultCurrencyId = currencyId;
-    }
-    if (monetaryPolicyId && isEmptyFieldValue(form.getFieldValue('defaultMonetaryPolicyId'))) {
-      patch.defaultMonetaryPolicyId = monetaryPolicyId;
-    }
-    if (Object.keys(patch).length > 0) {
-      form.setFieldsValue(patch);
-    }
+    const patch = customerDefaultsPatchFromEntity(entityRecord, {
+      countryId: form.getFieldValue('countryId'),
+      defaultCurrencyId: form.getFieldValue('defaultCurrencyId'),
+      defaultMonetaryPolicyId: form.getFieldValue('defaultMonetaryPolicyId'),
+      defaultOverdueNotificationPolicyKey: form.getFieldValue(
+        'defaultOverdueNotificationPolicyKey',
+      ),
+      defaultPaymentTermDays: form.getFieldValue('defaultPaymentTermDays'),
+    });
+    if (Object.keys(patch).length > 0) form.setFieldsValue(patch);
   }, [entityRecord, form]);
 
   useEffect(() => {
-    if (policies.length === 0) return;
-    const first = policies[0].key;
-    const currentDefault = form?.getFieldValue('defaultOverdueNotificationPolicyKey');
-    if (!currentDefault) {
-      form?.setFieldsValue({ defaultOverdueNotificationPolicyKey: first });
-    }
-  }, [policies, form]);
+    if (!form || !entityRecord || policies.length === 0) return;
+    if (!isUnsetCustomerDefault(form.getFieldValue('defaultOverdueNotificationPolicyKey'))) return;
+    if ((entityRecord.defaultOverdueNotificationPolicyKey ?? '').trim() !== '') return;
+    const first = overduePoliciesForEntity(policies, entityRecord.availableOverduePolicyKeys)[0];
+    if (first) form.setFieldsValue({ defaultOverdueNotificationPolicyKey: first.key });
+  }, [entityRecord, form, policies]);
 
   const policyOptions = useMemo(
     () =>
-      policies.map((p) => {
+      overduePoliciesForEntity(policies, entityRecord?.availableOverduePolicyKeys).map((p) => {
         const name = p.description?.trim() ?? '';
         return { value: p.key, label: name !== '' ? name : p.key };
       }),
-    [policies],
+    [entityRecord?.availableOverduePolicyKeys, policies],
   );
 
   if (!tenantId || !entityId) {
@@ -189,7 +197,6 @@ export function CustomerCreate() {
         layout="vertical"
         initialValues={{
           personType: 'physical_person',
-          defaultPaymentTermDays: 30,
           isActive: true,
           contacts: [emptyContactRow()],
         }}
@@ -250,6 +257,7 @@ export function CustomerCreate() {
               forceRender: true,
               children: (
                 <>
+                  <Typography.Title level={5}>{translate('pages.customers.who')}</Typography.Title>
                   <Form.Item
                     label={translate('table.customers.name')}
                     name="name"
@@ -270,35 +278,6 @@ export function CustomerCreate() {
                     rules={[{ required: true, message: translate('form.validation.requiredField') }]}
                   >
                     <Select {...countrySelect} showSearch optionFilterProp="label" />
-                  </Form.Item>
-                  <Form.Item
-                    label={translate('create.customer.priceList')}
-                    name="priceListId"
-                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-                  >
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      disabled={priceLists.length === 0}
-                      options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
-                      placeholder={priceLists.length === 0 ? '…' : undefined}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label={translate('create.customer.defaultCurrency')}
-                    name="defaultCurrencyId"
-                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-                  >
-                    <Select
-                      {...currencySelect}
-                      showSearch
-                      optionFilterProp="label"
-                      filterOption={(input, option) => {
-                        const label = option?.label;
-                        const text = typeof label === 'string' ? label : String(label ?? '');
-                        return text.toLowerCase().includes(input.trim().toLowerCase());
-                      }}
-                    />
                   </Form.Item>
                   <Form.Item
                     label={translate('create.customer.personType')}
@@ -355,6 +334,89 @@ export function CustomerCreate() {
                     <Input />
                   </Form.Item>
                   <Form.Item
+                    label={translate('create.customer.active')}
+                    name="isActive"
+                    valuePropName="checked"
+                  >
+                    <Switch />
+                  </Form.Item>
+                  <Typography.Title level={5}>{translate('pages.customers.howSold')}</Typography.Title>
+                  <Form.Item
+                    label={translate('create.customer.priceList')}
+                    name="priceListId"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      disabled={priceLists.length === 0}
+                      options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
+                      placeholder={priceLists.length === 0 ? '…' : undefined}
+                    />
+                  </Form.Item>
+                  {watchedCurrencyId && watchedPolicy && watchedTerm != null && !termsOpen ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'baseline',
+                        gap: '4px 16px',
+                        marginBottom: 16,
+                      }}
+                    >
+                      {(
+                        [
+                          [
+                            'pages.customers.termsCurrency',
+                            currencyLabelById.get(String(watchedCurrencyId)) ||
+                              String(watchedCurrencyId),
+                          ],
+                          [
+                            'pages.customers.termsOverdue',
+                            policyOptions.find((option) => option.value === watchedPolicy)?.label ||
+                              String(watchedPolicy),
+                          ],
+                          ['pages.customers.termsDays', String(watchedTerm)],
+                          [
+                            'pages.customers.termsMonetary',
+                            monetaryPolicies.find((policy) => policy.id === watchedMonetaryPolicyId)
+                              ?.name?.trim() || '—',
+                          ],
+                        ] as const
+                      ).map(([labelKey, value]) => (
+                        <span key={labelKey}>
+                          <Typography.Text type="secondary">{translate(labelKey)}</Typography.Text>
+                          {': '}
+                          <Typography.Text>{value}</Typography.Text>
+                        </span>
+                      ))}
+                      <Button
+                        type="link"
+                        onClick={() => setTermsOpen(true)}
+                        style={{ paddingInline: 0, height: 'auto' }}
+                      >
+                        {translate('pages.customers.changeTerms')}
+                      </Button>
+                    </div>
+                  ) : null}
+                  <div hidden={Boolean(watchedCurrencyId && watchedPolicy && watchedTerm != null && !termsOpen)}>
+                  <Form.Item
+                    label={translate('create.customer.defaultCurrency')}
+                    name="defaultCurrencyId"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select
+                      {...currencySelect}
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) => {
+                        const label = option?.label;
+                        const text = typeof label === 'string' ? label : String(label ?? '');
+                        return text.toLowerCase().includes(input.trim().toLowerCase());
+                      }}
+                    />
+                  </Form.Item>
+                  <Form.Item
                     label={translate('create.customer.defaultOverduePolicy')}
                     name="defaultOverdueNotificationPolicyKey"
                     rules={[{ required: true, message: translate('form.validation.requiredField') }]}
@@ -376,14 +438,8 @@ export function CustomerCreate() {
                       labelKey="create.customer.defaultMonetaryPolicy"
                     />
                   ) : null}
+                  </div>
                   <CustomerTaxProfileFields tenantId={tenantId} entityId={entityId} />
-                  <Form.Item
-                    label={translate('create.customer.active')}
-                    name="isActive"
-                    valuePropName="checked"
-                  >
-                    <Switch />
-                  </Form.Item>
                 </>
               ),
             },

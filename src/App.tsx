@@ -1,5 +1,4 @@
 import { Authenticated, Refine } from '@refinedev/core';
-import { RefineThemes, useNotificationProvider } from '@refinedev/antd';
 import { ThemedLayout } from '@refinedev/antd';
 import refineRouterProvider, { DocumentTitleHandler } from '@refinedev/react-router';
 import {
@@ -36,6 +35,7 @@ import esES from 'antd/locale/es_ES';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router';
 import { Suspense, useMemo } from 'react';
 import { AppHeader } from './app-shell/AppHeader.js';
+import { useTimciNotificationProvider } from './shared/timci/notificationProvider.js';
 import { lazyPage } from './app-shell/lazyPage.js';
 import { TimciPageChunkFallback } from './app-shell/TimciPageChunkFallback.js';
 import { TimciLoginPage } from './app-shell/TimciLoginPage.js';
@@ -243,14 +243,33 @@ const i18nProvider = createTimciI18nProvider();
 
 function TimciRefineTree() {
   const { theme: themeMode } = useUserPreferences();
-  const antdThemeConfig = useMemo(
-    () => ({
-      ...RefineThemes.Blue,
-      algorithm:
-        themeMode === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-    }),
-    [themeMode],
-  );
+  const antdThemeConfig = useMemo(() => {
+    const light = themeMode !== 'dark';
+    const primary = light ? '#1554C0' : '#1D4ED8';
+    const base = light ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm;
+    const algorithm = ((seed: Parameters<typeof antdTheme.defaultAlgorithm>[0]) => {
+      const derived = base(seed);
+      return {
+        ...derived,
+        colorPrimary: primary,
+        colorTextLightSolid: '#ffffff',
+      };
+    }) as typeof antdTheme.defaultAlgorithm;
+    return {
+      algorithm,
+      token: {
+        colorPrimary: primary,
+        colorText: light ? '#1A2332' : '#E8EDF2',
+        colorTextSecondary: light ? '#526070' : '#A8B3C0',
+        colorBgLayout: light ? '#F6F7F9' : '#12151A',
+        colorBgContainer: light ? '#FFFFFF' : '#1C2128',
+        colorBorder: light ? '#7E8C9C' : '#6E7681',
+        colorSuccess: light ? '#0F6B3C' : '#8EE0B4',
+        colorWarning: light ? '#8A5A00' : '#F5D48A',
+        colorError: light ? '#9F1D1D' : '#F5B4B4',
+      },
+    };
+  }, [themeMode]);
 
   const resources = useMemo(
     () => [
@@ -461,14 +480,14 @@ function TimciRefineTree() {
   return (
     <div className="timci-app">
       <ConfigProvider locale={esES} theme={antdThemeConfig}>
-        <AntdApp>
+        <AntdApp notification={{ placement: 'bottomRight' }}>
           <Refine
             routerProvider={refineRouterProvider}
             dataProvider={dataProvider}
             authProvider={authProvider}
             accessControlProvider={accessControlProvider}
             i18nProvider={i18nProvider}
-            notificationProvider={useNotificationProvider}
+            notificationProvider={useTimciNotificationProvider}
             resources={resources}
             options={{
               syncWithLocation: true,

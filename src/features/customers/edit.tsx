@@ -1,6 +1,6 @@
 import { Edit, SaveButton, useForm, useSelect } from '@refinedev/antd';
 import { useList, useTranslate, type BaseRecord } from '@refinedev/core';
-import { Alert, Form, Input, InputNumber, Select, Tabs, Typography } from 'antd';
+import { Alert, Button, Form, Input, InputNumber, Select, Space, Tabs, Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
@@ -66,8 +66,10 @@ export function CustomerEdit() {
   const [policies, setPolicies] = useState<OverduePolicyItem[]>([]);
   const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
   const [activeTab, setActiveTab] = useState('data');
+  const [termsOpen, setTermsOpen] = useState(false);
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'customers',
     action: 'edit',
   });
@@ -76,6 +78,9 @@ export function CustomerEdit() {
   });
 
   const record = query?.data?.data as CustomerRecord | undefined;
+  const watchedCurrencyId = Form.useWatch('defaultCurrencyId', form);
+  const watchedPolicy = Form.useWatch('defaultOverdueNotificationPolicyKey', form);
+  const watchedTerm = Form.useWatch('defaultPaymentTermDays', form);
 
   const showPathForId = useCallback(
     (id: string) => `/customers/show/${encodeURIComponent(id)}`,
@@ -206,6 +211,7 @@ export function CustomerEdit() {
                     }
                   }}
                 >
+                  <Typography.Title level={5}>{translate('pages.customers.who')}</Typography.Title>
                   <Form.Item label={translate('table.customers.name')}>
                     <Input value={record?.name ?? ''} disabled />
                   </Form.Item>
@@ -222,34 +228,6 @@ export function CustomerEdit() {
                     rules={[{ required: true, message: translate('form.validation.requiredField') }]}
                   >
                     <Select {...countrySelect} showSearch optionFilterProp="label" />
-                  </Form.Item>
-                  <Form.Item
-                    label={translate('create.customer.priceList')}
-                    name="priceListId"
-                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-                  >
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      disabled={priceLists.length === 0}
-                      options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label={translate('create.customer.defaultCurrency')}
-                    name="defaultCurrencyId"
-                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-                  >
-                    <Select
-                      {...currencySelect}
-                      showSearch
-                      optionFilterProp="label"
-                      filterOption={(input, option) => {
-                        const label = option?.label;
-                        const text = typeof label === 'string' ? label : String(label ?? '');
-                        return text.toLowerCase().includes(input.trim().toLowerCase());
-                      }}
-                    />
                   </Form.Item>
                   <Form.Item
                     label={translate('create.customer.personType')}
@@ -272,6 +250,47 @@ export function CustomerEdit() {
                   <Form.Item label={translate('create.customer.documentNumber')}>
                     <Input value={record?.documentNumber ?? ''} disabled />
                   </Form.Item>
+                  <Typography.Title level={5}>{translate('pages.customers.howSold')}</Typography.Title>
+                  <Form.Item
+                    label={translate('create.customer.priceList')}
+                    name="priceListId"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      disabled={priceLists.length === 0}
+                      options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
+                    />
+                  </Form.Item>
+                  {watchedCurrencyId && watchedPolicy && watchedTerm != null && !termsOpen ? (
+                    <Space style={{ marginBottom: 16 }}>
+                      <Typography.Text type="secondary">
+                        {translate('pages.customers.termsLine')}
+                        {`: ${watchedTerm}`}
+                      </Typography.Text>
+                      <Button type="link" onClick={() => setTermsOpen(true)}>
+                        {translate('pages.customers.changeTerms')}
+                      </Button>
+                    </Space>
+                  ) : null}
+                  <div hidden={Boolean(watchedCurrencyId && watchedPolicy && watchedTerm != null && !termsOpen)}>
+                  <Form.Item
+                    label={translate('create.customer.defaultCurrency')}
+                    name="defaultCurrencyId"
+                    rules={[{ required: true, message: translate('form.validation.requiredField') }]}
+                  >
+                    <Select
+                      {...currencySelect}
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) => {
+                        const label = option?.label;
+                        const text = typeof label === 'string' ? label : String(label ?? '');
+                        return text.toLowerCase().includes(input.trim().toLowerCase());
+                      }}
+                    />
+                  </Form.Item>
                   <Form.Item
                     label={translate('create.customer.defaultOverduePolicy')}
                     name="defaultOverdueNotificationPolicyKey"
@@ -293,6 +312,7 @@ export function CustomerEdit() {
                       labelKey="create.customer.defaultMonetaryPolicy"
                     />
                   ) : null}
+                  </div>
                   <CustomerTaxProfileFields
                     tenantId={tenantId}
                     entityId={record?.entityId ?? entityId}

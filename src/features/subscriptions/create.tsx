@@ -12,7 +12,7 @@ export function SubscriptionCreate() {
   const translate = useTranslate();
   const { dateFormat } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
-  const { formProps, saveButtonProps, onFinish, form } = useForm({ resource: 'subscriptions' });
+  const { formProps, saveButtonProps, onFinish, form } = useForm({ errorNotification: false, resource: 'subscriptions' });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors();
 
   if (!tenantId) {

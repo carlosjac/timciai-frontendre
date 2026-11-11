@@ -37,6 +37,7 @@ export function SellableItemEdit() {
   const { taxManagementEnabled } = useEntityTaxContext(tenantId, tenantId);
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'sellable_items',
     action: 'edit',
   });

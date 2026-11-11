@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type Key } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
-import { App, Button, Tag } from 'antd';
+import { Button, Tag } from 'antd';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { getResourceApiBase } from '../../shared/timci/apiUrl.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
@@ -8,6 +8,7 @@ import { timciFetch } from '../../shared/timci/http.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type DocumentRow = BaseRecord & {
   id: string;
@@ -38,7 +39,7 @@ function statusColor(status: string): string {
 
 export function DocumentList() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const canView = permData?.actionCodes?.includes('documents.view') ?? false;
@@ -59,15 +60,15 @@ export function DocumentList() {
           body: JSON.stringify({ ids: ids.slice(0, 50) }),
         });
       }
-      message.success(translate('documents.retryOk'));
+      notify.success(translate('documents.retryOk'));
       setSelectedKeys([]);
       window.location.reload();
     } catch {
-      message.error(translate('documents.actionError'));
+      notify.error(translate('documents.actionError'));
     } finally {
       setRetrying(false);
     }
-  }, [message, translate]);
+  }, [notify, translate]);
 
   const getRowShowPath = useMemo(
     () =>

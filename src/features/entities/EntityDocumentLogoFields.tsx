@@ -1,10 +1,11 @@
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, App as AntdApp, Button, Space, Typography, Upload } from 'antd';
+import { Alert, Button, Space, Typography, Upload } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   canFullyEditEntity,
   type TimciPermissionsData,
 } from '../../shared/timci/actionCodes.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 import {
   DOCUMENT_LOGO_ACCEPT,
   DOCUMENT_LOGO_MAX_BYTES,
@@ -28,7 +29,7 @@ type Props = {
  */
 export function EntityDocumentLogoFields({ entityId, readOnly = false }: Props) {
   const translate = useTranslate();
-  const { message } = AntdApp.useApp();
+  const notify = useTimciNotify();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const codes = permData?.actionCodes ?? [];
   const canConfigureEntity = canFullyEditEntity(codes);
@@ -101,17 +102,17 @@ export function EntityDocumentLogoFields({ entityId, readOnly = false }: Props) 
   const onUpload = async (file: File) => {
     const type = (file.type || '').toLowerCase();
     if (!DOCUMENT_LOGO_ACCEPT.split(',').includes(type)) {
-      message.error(translate('create.entity.documentLogoInvalidType'));
+      notify.error(translate('create.entity.documentLogoInvalidType'));
       return;
     }
     if (file.size > DOCUMENT_LOGO_MAX_BYTES) {
-      message.error(translate('create.entity.documentLogoTooLarge'));
+      notify.error(translate('create.entity.documentLogoTooLarge'));
       return;
     }
     setBusy(true);
     try {
       await uploadDocumentLogo(entityId, file);
-      message.success(translate('create.entity.documentLogoUploadOk'));
+      notify.success(translate('create.entity.documentLogoUploadOk'));
       // Immediate local preview (data URL), then refresh from API.
       const localPreview = await new Promise<string | null>((resolve, reject) => {
         const reader = new FileReader();
@@ -126,7 +127,7 @@ export function EntityDocumentLogoFields({ entityId, readOnly = false }: Props) 
       }
       await reload();
     } catch (e) {
-      message.error(
+      notify.error(
         e instanceof Error ? e.message : translate('create.entity.documentLogoUploadError'),
       );
     } finally {
@@ -138,11 +139,11 @@ export function EntityDocumentLogoFields({ entityId, readOnly = false }: Props) 
     setBusy(true);
     try {
       await clearDocumentLogo(entityId);
-      message.success(translate('create.entity.documentLogoRemoveOk'));
+      notify.success(translate('create.entity.documentLogoRemoveOk'));
       setHasLogo(false);
       setPreviewUrl(null);
     } catch (e) {
-      message.error(
+      notify.error(
         e instanceof Error ? e.message : translate('create.entity.documentLogoRemoveError'),
       );
     } finally {
@@ -166,7 +167,7 @@ export function EntityDocumentLogoFields({ entityId, readOnly = false }: Props) 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#fafafa',
+            background: 'var(--ant-color-fill-quaternary)',
             overflow: 'hidden',
           }}
         >

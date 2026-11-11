@@ -1,6 +1,6 @@
 import { Create, useForm } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, Form, Select, message } from 'antd';
+import { Alert, Form, Select } from 'antd';
 import { useEffect, useState } from 'react';
 import {
   canManageAllEntities,
@@ -14,12 +14,14 @@ import { MonetaryPolicyParamsFields } from './MonetaryPolicyParamsFields.js';
 import { normalizeMonetaryPolicyParams } from './monetaryPolicyParamsForm.js';
 import { relativeBandsSubmitErrorMessages } from './relativeBandsSubmitValidation.js';
 import { MonetaryPolicyNameField } from './MonetaryPolicyNameField.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 const CREATE_KIND = 'relative_bands';
 const CREATE_FIELDS = ['name', 'params', 'entityId'] as const;
 
 export function MonetaryPolicyCreate() {
   const translate = useTranslate();
+  const notify = useTimciNotify();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const codes = permData?.actionCodes ?? [];
   const canPickOrg = canManageAllEntities(codes);
@@ -28,6 +30,7 @@ export function MonetaryPolicyCreate() {
     headerTenantId && headerTenantId !== GLOBAL_TENANT_ID ? headerTenantId : undefined;
 
   const { formProps, saveButtonProps, onFinish, form } = useForm({
+    errorNotification: false,
     resource: 'monetary_policies',
   });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
@@ -118,7 +121,7 @@ export function MonetaryPolicyCreate() {
                 errors: coverageMessages,
               },
             ]);
-            message.error(
+            notify.error(
               coverageMessages[0] ??
                 translate('pages.monetaryPolicies.params.incompleteCoverageTitle'),
             );

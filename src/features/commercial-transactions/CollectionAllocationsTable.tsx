@@ -15,9 +15,10 @@ import {
   type AllocationCandidateRow,
 } from './collectionAllocations.js';
 import { useNavigate } from 'react-router';
-import { App, Button, Form, InputNumber, Space, Table, Typography } from 'antd';
+import { Button, Form, InputNumber, Space, Table, Typography } from 'antd';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslate } from '@refinedev/core';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type Props = {
   candidates: AllocationCandidateRow[];
@@ -47,7 +48,7 @@ export function CollectionAllocationsTable({
 }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const form = Form.useFormInstance();
   const { dateFormat, timeZone } = useUserPreferences();
   const watchedAmount = Form.useWatch('amount', form);
@@ -152,21 +153,21 @@ export function CollectionAllocationsTable({
       sourceAmount ?? form.getFieldValue('amount') ?? collectionAmount;
     const total = parseMoneyNumber(rawAmount);
     if (total == null || total <= 0) {
-      message.warning(translate('pages.commercialTransactions.fields.autoAllocateNeedAmount'));
+      notify.warning(translate('pages.commercialTransactions.fields.autoAllocateNeedAmount'));
       return;
     }
     if (!candidates.length) {
-      message.warning(translate('pages.commercialTransactions.fields.allocationsEmpty'));
+      notify.warning(translate('pages.commercialTransactions.fields.allocationsEmpty'));
       return;
     }
     const next = buildFifoAllocations(total, candidates);
     onChange?.(next);
     if (!next.length) {
-      message.warning(translate('pages.commercialTransactions.fields.allocationsEmpty'));
+      notify.warning(translate('pages.commercialTransactions.fields.allocationsEmpty'));
       return;
     }
-    message.success(translate('pages.commercialTransactions.fields.autoAllocateDone'));
-  }, [candidates, collectionAmount, form, message, onChange, sourceAmount, translate]);
+    notify.success(translate('pages.commercialTransactions.fields.autoAllocateDone'));
+  }, [candidates, collectionAmount, form, notify, onChange, sourceAmount, translate]);
 
   return (
     <>

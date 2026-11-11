@@ -1,19 +1,6 @@
 import { DeleteButton, EditButton, ListButton, RefreshButton, Show } from '@refinedev/antd';
 import { useOne, usePermissions, useShow, useTranslate } from '@refinedev/core';
-import {
-  Alert,
-  App as AntdApp,
-  Button,
-  DatePicker,
-  Descriptions,
-  Form,
-  Input,
-  Modal,
-  Radio,
-  Space,
-  Switch,
-  Tag,
-} from 'antd';
+import { Alert, App as AntdApp, Button, Collapse, DatePicker, Descriptions, Form, Input, Modal, Radio, Space, Switch, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -55,6 +42,7 @@ import {
   taxAttributeDisplayRows,
 } from './commercialTransactionTaxDisplay.js';
 import { unallocatedAmount } from './unallocatedAmount.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type Props = {
   resource: CommercialTransactionResource;
@@ -92,7 +80,8 @@ function fxRatesEqual(a: string | null | undefined, b: string | null | undefined
 export function CommercialTransactionShow({ resource }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
-  const { message, modal } = AntdApp.useApp();
+  const { modal } = AntdApp.useApp();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const config = COMMERCIAL_TX_CONFIG[resource];
@@ -233,16 +222,16 @@ export function CommercialTransactionShow({ resource }: Props) {
             }),
           },
         );
-        message.success(translate('pages.commercialTransactions.registered'));
+        notify.success(translate('pages.commercialTransactions.registered'));
         setRegisterOpen(false);
         await query?.refetch?.();
       } catch {
-        message.error(translate('pages.commercialTransactions.registerError'));
+        notify.error(translate('pages.commercialTransactions.registerError'));
       } finally {
         setRegisterLoading(false);
       }
     },
-    [message, query, record?.id, resource, tenantId, translate],
+    [notify, query, record?.id, resource, tenantId, translate],
   );
 
   const confirmRegisterSimple = useCallback(
@@ -298,7 +287,7 @@ export function CommercialTransactionShow({ resource }: Props) {
 
     const currencyId = record.currencyId != null ? String(record.currencyId).trim() : '';
     if (!currencyId) {
-      message.error(translate('pages.commercialTransactions.registerFxQuoteError'));
+      notify.error(translate('pages.commercialTransactions.registerFxQuoteError'));
       return;
     }
 
@@ -336,14 +325,14 @@ export function CommercialTransactionShow({ resource }: Props) {
 
       openRegisterModalWithFx(draft, current, Boolean(draft));
     } catch {
-      message.error(translate('pages.commercialTransactions.registerFxQuoteError'));
+      notify.error(translate('pages.commercialTransactions.registerFxQuoteError'));
     } finally {
       setRegisterQuoteLoading(false);
     }
   }, [
     confirmRegisterSimple,
     isSameAsBaseCurrency,
-    message,
+    notify,
     openRegisterModalWithFx,
     record,
     tenantId,
@@ -379,7 +368,7 @@ export function CommercialTransactionShow({ resource }: Props) {
           await timciFetch(getCommercialTransactionVoidUrl(tenantId, resource, String(record.id)), {
             method: 'POST',
           });
-          message.success(translate('pages.commercialTransactions.voided'));
+          notify.success(translate('pages.commercialTransactions.voided'));
           await query?.refetch?.();
         } catch (e: unknown) {
           const detail =
@@ -392,7 +381,7 @@ export function CommercialTransactionShow({ resource }: Props) {
         }
       },
     });
-  }, [message, modal, query, record?.id, resource, tenantId, translate]);
+  }, [notify, modal, query, record?.id, resource, tenantId, translate]);
 
   const supportsHoldFromAutoAllocation =
     resource === 'collections' || resource === 'credits';
@@ -419,19 +408,19 @@ export function CommercialTransactionShow({ resource }: Props) {
             body: JSON.stringify({ holdFromAutoAllocation: checked }),
           },
         );
-        message.success(
+        notify.success(
           translate('pages.commercialTransactions.fields.holdFromAutoAllocationUpdated'),
         );
         await query?.refetch?.();
       } catch {
-        message.error(
+        notify.error(
           translate('pages.commercialTransactions.fields.holdFromAutoAllocationError'),
         );
       } finally {
         setHoldLoading(false);
       }
     },
-    [message, query, record?.id, resource, supportsHoldFromAutoAllocation, tenantId, translate],
+    [notify, query, record?.id, resource, supportsHoldFromAutoAllocation, tenantId, translate],
   );
 
   if (!tenantId) {
@@ -445,7 +434,11 @@ export function CommercialTransactionShow({ resource }: Props) {
   return (
     <>
       <Show
-        title={translate(`${config.i18nPagesPrefix}.showTitle`)}
+        title={
+          record?.entityTxnNumber != null
+            ? `Nº ${record.entityTxnNumber}`
+            : translate(`${config.i18nPagesPrefix}.showTitle`)
+        }
         isLoading={isLoading}
         canEdit={canUpdate && isDraft}
         canDelete={false}
@@ -500,22 +493,29 @@ export function CommercialTransactionShow({ resource }: Props) {
             }
           />
         ) : null}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <Tag color={commercialStatusTagColor(status)}>
+            {translate(commercialStatusTitleKey(status))}
+          </Tag>
+          <Typography.Text strong style={{ fontSize: 22 }} aria-label={translate('table.commercialTransactions.amount')}>
+            {formatTimciMoney(record?.amount)}
+          </Typography.Text>
+        </div>
         <Descriptions
           bordered
-          column={1}
+          column={2}
           size="middle"
-          styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+          styles={{ label: { width: 180, maxWidth: 240, verticalAlign: 'top' } }}
         >
-          <Descriptions.Item
-            label={translate('pages.commercialTransactions.fields.entityTxnNumber')}
-          >
-            {record?.entityTxnNumber ?? '—'}
-          </Descriptions.Item>
-          <Descriptions.Item label={translate('table.commercialTransactions.status')}>
-            <Tag color={commercialStatusTagColor(status)}>
-              {translate(commercialStatusTitleKey(status))}
-            </Tag>
-          </Descriptions.Item>
           <Descriptions.Item label={translate('pages.commercialTransactions.fields.customer')}>
             {customerResult?.name?.trim() || record?.customerId || '—'}
           </Descriptions.Item>
@@ -525,61 +525,23 @@ export function CommercialTransactionShow({ resource }: Props) {
           <Descriptions.Item label={translate('table.commercialTransactions.currency')}>
             {currencyLabel}
           </Descriptions.Item>
-          {taxesOn ? (
-            <>
-              <Descriptions.Item label={translate('pages.commercialTransactions.fields.net')}>
-                {formatTimciMoney(record?.netAmount)}
-              </Descriptions.Item>
-              {taxAmountRows.map((row) => (
-                <Descriptions.Item key={row.key} label={row.label}>
-                  {formatTimciMoney(row.amount)}
-                </Descriptions.Item>
-              ))}
-              <Descriptions.Item label={translate('pages.commercialTransactions.fields.gross')}>
-                {formatTimciMoney(record?.amount)}
-              </Descriptions.Item>
-              {headerTaxAttributeRows.map((row) => (
-                <Descriptions.Item key={`tax-attr-${row.key}`} label={row.label}>
-                  {row.value}
-                </Descriptions.Item>
-              ))}
-            </>
-          ) : (
-            <Descriptions.Item label={translate('table.commercialTransactions.amount')}>
-              {formatTimciMoney(record?.amount)}
-            </Descriptions.Item>
-          )}
-          <Descriptions.Item label={translate('pages.commercialTransactions.fields.fxRate')}>
-            {record?.fxRate ?? '—'}
-          </Descriptions.Item>
-          <Descriptions.Item label={translate('pages.commercialTransactions.fields.fxRateAsOf')}>
-            {record?.fxRateAsOf
-              ? formatTimciUserDateTime(record.fxRateAsOf, { dateFormat, timeZone })
-              : '—'}
-          </Descriptions.Item>
-          <Descriptions.Item label={translate('pages.commercialTransactions.fields.fxRateManual')}>
-            {record?.fxRateManual
-              ? translate('table.users.yes')
-              : translate('table.users.no')}
-          </Descriptions.Item>
-          <Descriptions.Item label={translate('pages.commercialTransactions.fields.amountInBase')}>
-            {formatTimciMoney(record?.amountInBase)}
-          </Descriptions.Item>
-          <Descriptions.Item label={translate('pages.commercialTransactions.fields.concept')}>
-            {record?.concept?.trim() || '—'}
-          </Descriptions.Item>
           {record?.dueDate ? (
             <Descriptions.Item label={translate('pages.commercialTransactions.fields.dueDate')}>
               {formatTimciUserDateOnly(record.dueDate, { dateFormat, timeZone })}
             </Descriptions.Item>
           ) : null}
-          {showsMonetaryPolicy ? (
-            <Descriptions.Item
-              label={translate('pages.commercialTransactions.fields.monetaryPolicy')}
-            >
-              {monetaryPolicyLabel}
+          {taxesOn ? (
+            <Descriptions.Item label={translate('pages.commercialTransactions.fields.net')}>
+              {formatTimciMoney(record?.netAmount)}
             </Descriptions.Item>
           ) : null}
+          {taxesOn
+            ? taxAmountRows.map((row) => (
+                <Descriptions.Item key={row.key} label={row.label}>
+                  {formatTimciMoney(row.amount)}
+                </Descriptions.Item>
+              ))
+            : null}
           {record?.openAmount != null ? (
             <Descriptions.Item label={translate('pages.commercialTransactions.fields.openAmount')}>
               {formatTimciMoney(record.openAmount)}
@@ -592,61 +554,110 @@ export function CommercialTransactionShow({ resource }: Props) {
               {formatTimciMoney(remanenteSinImputar)}
             </Descriptions.Item>
           ) : null}
-          {supportsHoldFromAutoAllocation ? (
-            <Descriptions.Item
-              label={translate('pages.commercialTransactions.fields.holdFromAutoAllocation')}
-            >
-              {isDraft ? (
-                record?.holdFromAutoAllocation
-                  ? translate('table.users.yes')
-                  : translate('table.users.no')
-              ) : canUpdate && isRegistered && !record?.reversedByTransactionId ? (
-                <Switch
-                  checked={record?.holdFromAutoAllocation === true}
-                  loading={holdLoading}
-                  onChange={(checked) => void onHoldFromAutoAllocationChange(checked)}
-                  aria-label={translate(
-                    'pages.commercialTransactions.fields.holdFromAutoAllocation',
-                  )}
-                />
-              ) : record?.holdFromAutoAllocation ? (
-                translate('table.users.yes')
-              ) : (
-                translate('table.users.no')
-              )}
-            </Descriptions.Item>
-          ) : null}
-          {record?.reversesTransactionId ? (
-            <Descriptions.Item
-              label={translate('pages.commercialTransactions.fields.reversesTransaction')}
-            >
-              {(() => {
-                const n =
-                  record.reversesEntityTxnNumber != null
-                    ? String(record.reversesEntityTxnNumber)
-                    : null;
-                const label = n != null ? `Nº ${n}` : record.reversesTransactionId;
-                const res = commercialResourceFromType(record.reversesTransactionType ?? '');
-                if (res && record.reversesTransactionId) {
-                  return (
-                    <Button
-                      type="link"
-                      style={{ padding: 0, height: 'auto' }}
-                      onClick={() =>
-                        navigate(
-                          commercialTransactionShowPath(res, String(record.reversesTransactionId)),
-                        )
-                      }
-                    >
-                      {label}
-                    </Button>
-                  );
-                }
-                return label;
-              })()}
-            </Descriptions.Item>
-          ) : null}
         </Descriptions>
+        <Collapse
+          style={{ marginTop: 16 }}
+          items={[
+            {
+              key: 'more',
+              label: translate('pages.commercialTransactions.moreOptions'),
+              children: (
+                <Descriptions bordered column={1} size="small">
+                  <Descriptions.Item label={translate('pages.commercialTransactions.fields.fxRate')}>
+                    {record?.fxRate ?? '—'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={translate('pages.commercialTransactions.fields.fxRateAsOf')}>
+                    {record?.fxRateAsOf
+                      ? formatTimciUserDateTime(record.fxRateAsOf, { dateFormat, timeZone })
+                      : '—'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={translate('pages.commercialTransactions.fields.fxRateManual')}>
+                    {record?.fxRateManual
+                      ? translate('table.users.yes')
+                      : translate('table.users.no')}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={translate('pages.commercialTransactions.fields.amountInBase')}>
+                    {formatTimciMoney(record?.amountInBase)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={translate('pages.commercialTransactions.fields.concept')}>
+                    {record?.concept?.trim() || '—'}
+                  </Descriptions.Item>
+                  {showsMonetaryPolicy ? (
+                    <Descriptions.Item
+                      label={translate('pages.commercialTransactions.fields.monetaryPolicy')}
+                    >
+                      {monetaryPolicyLabel}
+                    </Descriptions.Item>
+                  ) : null}
+                  {taxesOn
+                    ? headerTaxAttributeRows.map((row) => (
+                        <Descriptions.Item key={`tax-attr-${row.key}`} label={row.label}>
+                          {row.value}
+                        </Descriptions.Item>
+                      ))
+                    : null}
+                  {supportsHoldFromAutoAllocation ? (
+                    <Descriptions.Item
+                      label={translate('pages.commercialTransactions.fields.holdFromAutoAllocation')}
+                    >
+                      {isDraft ? (
+                        record?.holdFromAutoAllocation
+                          ? translate('table.users.yes')
+                          : translate('table.users.no')
+                      ) : canUpdate && isRegistered && !record?.reversedByTransactionId ? (
+                        <Switch
+                          checked={record?.holdFromAutoAllocation === true}
+                          loading={holdLoading}
+                          onChange={(checked) => void onHoldFromAutoAllocationChange(checked)}
+                          aria-label={translate(
+                            'pages.commercialTransactions.fields.holdFromAutoAllocation',
+                          )}
+                        />
+                      ) : record?.holdFromAutoAllocation ? (
+                        translate('table.users.yes')
+                      ) : (
+                        translate('table.users.no')
+                      )}
+                    </Descriptions.Item>
+                  ) : null}
+                  {record?.reversesTransactionId ? (
+                    <Descriptions.Item
+                      label={translate('pages.commercialTransactions.fields.reversesTransaction')}
+                    >
+                      {(() => {
+                        const n =
+                          record.reversesEntityTxnNumber != null
+                            ? String(record.reversesEntityTxnNumber)
+                            : null;
+                        const label = n != null ? `Nº ${n}` : record.reversesTransactionId;
+                        const res = commercialResourceFromType(record.reversesTransactionType ?? '');
+                        if (res && record.reversesTransactionId) {
+                          return (
+                            <Button
+                              type="link"
+                              style={{ padding: 0, height: 'auto' }}
+                              onClick={() =>
+                                navigate(
+                                  commercialTransactionShowPath(
+                                    res,
+                                    String(record.reversesTransactionId),
+                                  ),
+                                )
+                              }
+                            >
+                              {label}
+                            </Button>
+                          );
+                        }
+                        return label;
+                      })()}
+                    </Descriptions.Item>
+                  ) : null}
+                </Descriptions>
+              ),
+            },
+          ]}
+        />
 
         <CommercialTransactionItemsPanel
           resource={resource}

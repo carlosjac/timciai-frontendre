@@ -1,12 +1,13 @@
 import { Show } from '@refinedev/antd';
 import { usePermissions, useShow, useTranslate } from '@refinedev/core';
-import { App, Button, Descriptions, Tag, Typography } from 'antd';
+import { Button, Descriptions, Tag, Typography } from 'antd';
 import { Link } from 'react-router';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { getResourceApiBase } from '../../shared/timci/apiUrl.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type AlertRecord = {
   id: string;
@@ -22,7 +23,7 @@ type AlertRecord = {
 
 export function AlertShow() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const canAcknowledge =
@@ -38,10 +39,10 @@ export function AlertShow() {
       await timciFetch(`${base}/${encodeURIComponent(record.id)}/acknowledge`, {
         method: 'POST',
       });
-      message.success(translate('pages.alerts.acknowledged'));
+      notify.success(translate('pages.alerts.acknowledged'));
       await query.refetch();
     } catch {
-      message.error(translate('pages.alerts.acknowledgeError'));
+      notify.error(translate('pages.alerts.acknowledgeError'));
     }
   };
 

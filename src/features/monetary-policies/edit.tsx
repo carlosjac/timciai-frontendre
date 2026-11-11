@@ -1,6 +1,6 @@
 import { Edit, useForm } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, Form, Input, message } from 'antd';
+import { Alert, Form, Input } from 'antd';
 import { useCallback, useEffect } from 'react';
 import {
   canManageAllEntities,
@@ -21,6 +21,7 @@ import {
 import { relativeBandsSubmitErrorMessages } from './relativeBandsSubmitValidation.js';
 import { MonetaryPolicyNameField } from './MonetaryPolicyNameField.js';
 import { MonetaryPolicyParamsFields } from './MonetaryPolicyParamsFields.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 const EDIT_FIELDS = ['name', 'params'] as const;
 
@@ -40,6 +41,7 @@ type MonetaryPolicyRecord = {
 
 export function MonetaryPolicyEdit() {
   const translate = useTranslate();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const showOrg = canManageAllEntities(permData?.actionCodes ?? []);
@@ -47,6 +49,7 @@ export function MonetaryPolicyEdit() {
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } =
     useForm({
+    errorNotification: false,
       resource: 'monetary_policies',
       action: 'edit',
     });
@@ -117,7 +120,7 @@ export function MonetaryPolicyEdit() {
                 errors: coverageMessages,
               },
             ]);
-            message.error(
+            notify.error(
               coverageMessages[0] ??
                 translate('pages.monetaryPolicies.params.incompleteCoverageTitle'),
             );

@@ -1,5 +1,5 @@
 import { useCreate, useInvalidate, useOne, useTranslate, useUpdate } from '@refinedev/core';
-import { App, Button, DatePicker, Drawer, Form, Input, Select, Typography } from 'antd';
+import { Button, DatePicker, Drawer, Form, Input, Select, Typography } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo } from 'react';
@@ -9,6 +9,7 @@ import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAle
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 const CREATE_FIELDS = ['currencyId', 'unitPriceAmount', 'validFrom', 'validTo'] as const;
 const EDIT_FIELDS = ['currencyId', 'unitPriceAmount', 'validFrom', 'validTo'] as const;
@@ -38,7 +39,7 @@ export function SellableItemPriceDrawer({
   editingId,
 }: SellableItemPriceDrawerProps) {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { dateFormat } = useUserPreferences();
   const [form] = Form.useForm();
   const invalidate = useInvalidate();
@@ -114,7 +115,7 @@ export function SellableItemPriceDrawer({
     const vf = values.validFrom as Dayjs | null | undefined;
     const vt = values.validTo as Dayjs | null | undefined;
     if (vf && vt && vf.isAfter(vt, 'day')) {
-      message.error(translate('pages.priceListItems.validation.validRange'));
+      notify.error(translate('pages.priceListItems.validation.validRange'));
       return;
     }
     clearServerErrors(form);
@@ -130,7 +131,7 @@ export function SellableItemPriceDrawer({
             validTo: toApiDate(vt),
           },
         });
-        message.success(translate('notifications.success'));
+        notify.success(translate('notifications.success'));
       } else {
         await createMut({
           resource: 'price_list_items',
@@ -144,7 +145,7 @@ export function SellableItemPriceDrawer({
             validTo: toApiDate(vt),
           },
         });
-        message.success(translate('notifications.success'));
+        notify.success(translate('notifications.success'));
       }
       await invalidate({ resource: 'price_list_items', invalidates: ['list'] });
       handleClose();

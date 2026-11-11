@@ -45,6 +45,7 @@ export function UserEdit() {
   const { dateFormat, timeZone } = useUserPreferences();
 
   const { formProps, saveButtonProps, onFinish: submitRecord, form, query, formLoading } = useForm({
+    errorNotification: false,
     resource: 'users',
     action: 'edit',
   });

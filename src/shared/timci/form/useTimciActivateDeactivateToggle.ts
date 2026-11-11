@@ -1,7 +1,8 @@
 import { useInvalidate, useTranslate } from '@refinedev/core';
-import { App } from 'antd';
+
 import { useCallback, useMemo, useState } from 'react';
 import { timciFetch } from '../http.js';
+import { useTimciNotify } from '../notifyTimci.js';
 
 type ToggleRecord = {
   id?: string;
@@ -38,7 +39,7 @@ export function useTimciActivateDeactivateToggle(options: {
   } = options;
 
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const invalidate = useInvalidate();
 
   const [toggleOpen, setToggleOpen] = useState(false);
@@ -60,7 +61,7 @@ export function useTimciActivateDeactivateToggle(options: {
       const { activate, deactivate } = resolveToggleUrls(record.id);
       const url = record.isActive ? deactivate : activate;
       await timciFetch(url, { method: toggleMethod });
-      message.success(
+      notify.success(
         record.isActive
           ? translate(`${i18nPrefix}.deactivated`)
           : translate(`${i18nPrefix}.activated`),
@@ -72,7 +73,7 @@ export function useTimciActivateDeactivateToggle(options: {
       });
       await query?.refetch?.();
     } catch (e: unknown) {
-      message.error(
+      notify.error(
         e instanceof Error ? e.message : translate(`${i18nPrefix}.toggleError`),
       );
     } finally {
@@ -81,7 +82,7 @@ export function useTimciActivateDeactivateToggle(options: {
   }, [
     i18nPrefix,
     invalidate,
-    message,
+    notify,
     query,
     record?.id,
     record?.isActive,

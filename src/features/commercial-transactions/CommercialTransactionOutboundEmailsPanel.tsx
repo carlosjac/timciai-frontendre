@@ -8,6 +8,7 @@ import {
   type CommercialTransactionResource,
 } from '../../shared/timci/commercialTransactionsApi.js';
 import { timciFetch } from '../../shared/timci/http.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type OutboundEmailRow = {
   id: string;
@@ -29,7 +30,8 @@ export function CommercialTransactionOutboundEmailsPanel({
   canManage = false,
 }: Props) {
   const translate = useTranslate();
-  const { message, modal } = App.useApp();
+  const { modal } = App.useApp();
+  const notify = useTimciNotify();
   const [rows, setRows] = useState<OutboundEmailRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -46,11 +48,11 @@ export function CommercialTransactionOutboundEmailsPanel({
       const { json } = await timciFetch(`${base}?${params.toString()}`);
       setRows(Array.isArray(json) ? (json as OutboundEmailRow[]) : []);
     } catch {
-      message.error(translate('pages.outboundEmails.loadError'));
+      notify.error(translate('pages.outboundEmails.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [commercialTransactionId, message, translate]);
+  }, [commercialTransactionId, notify, translate]);
 
   useEffect(() => {
     void load();
@@ -61,10 +63,10 @@ export function CommercialTransactionOutboundEmailsPanel({
     if (!base) return;
     try {
       await timciFetch(`${base}/${encodeURIComponent(id)}/retry`, { method: 'POST' });
-      message.success(translate('pages.outboundEmails.retrySuccess'));
+      notify.success(translate('pages.outboundEmails.retrySuccess'));
       await load();
     } catch {
-      message.error(translate('pages.outboundEmails.retryError'));
+      notify.error(translate('pages.outboundEmails.retryError'));
     }
   };
 
@@ -87,14 +89,14 @@ export function CommercialTransactionOutboundEmailsPanel({
             ),
             { method: 'POST' }
           );
-          message.success(translate('pages.outboundEmails.resendSuccess'));
+          notify.success(translate('pages.outboundEmails.resendSuccess'));
           await load();
         } catch (e: unknown) {
           const detail =
             e instanceof Error && e.message.trim() !== ''
               ? e.message.trim()
               : translate('pages.outboundEmails.resendError');
-          message.error(detail);
+          notify.error(detail);
         } finally {
           setResendLoading(false);
         }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslate } from '@refinedev/core';
-import { App, Button, DatePicker, Form, Modal, Space, Typography, Upload } from 'antd';
+import { Button, DatePicker, Form, Modal, Space, Typography, Upload } from 'antd';
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useNavigate } from 'react-router';
@@ -10,6 +10,7 @@ import {
   enqueueCustomerImport,
 } from '../../shared/timci/importJobsApi.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type Props = {
   tenantId: string | null;
@@ -18,7 +19,7 @@ type Props = {
 export function CustomerImportActions({ tenantId }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { dateFormat } = useUserPreferences();
   const [downloading, setDownloading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -33,7 +34,7 @@ export function CustomerImportActions({ tenantId }: Props) {
     try {
       await downloadCustomerImportTemplate(tenantId);
     } catch (e) {
-      message.error(e instanceof Error ? e.message : translate('pages.customers.import.downloadError'));
+      notify.error(e instanceof Error ? e.message : translate('pages.customers.import.downloadError'));
     } finally {
       setDownloading(false);
     }
@@ -53,7 +54,7 @@ export function CustomerImportActions({ tenantId }: Props) {
       setOpeningDate(dayjs());
       navigate(`/customers/import-jobs/${encodeURIComponent(jobId)}`);
     } catch (e) {
-      message.error(e instanceof Error ? e.message : translate('pages.customers.import.uploadError'));
+      notify.error(e instanceof Error ? e.message : translate('pages.customers.import.uploadError'));
     } finally {
       setUploading(false);
     }

@@ -1,12 +1,13 @@
 import { Show } from '@refinedev/antd';
 import { usePermissions, useShow, useTranslate } from '@refinedev/core';
-import { App, Button, Descriptions, Table, Tag, Typography } from 'antd';
+import { Button, Descriptions, Table, Tag, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { getResourceApiBase } from '../../shared/timci/apiUrl.js';
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
 type OutboundEmail = {
   id: string;
@@ -34,7 +35,7 @@ type EmailAttempt = {
 
 export function OutboundEmailShow() {
   const translate = useTranslate();
-  const { message } = App.useApp();
+  const notify = useTimciNotify();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const canManage =
@@ -56,7 +57,7 @@ export function OutboundEmailShow() {
         if (!cancelled) setAttempts(Array.isArray(json) ? (json as EmailAttempt[]) : []);
       })
       .catch(() => {
-        if (!cancelled) message.error(translate('pages.outboundEmails.attemptsError'));
+        if (!cancelled) notify.error(translate('pages.outboundEmails.attemptsError'));
       })
       .finally(() => {
         if (!cancelled) setAttemptsLoading(false);
@@ -64,7 +65,7 @@ export function OutboundEmailShow() {
     return () => {
       cancelled = true;
     };
-  }, [message, record?.id, translate]);
+  }, [notify, record?.id, translate]);
 
   const retry = async () => {
     if (!record) return;
@@ -73,10 +74,10 @@ export function OutboundEmailShow() {
     setRetrying(true);
     try {
       await timciFetch(`${base}/${encodeURIComponent(record.id)}/retry`, { method: 'POST' });
-      message.success(translate('pages.outboundEmails.retrySuccess'));
+      notify.success(translate('pages.outboundEmails.retrySuccess'));
       await query.refetch();
     } catch {
-      message.error(translate('pages.outboundEmails.retryError'));
+      notify.error(translate('pages.outboundEmails.retryError'));
     } finally {
       setRetrying(false);
     }

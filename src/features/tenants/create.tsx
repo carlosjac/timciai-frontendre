@@ -8,7 +8,7 @@ const TENANT_CREATE_FIELDS = ['name'] as const;
 
 export function TenantCreate() {
   const translate = useTranslate();
-  const { formProps, saveButtonProps, onFinish, form } = useForm({ resource: 'tenants' });
+  const { formProps, saveButtonProps, onFinish, form } = useForm({ errorNotification: false, resource: 'tenants' });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
     formFieldNames: TENANT_CREATE_FIELDS,
   });
