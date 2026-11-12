@@ -67,16 +67,26 @@ function BoundField({ field, bound, unit, disabled, label, tooltip, t }: BoundFi
 
   return (
     <Form.Item label={label} tooltip={tooltip} style={{ marginBottom: 0 }}>
-      <Space.Compact>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: '100%' }}>
         {mode === 'number' && (
           <Form.Item {...field} name={[field.name, valueName]} noStyle>
-            <InputNumber disabled={disabled} precision={0} style={{ width: 90 }} />
+            <InputNumber
+              disabled={disabled}
+              precision={0}
+              aria-label={`${label}, ${t('boundValue')}`}
+              style={{ width: '100%', maxWidth: 120 }}
+            />
           </Form.Item>
         )}
         <Form.Item {...field} name={[field.name, modeName]} noStyle>
-          <Select disabled={disabled} style={{ width: 300 }} options={modeOptions} />
+          <Select
+            disabled={disabled}
+            aria-label={`${label}, ${t('boundModeLabel')}`}
+            style={{ width: '100%', maxWidth: 300, flex: '1 1 180px' }}
+            options={modeOptions}
+          />
         </Form.Item>
-      </Space.Compact>
+      </div>
     </Form.Item>
   );
 }
@@ -131,7 +141,7 @@ export function MonetaryPolicyParamsFields({ disabled, kind }: Props) {
         rules={required}
         extra={translate('pages.monetaryPolicies.anchorHint')}
       >
-        <Radio.Group disabled={disabled}>
+        <Radio.Group disabled={disabled} style={{ display: 'flex', flexWrap: 'wrap' }}>
           <Radio.Button value="document_date">
             {translate('pages.monetaryPolicies.anchor.document_date')}
           </Radio.Button>
@@ -147,7 +157,7 @@ export function MonetaryPolicyParamsFields({ disabled, kind }: Props) {
         rules={required}
         extra={translate('pages.monetaryPolicies.unitHint')}
       >
-        <Radio.Group disabled={disabled}>
+        <Radio.Group disabled={disabled} style={{ display: 'flex', flexWrap: 'wrap' }}>
           <Radio.Button value="days">{translate('pages.monetaryPolicies.unit.days')}</Radio.Button>
           <Radio.Button value="months">{translate('pages.monetaryPolicies.unit.months')}</Radio.Button>
         </Radio.Group>

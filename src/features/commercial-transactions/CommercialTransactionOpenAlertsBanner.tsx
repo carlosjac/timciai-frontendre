@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslate } from '@refinedev/core';
 import { Alert, Button } from 'antd';
-import { Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { getResourceApiBase } from '../../shared/timci/apiUrl.js';
 import { timciFetch } from '../../shared/timci/http.js';
 
@@ -11,14 +11,15 @@ type Props = {
 
 export function CommercialTransactionOpenAlertsBanner({ commercialTransactionId }: Props) {
   const translate = useTranslate();
+  const navigate = useNavigate();
   const [alertId, setAlertId] = useState<string | null>(null);
+  const base = getResourceApiBase('alerts');
+  if ((!base || !commercialTransactionId) && alertId !== null) {
+    setAlertId(null);
+  }
 
   useEffect(() => {
-    const base = getResourceApiBase('alerts');
-    if (!base || !commercialTransactionId) {
-      setAlertId(null);
-      return;
-    }
+    if (!base || !commercialTransactionId) return;
     let cancelled = false;
     const params = new URLSearchParams({
       range: JSON.stringify([0, 0]),
@@ -40,7 +41,7 @@ export function CommercialTransactionOpenAlertsBanner({ commercialTransactionId 
     return () => {
       cancelled = true;
     };
-  }, [commercialTransactionId]);
+  }, [base, commercialTransactionId]);
 
   if (!alertId) return null;
 
@@ -51,11 +52,14 @@ export function CommercialTransactionOpenAlertsBanner({ commercialTransactionId 
       style={{ marginTop: 16, marginBottom: 8 }}
       message={translate('pages.alerts.openRelated')}
       action={
-        <Link to={`/alerts/show/${encodeURIComponent(alertId)}`}>
-          <Button size="small" type="primary" aria-label={translate('header.alerts.open')}>
-            {translate('header.alerts.open')}
-          </Button>
-        </Link>
+        <Button
+          size="small"
+          type="primary"
+          aria-label={translate('header.alerts.open')}
+          onClick={() => navigate(`/alerts/show/${encodeURIComponent(alertId)}`)}
+        >
+          {translate('header.alerts.open')}
+        </Button>
       }
     />
   );

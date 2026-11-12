@@ -140,7 +140,7 @@ export function UserEdit() {
             showSearch
             options={tzOptions}
             popupMatchSelectWidth={false}
-            dropdownStyle={{ minWidth: 320 }}
+            dropdownStyle={{ minWidth: 'min(320px, calc(100vw - 16px))' }}
             filterOption={(input, option) =>
               timeZoneOptionMatchesQuery(String(option?.label ?? ''), input)
             }

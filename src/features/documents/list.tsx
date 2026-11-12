@@ -179,7 +179,14 @@ export function DocumentList() {
           ? {
               selectedRowKeys: selectedKeys,
               onChange: setSelectedKeys,
-              getCheckboxProps: (record) => ({ disabled: record.status !== 'failed' }),
+              getCheckboxProps: (record) => ({
+                disabled: record.status !== 'failed',
+                'aria-label': translate('list.a11y.selectRow', {
+                  label:
+                    record.number?.trim() ||
+                    translate(`documents.kinds.${record.documentKind}`, undefined, record.documentKind),
+                }),
+              }),
             }
           : undefined
       }

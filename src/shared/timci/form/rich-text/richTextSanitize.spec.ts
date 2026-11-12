@@ -19,4 +19,16 @@ describe('sanitizeRichTextHtml', () => {
     expect(html).toContain('x');
     expect(html).toContain('y');
   });
+
+  it('strips script, onerror and href before that HTML reaches the editor', () => {
+    const html = sanitizeRichTextHtml(
+      '<p>hola</p><img src=x onerror="alert(1)"><script>alert(1)</script><a href="javascript:alert(1)">y</a>',
+    );
+    expect(html).not.toContain('onerror');
+    expect(html).not.toContain('script');
+    expect(html).not.toContain('href');
+    expect(html).not.toContain('<img');
+    expect(html).toContain('hola');
+    expect(html).toContain('y');
+  });
 });

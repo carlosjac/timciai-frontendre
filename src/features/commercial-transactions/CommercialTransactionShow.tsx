@@ -1,4 +1,4 @@
-import { DeleteButton, EditButton, ListButton, RefreshButton, Show } from '@refinedev/antd';
+import { DeleteButton, RefreshButton, Show } from '@refinedev/antd';
 import { useOne, usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, App as AntdApp, Button, Collapse, DatePicker, Descriptions, Form, Input, Modal, Radio, Space, Switch, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
@@ -43,6 +43,8 @@ import {
 } from './commercialTransactionTaxDisplay.js';
 import { unallocatedAmount } from './unallocatedAmount.js';
 import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
+import { TimciEditLink, TimciListLink } from '../../shared/timci/TimciResourceLink.js';
 
 type Props = {
   resource: CommercialTransactionResource;
@@ -79,6 +81,7 @@ function fxRatesEqual(a: string | null | undefined, b: string | null | undefined
 
 export function CommercialTransactionShow({ resource }: Props) {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const navigate = useNavigate();
   const { modal } = AntdApp.useApp();
   const notify = useTimciNotify();
@@ -191,7 +194,7 @@ export function CommercialTransactionShow({ resource }: Props) {
     const baseCurrency =
       entityResult?.baseCurrencyId != null ? String(entityResult.baseCurrencyId).trim() : '';
     return Boolean(txCurrency && baseCurrency && txCurrency === baseCurrency);
-  }, [entityResult?.baseCurrencyId, record?.currencyId]);
+  }, [entityResult, record]);
 
   const applyFxSnapshotToForm = useCallback(
     (snap: FxSnapshot) => {
@@ -231,7 +234,7 @@ export function CommercialTransactionShow({ resource }: Props) {
         setRegisterLoading(false);
       }
     },
-    [notify, query, record?.id, resource, tenantId, translate],
+    [notify, query, record, resource, tenantId, translate],
   );
 
   const confirmRegisterSimple = useCallback(
@@ -381,7 +384,7 @@ export function CommercialTransactionShow({ resource }: Props) {
         }
       },
     });
-  }, [notify, modal, query, record?.id, resource, tenantId, translate]);
+  }, [notify, modal, query, record, resource, tenantId, translate]);
 
   const supportsHoldFromAutoAllocation =
     resource === 'collections' || resource === 'credits';
@@ -420,7 +423,7 @@ export function CommercialTransactionShow({ resource }: Props) {
         setHoldLoading(false);
       }
     },
-    [notify, query, record?.id, resource, supportsHoldFromAutoAllocation, tenantId, translate],
+    [notify, query, record, resource, supportsHoldFromAutoAllocation, tenantId, translate],
   );
 
   if (!tenantId) {
@@ -443,9 +446,17 @@ export function CommercialTransactionShow({ resource }: Props) {
         canEdit={canUpdate && isDraft}
         canDelete={false}
         headerButtons={({ listButtonProps, editButtonProps, refreshButtonProps }) => (
-          <Space wrap>
-            {listButtonProps ? <ListButton {...listButtonProps} /> : null}
-            {canUpdate && isDraft && editButtonProps ? <EditButton {...editButtonProps} /> : null}
+          <Space wrap size="middle">
+            {listButtonProps ? (
+              <TimciListLink resource={resource} label={translate('buttons.list')} />
+            ) : null}
+            {canUpdate && isDraft && editButtonProps ? (
+              <TimciEditLink
+                resource={resource}
+                recordItemId={record?.id}
+                label={translate('buttons.edit')}
+              />
+            ) : null}
             {refreshButtonProps ? <RefreshButton {...refreshButtonProps} /> : null}
             {canRegister && isDraft ? (
               <Button
@@ -512,9 +523,9 @@ export function CommercialTransactionShow({ resource }: Props) {
         </div>
         <Descriptions
           bordered
-          column={2}
+          column={{ xs: 1, md: 2 }}
           size="middle"
-          styles={{ label: { width: 180, maxWidth: 240, verticalAlign: 'top' } }}
+          styles={descriptionStyles}
         >
           <Descriptions.Item label={translate('pages.commercialTransactions.fields.customer')}>
             {customerResult?.name?.trim() || record?.customerId || '—'}

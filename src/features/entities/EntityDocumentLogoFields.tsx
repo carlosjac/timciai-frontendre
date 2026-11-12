@@ -80,8 +80,12 @@ export function EntityDocumentLogoFields({ entityId, readOnly = false }: Props) 
   }, [entityId, canView]);
 
   useEffect(() => {
-    void reload();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void reload();
+    });
     return () => {
+      cancelled = true;
       loadGenRef.current += 1;
     };
   }, [reload]);

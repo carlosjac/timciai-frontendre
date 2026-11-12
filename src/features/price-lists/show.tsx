@@ -1,3 +1,4 @@
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { Show } from '@refinedev/antd';
 import { usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, Descriptions, Tabs, Tag } from 'antd';
@@ -31,6 +32,7 @@ type PriceListRecord = {
 
 export function PriceListShow() {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { data: permData } = usePermissions<TimciPermissionsData>({});
@@ -95,6 +97,7 @@ export function PriceListShow() {
       >
         <TimciFormInactiveRecordBanner isActive={record?.isActive} />
         <Tabs
+          aria-label={translate('tabs.group')}
           activeKey={activeTab}
           onChange={setActiveTab}
           items={[
@@ -107,7 +110,7 @@ export function PriceListShow() {
                     bordered
                     column={1}
                     size="middle"
-                    styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+                    styles={descriptionStyles}
                   >
                     <Descriptions.Item label={translate('table.priceLists.name')}>
                       {record?.name ?? '—'}

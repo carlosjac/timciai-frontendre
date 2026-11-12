@@ -1,4 +1,4 @@
-import { EditButton } from '@refinedev/antd';
+import { TimciEditLink } from '../../shared/timci/TimciResourceLink.js';
 import { useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
@@ -51,13 +51,12 @@ export function PriceListList() {
       render: (_: unknown, record: PriceListRow) =>
         record.isActive === false ? null : (
           <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-            <EditButton
-              resource="price_lists"
-              recordItemId={record.id}
-              hideText
-              title={translate('table.priceLists.edit')}
-              aria-label={translate('table.priceLists.edit')}
-            />
+            <TimciEditLink
+            resource="price_lists"
+            recordItemId={record.id}
+            hideText
+            label={translate('table.priceLists.edit')}
+          />
           </span>
         ),
       exportValue: () => '',

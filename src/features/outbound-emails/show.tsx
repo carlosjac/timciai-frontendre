@@ -50,18 +50,22 @@ export function OutboundEmailShow() {
     if (!record?.id) return;
     const base = getResourceApiBase('outboundEmails');
     if (!base) return;
+    const emailId = record.id;
     let cancelled = false;
-    setAttemptsLoading(true);
-    void timciFetch(`${base}/${encodeURIComponent(record.id)}/attempts`)
-      .then(({ json }) => {
-        if (!cancelled) setAttempts(Array.isArray(json) ? (json as EmailAttempt[]) : []);
-      })
-      .catch(() => {
-        if (!cancelled) notify.error(translate('pages.outboundEmails.attemptsError'));
-      })
-      .finally(() => {
-        if (!cancelled) setAttemptsLoading(false);
-      });
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setAttemptsLoading(true);
+      void timciFetch(`${base}/${encodeURIComponent(emailId)}/attempts`)
+        .then(({ json }) => {
+          if (!cancelled) setAttempts(Array.isArray(json) ? (json as EmailAttempt[]) : []);
+        })
+        .catch(() => {
+          if (!cancelled) notify.error(translate('pages.outboundEmails.attemptsError'));
+        })
+        .finally(() => {
+          if (!cancelled) setAttemptsLoading(false);
+        });
+    });
     return () => {
       cancelled = true;
     };
@@ -136,6 +140,7 @@ export function OutboundEmailShow() {
           <Table<EmailAttempt>
             rowKey="id"
             size="small"
+            scroll={{ x: 'max-content' }}
             loading={attemptsLoading}
             dataSource={attempts}
             pagination={false}

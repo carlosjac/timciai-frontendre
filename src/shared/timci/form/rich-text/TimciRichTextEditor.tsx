@@ -13,13 +13,19 @@ export type TimciRichTextEditorProps = {
   disabled?: boolean;
   /** Minimum editor body height in pixels. */
   minHeight?: number;
+  id?: string;
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean | 'true' | 'false';
 };
 
 const editorBodyStyle = `
 .timci-rich-text-editor .tiptap {
-  outline: none;
   min-height: inherit;
   color: var(--ant-color-text, inherit);
+}
+.timci-rich-text-editor .tiptap:focus-visible {
+  outline: 2px solid var(--ant-color-primary, #1677ff);
+  outline-offset: 2px;
 }
 .timci-rich-text-editor.timci-rich-text-editor--disabled .tiptap {
   cursor: default;
@@ -38,6 +44,9 @@ export function TimciRichTextEditor({
   onChange,
   disabled = false,
   minHeight = 96,
+  id,
+  'aria-describedby': ariaDescribedBy,
+  'aria-invalid': ariaInvalid,
 }: TimciRichTextEditorProps) {
   const translate = useTranslate();
 
@@ -57,7 +66,7 @@ export function TimciRichTextEditor({
       }),
       Underline,
     ],
-    content: value ?? '',
+    content: sanitizeRichTextHtml(value ?? ''),
     editable: !disabled,
     onUpdate: ({ editor: ed }) => {
       onChange?.(sanitizeRichTextHtml(ed.getHTML()));
@@ -71,10 +80,22 @@ export function TimciRichTextEditor({
 
   useEffect(() => {
     if (!editor) return;
+    const attributes: Record<string, string> = {
+      role: 'textbox',
+      'aria-multiline': 'true',
+    };
+    if (id) attributes.id = id;
+    if (ariaDescribedBy) attributes['aria-describedby'] = ariaDescribedBy;
+    if (ariaInvalid != null && ariaInvalid !== false) attributes['aria-invalid'] = 'true';
+    editor.setOptions({ editorProps: { attributes } });
+  }, [ariaDescribedBy, ariaInvalid, editor, id]);
+
+  useEffect(() => {
+    if (!editor) return;
     const current = editor.getHTML();
-    const next = value ?? '';
+    const next = sanitizeRichTextHtml(value ?? '');
     if (next !== current) {
-      editor.commands.setContent(sanitizeRichTextHtml(next), { emitUpdate: false });
+      editor.commands.setContent(next, { emitUpdate: false });
     }
   }, [editor, value]);
 

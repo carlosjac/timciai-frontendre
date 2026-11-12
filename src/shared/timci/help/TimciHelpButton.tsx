@@ -15,7 +15,7 @@ export function TimciHelpButton(props: { topic: string; text: string }): ReactEl
       onOpenChange={setOpen}
       destroyOnHidden
       content={
-        <Typography.Paragraph style={{ maxWidth: 340, marginBottom: 0 }}>{props.text}</Typography.Paragraph>
+        <Typography.Paragraph style={{ maxWidth: 'min(340px, calc(100vw - 16px))', marginBottom: 0 }}>{props.text}</Typography.Paragraph>
       }
     >
       <Button
@@ -26,7 +26,7 @@ export function TimciHelpButton(props: { topic: string; text: string }): ReactEl
         aria-haspopup="dialog"
         icon={<QuestionCircleOutlined aria-hidden />}
         onMouseDown={(event) => event.stopPropagation()}
-        style={{ width: 22, height: 22, color: 'inherit', opacity: 0.65 }}
+        style={{ width: 24, height: 24, color: 'inherit', opacity: 0.65 }}
       />
     </Popover>
   );

@@ -1,7 +1,7 @@
 import { useTranslate } from '@refinedev/core';
 import { Table, Tag } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { formatTimciUserDateTime } from '../formatUserDateTime.js';
 import type { TimciUserDateTimePrefs } from '../formatUserDateTime.js';
 import { listTimciImportJobs, type TimciImportJob, type TimciImportJobStatus } from '../importJobsApi.js';
@@ -53,7 +53,13 @@ export function TimciImportJobList({
   }, [tenantId, resource, page]);
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void load();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   return (
@@ -71,6 +77,7 @@ export function TimciImportJobList({
           onChange: (p) => setPage(p),
           showSizeChanger: false,
         }}
+        scroll={{ x: 'max-content' }}
         onRow={(record) => ({
           onClick: () => navigate(detailPath(record.id)),
           style: { cursor: 'pointer' },
@@ -79,7 +86,11 @@ export function TimciImportJobList({
           {
             title: translate('import.job.createdAt'),
             dataIndex: 'createdAt',
-            render: (v: string) => formatTimciUserDateTime(v, datePrefs),
+            render: (v: string, record) => (
+              <Link to={detailPath(record.id)} onClick={(event) => event.stopPropagation()}>
+                {formatTimciUserDateTime(v, datePrefs)}
+              </Link>
+            ),
           },
           {
             title: translate('import.job.createdBy'),

@@ -63,7 +63,9 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
     }
   }, [tenantId, jobId, job, tab, rowPage]);
 
-  useEffect(() => {
+  const [jobScope, setJobScope] = useState(jobId);
+  if (jobId !== jobScope) {
+    setJobScope(jobId);
     setJob(null);
     setLoadError(null);
     setTab('created');
@@ -71,18 +73,21 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
     setRowPage(1);
     setRows([]);
     setRowTotal(0);
-  }, [jobId]);
-
-  useEffect(() => {
-    void loadJob();
-  }, [loadJob]);
-
-  useEffect(() => {
-    if (!job || isActive(job.status) || tabInitialized) return;
+  } else if (job && !isActive(job.status) && !tabInitialized) {
     if (job.failedCount > 0) setTab('failed');
     else if (job.createdCount === 0 && job.skippedCount > 0) setTab('skipped');
     setTabInitialized(true);
-  }, [job, tabInitialized]);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void loadJob();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadJob]);
 
   useEffect(() => {
     if (!job || !isActive(job.status)) return;
@@ -93,7 +98,13 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
   }, [job, loadJob]);
 
   useEffect(() => {
-    void loadRows();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void loadRows();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [loadRows]);
 
   const statusTag = job ? (
@@ -120,7 +131,9 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
       {loadError ? (
         <Alert type="error" showIcon message={loadError} />
       ) : !job ? (
-        <Spin />
+        <div role="status" aria-label={translate('app.loadingPage')}>
+          <Spin />
+        </div>
       ) : (
         <>
           {isActive(job.status) ? (
@@ -138,7 +151,7 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
                       ? 10
                       : 0
                 }
-                status="active"
+                status="normal"
                 aria-label={translate('import.job.progress')}
               />
             </>
@@ -171,7 +184,7 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
               })}
             />
           )}
-          <Typography.Paragraph style={{ marginBottom: 0 }}>
+          <Typography.Paragraph style={{ marginBottom: 0 }} aria-live="polite">
             {translate('import.job.progressDetail', {
               created: job.createdCount,
               skipped: job.skippedCount,
@@ -181,6 +194,7 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
           </Typography.Paragraph>
           {!isActive(job.status) ? (
             <Tabs
+              aria-label={translate('tabs.group')}
               activeKey={tab}
               onChange={(key) => {
                 setTab(key as TimciImportRowStatus);
@@ -193,6 +207,7 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
                   children: (
                     <Table<TimciImportJobRow>
                       size="small"
+                      scroll={{ x: 'max-content' }}
                       rowKey={(r) => `c-${r.rowNumber}`}
                       loading={rowsLoading}
                       dataSource={tab === 'created' ? rows : []}
@@ -222,6 +237,7 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
                   children: (
                     <Table<TimciImportJobRow>
                       size="small"
+                      scroll={{ x: 'max-content' }}
                       rowKey={(r) => `s-${r.rowNumber}`}
                       loading={rowsLoading}
                       dataSource={tab === 'skipped' ? rows : []}
@@ -255,6 +271,7 @@ export function TimciImportJobPanel({ tenantId, jobId, backPath, titleKey }: Pro
                   children: (
                     <Table<TimciImportJobRow>
                       size="small"
+                      scroll={{ x: 'max-content' }}
                       rowKey={(r) => `f-${r.rowNumber}`}
                       loading={rowsLoading}
                       dataSource={tab === 'failed' ? rows : []}

@@ -51,6 +51,7 @@ export function PermissionList() {
               resource="permissions"
               recordItemId={record.id}
               hideText
+              aria-label={translate('table.permissions.delete')}
               title={translate('table.permissions.delete')}
               confirmTitle={translate('pages.permissions.deleteConfirmTitle')}
             />

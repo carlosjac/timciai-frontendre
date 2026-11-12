@@ -63,8 +63,10 @@ export function DocumentShow() {
     let cancelled = false;
     let objectUrl: string | null = null;
 
-    setPdfObjectUrl(null);
-    setPdfError(false);
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setPdfObjectUrl(null);
+      setPdfError(false);
 
     const loadPdf = async () => {
       if (!record?.id || !record.hasContent) {
@@ -90,6 +92,7 @@ export function DocumentShow() {
     };
 
     void loadPdf();
+    });
 
     return () => {
       cancelled = true;
@@ -217,8 +220,12 @@ export function DocumentShow() {
       {record?.hasContent ? (
         <div style={{ marginTop: 8 }}>
           {pdfLoading ? (
-            <div style={{ textAlign: 'center', padding: 48 }}>
-              <Spin tip={translate('documents.previewLoading')} />
+            <div
+              role="status"
+              aria-label={translate('documents.previewLoading')}
+              style={{ textAlign: 'center', padding: 48 }}
+            >
+              <Spin />
             </div>
           ) : pdfError || !pdfObjectUrl ? (
             <Typography.Paragraph type="secondary">

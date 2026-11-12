@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { HttpError } from '@refinedev/core';
 import { timciFetch, toHttpError } from './http.js';
 import { mswServer } from '../../test/msw/server.js';
@@ -18,6 +18,7 @@ describe('timciFetch', () => {
       contentType: string | null;
     } | null = null;
 
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
     mswServer.use(
       http.post(`${API}/probe`, async ({ request }) => {
         saw = {
@@ -25,7 +26,6 @@ describe('timciFetch', () => {
           useSession: request.headers.get('X-Use-Session'),
           contentType: request.headers.get('Content-Type'),
         };
-        expect(request.credentials).toBe('include');
         return HttpResponse.json({ ok: true });
       }),
     );
@@ -34,6 +34,9 @@ describe('timciFetch', () => {
       method: 'POST',
       body: JSON.stringify({ a: 1 }),
     });
+    const init = fetchSpy.mock.calls.at(-1)?.[1] as RequestInit | undefined;
+    expect(init?.credentials).toBe('include');
+    fetchSpy.mockRestore();
     expect(result.status).toBe(200);
     expect(result.json).toEqual({ ok: true });
     expect(saw).toEqual({

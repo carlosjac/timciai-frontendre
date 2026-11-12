@@ -17,7 +17,7 @@ import {
   Typography,
 } from 'antd';
 import dayjs from 'dayjs';
-import { Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
 import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
@@ -126,7 +126,7 @@ function MoneyFigure({
   strong?: boolean;
 }) {
   return (
-    <div style={{ minWidth: strong ? 140 : 96 }}>
+    <div style={{ minWidth: 0, width: '100%' }}>
       <div style={{ fontSize: 12, color: 'var(--ant-color-text-secondary)' }}>{label}</div>
       <Typography.Text
         strong={strong}
@@ -184,13 +184,13 @@ function SaleItemComputedAmounts({
 
   return (
     <>
-      <Col xs={12} sm={8} md={6} lg={4}>
+      <Col xs={24} sm={8} md={6} lg={4}>
         <MoneyFigure
           label={translate('pages.commercialTransactions.fields.discountAmount')}
           value={computed?.discountAmount ?? ''}
         />
       </Col>
-      <Col xs={12} sm={8} md={6} lg={4}>
+      <Col xs={24} sm={8} md={6} lg={4}>
         <MoneyFigure
           label={netLabel}
           value={
@@ -203,11 +203,11 @@ function SaleItemComputedAmounts({
       {taxesOn ? (
         <>
           {taxFields.map((field) => (
-            <Col key={field.key} xs={12} sm={8} md={6} lg={4}>
+            <Col key={field.key} xs={24} sm={8} md={6} lg={4}>
               <MoneyFigure label={field.label} value={formatTimciMoneyOrEmpty(field.value)} />
             </Col>
           ))}
-          <Col xs={12} sm={8} md={6} lg={4}>
+          <Col xs={24} sm={8} md={6} lg={4}>
             <MoneyFigure
               label={translate('pages.commercialTransactions.fields.gross')}
               value={formatTimciMoneyOrEmpty(gross)}
@@ -341,6 +341,7 @@ export function CommercialTransactionFormFields({
   pickerDateFormat,
 }: Props) {
   const translate = useTranslate();
+  const navigate = useNavigate();
   const form = Form.useFormInstance();
   const customerId = Form.useWatch('customerId', form) as string | undefined;
   const currencyId = Form.useWatch('currencyId', form) as string | undefined;
@@ -384,11 +385,13 @@ export function CommercialTransactionFormFields({
   });
   const customerSelect = stripSelectServerSearch(customerSelectRaw);
 
+  const canCheckEmailBlockers = mayNotifyCustomer && Boolean(tenantId && customerId);
+  if (!canCheckEmailBlockers && emailDeliveryBlockers !== 0) {
+    setEmailDeliveryBlockers(0);
+  }
+
   useEffect(() => {
-    if (!mayNotifyCustomer || !tenantId || !customerId) {
-      setEmailDeliveryBlockers(0);
-      return;
-    }
+    if (!canCheckEmailBlockers || !tenantId || !customerId) return;
     let cancelled = false;
     const url =
       `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}` +
@@ -405,7 +408,7 @@ export function CommercialTransactionFormFields({
     return () => {
       cancelled = true;
     };
-  }, [customerId, mayNotifyCustomer, tenantId]);
+  }, [canCheckEmailBlockers, customerId, tenantId]);
 
   const { selectProps: currencySelect, labelById: currencyLabelById } =
     useEntitySupportedCurrencySelect(tenantId);
@@ -903,11 +906,13 @@ export function CommercialTransactionFormFields({
           style={{ marginBottom: 16 }}
           message={translate('pages.alerts.emailDeliveryWarning')}
           action={
-            <Link to={`/customers/edit/${encodeURIComponent(customerId)}`}>
-              <Button size="small" type="link">
-                {translate('pages.alerts.emailDeliveryWarningLink')}
-              </Button>
-            </Link>
+            <Button
+              size="small"
+              type="link"
+              onClick={() => navigate(`/customers/edit/${encodeURIComponent(customerId)}`)}
+            >
+              {translate('pages.alerts.emailDeliveryWarningLink')}
+            </Button>
           }
         />
       ) : null}
@@ -1136,7 +1141,7 @@ export function CommercialTransactionFormFields({
                       </Form.Item>
                     ) : null}
                     <Row gutter={[16, 0]}>
-                      <Col xs={12} sm={8} md={6} lg={4}>
+                      <Col xs={24} sm={8} md={6} lg={4}>
                         <Form.Item
                           {...restField}
                           label={translate('pages.commercialTransactions.fields.quantity')}
@@ -1148,7 +1153,7 @@ export function CommercialTransactionFormFields({
                           <InputNumber min={0} stringMode style={{ width: '100%' }} />
                         </Form.Item>
                       </Col>
-                      <Col xs={12} sm={8} md={6} lg={4}>
+                      <Col xs={24} sm={8} md={6} lg={4}>
                         <Form.Item
                           {...restField}
                           label={translate('pages.commercialTransactions.fields.unitPrice')}
@@ -1160,7 +1165,7 @@ export function CommercialTransactionFormFields({
                           <InputNumber min={0} stringMode style={{ width: '100%' }} />
                         </Form.Item>
                       </Col>
-                      <Col xs={12} sm={8} md={6} lg={4}>
+                      <Col xs={24} sm={8} md={6} lg={4}>
                         <Form.Item
                           {...restField}
                           label={translate('pages.commercialTransactions.fields.discountPercent')}

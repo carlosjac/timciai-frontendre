@@ -22,4 +22,33 @@ describe('rowsToCsv', () => {
     ]);
     expect(csv).toBe('Q\r\n"say ""hi"""');
   });
+
+  it('neutralizes cells Excel would run as formulas', () => {
+    const csv = rowsToCsv(
+      [
+        { v: '=HYPERLINK("http://evil")' },
+        { v: '+1+1' },
+        { v: '-1+1' },
+        { v: '@SUM(1+1)' },
+        { v: '\t=1+1' },
+        { v: '\r=1' },
+        { v: '  =1' },
+        { v: 'Ada' },
+      ],
+      [{ header: 'V', accessor: (r) => r.v }],
+    );
+    expect(csv).toBe(
+      [
+        'V',
+        '"\'=HYPERLINK(""http://evil"")"',
+        "'+1+1",
+        "'-1+1",
+        "'@SUM(1+1)",
+        "'\t=1+1",
+        '"\'\r=1"',
+        "'  =1",
+        'Ada',
+      ].join('\r\n'),
+    );
+  });
 });

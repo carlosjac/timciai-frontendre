@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 import { mswServer } from './msw/server.js';
 
 beforeAll(() => {
-  mswServer.listen({ onUnhandledRequest: 'error' });
+  mswServer.listen({ onUnhandledFrame: 'error' });
 });
 
 afterEach(() => {

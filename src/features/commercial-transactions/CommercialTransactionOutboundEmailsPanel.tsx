@@ -55,7 +55,13 @@ export function CommercialTransactionOutboundEmailsPanel({
   }, [commercialTransactionId, notify, translate]);
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void load();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   const retry = async (id: string) => {
@@ -127,6 +133,7 @@ export function CommercialTransactionOutboundEmailsPanel({
       <Table<OutboundEmailRow>
         rowKey="id"
         size="small"
+        scroll={{ x: 'max-content' }}
         loading={loading}
         dataSource={rows}
         pagination={false}
@@ -144,7 +151,7 @@ export function CommercialTransactionOutboundEmailsPanel({
             title: translate('table.outboundEmails.actions'),
             key: 'actions',
             render: (_value, row) => (
-              <Space>
+              <Space wrap>
                 <Link to={`/outbound-emails/show/${encodeURIComponent(row.id)}`}>
                   {translate('pages.outboundEmails.view')}
                 </Link>

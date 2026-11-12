@@ -1,3 +1,4 @@
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { Show } from '@refinedev/antd';
 import {
   useGetIdentity,
@@ -47,6 +48,7 @@ type UserRecord = {
 
 export function UserShow() {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const { open: openNotification } = useNotification();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
@@ -146,7 +148,7 @@ export function UserShow() {
           bordered
           column={1}
           size="middle"
-          styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+          styles={descriptionStyles}
         >
           <Descriptions.Item label={translate('pages.login.fields.email')}>
             {record?.email ?? '—'}

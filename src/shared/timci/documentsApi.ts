@@ -1,5 +1,6 @@
 import { getV1Base } from '../../config.js';
 import { getStoredTenantId } from './apiUrl.js';
+import { asPdfBlob } from './pdfBytes.js';
 import { encodeTimciPathSegment } from './pathSegment.js';
 import { timciFetch } from './http.js';
 
@@ -128,9 +129,7 @@ export async function fetchIssuedDocumentPdfBlob(documentId: string): Promise<Bl
   });
   if (!res.ok) return null;
   const raw = await res.blob();
-  // Force PDF MIME so browser viewers render blob: URLs in iframes reliably.
-  if (raw.type === 'application/pdf') return raw;
-  return new Blob([raw], { type: 'application/pdf' });
+  return asPdfBlob(raw);
 }
 
 /** Downloads issued document PDF; returns false if content is missing or the request fails. */

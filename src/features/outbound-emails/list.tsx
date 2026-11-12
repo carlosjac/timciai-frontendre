@@ -166,7 +166,12 @@ export function OutboundEmailList() {
             ? {
                 selectedRowKeys: selectedKeys,
                 onChange: setSelectedKeys,
-                getCheckboxProps: (record) => ({ disabled: record.status !== 'failed' }),
+                getCheckboxProps: (record) => ({
+                  disabled: record.status !== 'failed',
+                  'aria-label': translate('list.a11y.selectRow', {
+                    label: record.subject?.trim() || record.id,
+                  }),
+                }),
               }
             : undefined
         }

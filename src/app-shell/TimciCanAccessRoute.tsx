@@ -2,6 +2,7 @@ import { useCan } from '@refinedev/core';
 import { Spin } from 'antd';
 import type { ReactNode } from 'react';
 import { TimciAccessDeniedPage } from './TimciAccessDeniedPage.js';
+import { esMessages } from '../i18n/locale.es.js';
 
 type TimciCanAccessRouteProps = {
   resource: string;
@@ -18,7 +19,11 @@ export function TimciCanAccessRoute({ resource, action, children }: TimciCanAcce
   const waiting = isLoading || (isFetching && canData == null);
   if (waiting) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 16px' }}>
+      <div
+        role="status"
+        aria-label={esMessages.app.loadingPage}
+        style={{ display: 'flex', justifyContent: 'center', padding: '48px 16px' }}
+      >
         <Spin size="large" />
       </div>
     );

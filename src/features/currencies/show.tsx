@@ -1,3 +1,4 @@
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { Show } from '@refinedev/antd';
 import { usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, Descriptions, Tag } from 'antd';
@@ -31,6 +32,7 @@ type CurrencyRecord = {
 
 export function CurrencyShow() {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { data: permData } = usePermissions<TimciPermissionsData>({});
@@ -96,7 +98,7 @@ export function CurrencyShow() {
           bordered
           column={1}
           size="middle"
-          styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+          styles={descriptionStyles}
         >
           <Descriptions.Item label={translate('table.currencies.code')}>
             {record?.code ?? '—'}

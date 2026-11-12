@@ -1,3 +1,4 @@
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { Descriptions, Tag } from 'antd';
 import { useTranslate } from '@refinedev/core';
 import { timciPersonTypeLabel } from '../../shared/timci/personTypeLabel.js';
@@ -18,13 +19,14 @@ function boolTag(translate: (key: string) => string, value: boolean | undefined)
 
 export function EntityIdentityReadonly({ record, resolveCountry }: EntityIdentityReadonlyProps) {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
 
   return (
     <Descriptions
       bordered
       column={{ xs: 1, sm: 1, md: 2 }}
       size="middle"
-      styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+      styles={descriptionStyles}
       title={translate('pages.entitySettings.identitySection')}
     >
       <Descriptions.Item label={translate('table.entities.name')}>

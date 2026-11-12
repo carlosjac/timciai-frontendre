@@ -66,7 +66,13 @@ export function CommercialTransactionDocumentsPanel({
   }, [tenantId, commercialTransactionId, notify, translate]);
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void load();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   const download = async (id: string) => {
@@ -96,6 +102,7 @@ export function CommercialTransactionDocumentsPanel({
       <Typography.Title level={5}>{translate('documents.panelTitle')}</Typography.Title>
       <Table
         size="small"
+        scroll={{ x: 'max-content' }}
         rowKey="id"
         loading={loading}
         dataSource={rows}

@@ -113,7 +113,7 @@ export async function downloadCustomerImportTemplate(tenantId: string): Promise<
   );
   if (!res.ok) {
     const text = await res.text();
-    let json: unknown = null;
+    let json: unknown;
     try {
       json = text ? (JSON.parse(text) as unknown) : null;
     } catch {

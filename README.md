@@ -2,6 +2,10 @@
 
 Admin alternativo para el [backend Timci](../backend): [Refine](https://refine.dev/) con **Ant Design**, mismo contrato que el admin principal en React Admin (`frontend`): cookie de sesión + `X-Use-Session`, listas con `sort` / `range` / `filter` en query y totales vía cabecera **`Content-Range`**.
 
+## Producción
+
+La imagen del admin estático se construye con el `Dockerfile` de este repo (`VITE_API_URL` vacío, el navegador llama a `/v1` en el mismo sitio) y se publica en `ghcr.io/carlosjac/timci-admin` al pushear a `main`. Cómo se trabaja en ramas y cómo se publica está en el repo `timci-infra` (`README.md`, sección **Cómo trabajar el código**).
+
 ## Requisitos
 
 - Node.js 20+

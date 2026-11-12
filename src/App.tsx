@@ -500,10 +500,15 @@ function TimciRefineTree() {
             <Route
               element={
                 <Authenticated key="app" redirectOnFail="/login">
+                  <a className="timci-skip-link" href="#timci-main">
+                    {esMessages.header.skipToContent}
+                  </a>
                   <ThemedLayout Header={AppHeader} Sider={TimciThemedSider}>
-                    <Suspense fallback={<TimciPageChunkFallback />}>
-                      <Outlet />
-                    </Suspense>
+                    <main id="timci-main" tabIndex={-1}>
+                      <Suspense fallback={<TimciPageChunkFallback />}>
+                        <Outlet />
+                      </Suspense>
+                    </main>
                   </ThemedLayout>
                 </Authenticated>
               }

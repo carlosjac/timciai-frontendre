@@ -89,7 +89,11 @@ export function EntitySettingsPage() {
   if (permissionsWaiting) {
     return (
       <List title={translate('pages.entitySettings.title')}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 16px' }}>
+        <div
+          role="status"
+          aria-label={translate('app.loadingPage')}
+          style={{ display: 'flex', justifyContent: 'center', padding: '48px 16px' }}
+        >
           <Spin size="large" />
         </div>
       </List>

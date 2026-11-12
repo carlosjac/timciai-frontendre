@@ -1,4 +1,4 @@
-import { EditButton } from '@refinedev/antd';
+import { TimciEditLink } from '../../shared/timci/TimciResourceLink.js';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
 import { useMemo } from 'react';
@@ -52,12 +52,11 @@ export function SubscriptionList() {
       width: 72,
       render: (_value, record) => (
         <span data-timci-row-action onClick={(event) => event.stopPropagation()}>
-          <EditButton
+          <TimciEditLink
             resource="subscriptions"
             recordItemId={record.id}
             hideText
-            title={translate('table.subscriptions.edit')}
-            aria-label={translate('table.subscriptions.edit')}
+            label={translate('table.subscriptions.edit')}
           />
         </span>
       ),

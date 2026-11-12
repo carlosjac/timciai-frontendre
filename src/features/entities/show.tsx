@@ -26,12 +26,11 @@ import { useCountryIsoCodeMap } from '../../shared/timci/tax/useCountryIsoCodeMa
 import { useTaxProfileSchema } from '../../shared/timci/tax/useTaxProfileSchema.js';
 import { filterAttributeDefsForRole } from '../../shared/timci/taxesApi.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { EntityAdminRedirect } from './EntityAdminRedirect.js';
 import { PromoteToProductionButton } from './PromoteToProductionButton.js';
 import { EntityDocumentLogoFields } from './EntityDocumentLogoFields.js';
 import type { EntityRecord, PaymentOptionRow } from './entity-types.js';
-
-const descStyles = { label: { width: 220, maxWidth: 280, verticalAlign: 'top' as const } };
 
 type EntityShowTab = 'identity' | 'general' | 'taxes' | 'documents' | 'payment-options';
 
@@ -54,6 +53,7 @@ function boolTag(translate: (key: string) => string, value: boolean | undefined)
 
 export function EntityShow() {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const { dateFormat, timeZone } = useUserPreferences();
   const [searchParams, setSearchParams] = useSearchParams();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
@@ -177,7 +177,7 @@ export function EntityShow() {
             key: 'identity',
             label: translate('pages.entities.tabs.identity'),
             children: (
-              <Descriptions bordered column={1} size="middle" styles={descStyles}>
+              <Descriptions bordered column={1} size="middle" styles={descriptionStyles}>
                 <Descriptions.Item label="Id">{record?.id ?? '—'}</Descriptions.Item>
                 <Descriptions.Item label={translate('table.entities.name')}>
                   {record?.name ?? '—'}
@@ -216,7 +216,7 @@ export function EntityShow() {
       key: 'general',
       label: translate('pages.entities.tabs.general'),
       children: (
-        <Descriptions bordered column={1} size="middle" styles={descStyles}>
+        <Descriptions bordered column={1} size="middle" styles={descriptionStyles}>
           {!canFullEditEntity ? (
             <Descriptions.Item label="Id">{record?.id ?? '—'}</Descriptions.Item>
           ) : null}
@@ -283,7 +283,7 @@ export function EntityShow() {
             key: 'taxes',
             label: translate('pages.entities.tabs.taxes'),
             children: (
-              <Descriptions bordered column={1} size="middle" styles={descStyles}>
+              <Descriptions bordered column={1} size="middle" styles={descriptionStyles}>
                 <Descriptions.Item label={translate('create.entity.taxManagementEnabled')}>
                   {boolTag(translate, record?.taxManagementEnabled)}
                 </Descriptions.Item>
@@ -307,7 +307,7 @@ export function EntityShow() {
             label: translate('pages.entities.tabs.documents'),
             children: (
               <>
-                <Descriptions bordered column={1} size="middle" styles={descStyles}>
+                <Descriptions bordered column={1} size="middle" styles={descriptionStyles}>
                   <Descriptions.Item label={translate('create.entity.documentEmissionMode')}>
                     {translate(
                       `documents.mode.${record?.documentEmissionMode ?? 'unofficial'}`,
@@ -327,6 +327,7 @@ export function EntityShow() {
       children: (
         <Table<PaymentOptionRow>
           size="small"
+          scroll={{ x: 'max-content' }}
           rowKey={(row) => row.id ?? `opt-${row.ordinal}`}
           pagination={false}
           dataSource={record?.paymentOptions ?? []}

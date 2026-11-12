@@ -1,4 +1,4 @@
-import { EditButton } from '@refinedev/antd';
+import { TimciEditLink } from '../../shared/timci/TimciResourceLink.js';
 import { useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
@@ -50,13 +50,12 @@ export function DocumentTypeList() {
       render: (_: unknown, record: DocTypeRow) =>
         record.isActive === false ? null : (
           <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-            <EditButton
-              resource="document_types"
-              recordItemId={record.id}
-              hideText
-              title={translate('table.documentTypes.edit')}
-              aria-label={translate('table.documentTypes.edit')}
-            />
+            <TimciEditLink
+            resource="document_types"
+            recordItemId={record.id}
+            hideText
+            label={translate('table.documentTypes.edit')}
+          />
           </span>
         ),
       exportValue: () => '',

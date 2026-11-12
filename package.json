@@ -15,41 +15,36 @@
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.7",
-    "@ant-design/icons": "^6.1.1",
+    "@ant-design/icons": "^6.3.4",
     "@refinedev/antd": "^6.0.3",
-    "@refinedev/core": "^5.0.11",
+    "@refinedev/core": "^5.0.12",
     "@refinedev/react-router": "^2.0.4",
-    "@tiptap/extension-underline": "^3.27.1",
-    "@tiptap/react": "^3.27.1",
-    "@tiptap/starter-kit": "^3.27.1",
+    "@tiptap/extension-underline": "^3.33.1",
+    "@tiptap/react": "^3.33.1",
+    "@tiptap/starter-kit": "^3.33.1",
     "antd": "^5.29.3",
-    "dayjs": "^1.11.20",
-    "isomorphic-dompurify": "^3.18.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "dayjs": "^1.11.23",
+    "isomorphic-dompurify": "^4.7.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "react-grid-layout": "^2.3.0",
-    "react-router": "^7.14.1"
-  },
-  "pnpm": {
-    "overrides": {
-      "dompurify": ">=3.4.12"
-    }
+    "react-router": "^7.18.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
-    "@types/node": "^24.12.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.9",
-    "eslint": "^9.39.4",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.4.0",
-    "msw": "^2",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.57.0",
-    "vite": "^8.0.1",
-    "vitest": "^4.1.9"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "@vitest/coverage-v8": "^5.1.0",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.14.0",
+    "msw": "^3.0.5",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
   }
 }

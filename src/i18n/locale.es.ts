@@ -9,6 +9,10 @@ export const esMessages = {
     close: 'Cerrar',
     edit: 'Editar',
     delete: 'Eliminar',
+    list: 'Lista',
+  },
+  tabs: {
+    group: 'Secciones',
   },
   help: {
     open: 'Ayuda sobre {{topic}}',
@@ -189,7 +193,10 @@ export const esMessages = {
     empty: 'Sin datos',
     openReport: 'Ver detalle',
     noAccess: 'No tenés acceso al tablero.',
+    periodGroup: 'Período',
     periodDays: 'Últimos {{count}} días',
+    moveUp: 'Subir',
+    moveDown: 'Bajar',
     today: 'Hoy',
     todayOverdue: 'Importe vencido',
     todayCustomers: 'Clientes vencidos',
@@ -337,7 +344,9 @@ export const esMessages = {
     currencyAll: 'Todas las monedas',
     bucket: 'Antigüedad',
     bucketAll: 'Todos los cubos',
+    period: 'Período',
     periodDays: 'Últimos {{count}} días',
+    activeRange: '{{from}} – {{to}}',
     asOfNote: 'Este informe es el saldo a la fecha. El período no lo filtra.',
     yes: 'Sí',
     no: 'No',
@@ -462,6 +471,10 @@ export const esMessages = {
   header: {
     logout: 'Cerrar sesión',
     openNavigation: 'Abrir menú de navegación',
+    navigation: 'Navegación',
+    collapseNavigation: 'Contraer menú',
+    expandNavigation: 'Expandir menú',
+    skipToContent: 'Saltar al contenido',
     accountMenu: 'Menú de cuenta',
     impersonation: {
       banner: 'Actuando como {{target}} (iniciado por {{actor}})',
@@ -483,11 +496,22 @@ export const esMessages = {
   list: {
     /** Texto de la tabla Ant Design cuando no hay filas (sustituye el “No data” en inglés). */
     emptyData: 'Sin datos',
+    view: 'Ver',
     a11y: {
       listTable: 'Tabla de datos',
       openColumnFilter: 'Abrir filtro para la columna',
       removeFilterForColumn: 'Quitar filtro',
       columnPickerGroup: 'Elegir columnas visibles en la tabla',
+      filterOperator: 'Operador de {{column}}',
+      filterValue: 'Valor de {{column}}',
+      filterValueFrom: 'Valor inicial de {{column}}',
+      filterValueTo: 'Valor final de {{column}}',
+      filterDate: 'Fecha de {{column}}',
+      filterDateFrom: 'Fecha inicial de {{column}}',
+      filterDateTo: 'Fecha final de {{column}}',
+      selectAll: 'Seleccionar todo',
+      selectInvert: 'Invertir selección',
+      selectRow: 'Seleccionar {{label}}',
     },
     columns: 'Columnas visibles',
     columnsMinOne: 'Debe quedar al menos una columna visible.',
@@ -1020,6 +1044,8 @@ export const esMessages = {
       params: {
         from: 'Desde',
         to: 'Hasta',
+        boundValue: 'valor',
+        boundModeLabel: 'modo',
         fromHint:
           'Inicio de la franja respecto de la fecha base (días/meses desde la fecha base, fin de mes, primer día del mes siguiente o sin límite).',
         toHint:
@@ -1500,6 +1526,7 @@ export const esMessages = {
       createdByName: 'Creado por',
       updatedByName: 'Actualizado por',
       actions: 'Acciones',
+      delete: 'Eliminar',
     },
     countries: {
       actions: 'Acciones',

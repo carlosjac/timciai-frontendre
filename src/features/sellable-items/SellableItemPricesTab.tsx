@@ -173,7 +173,7 @@ export function SellableItemPricesTab({
 
   if (listsLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
+      <div role="status" aria-label={translate('app.loadingPage')} style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
         <Spin />
       </div>
     );

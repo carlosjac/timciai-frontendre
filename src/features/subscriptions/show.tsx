@@ -86,6 +86,7 @@ export function SubscriptionShow() {
       <Table
         rowKey="id"
         pagination={false}
+        scroll={{ x: 'max-content' }}
         dataSource={record?.lines ?? []}
         columns={[
           {
@@ -102,6 +103,7 @@ export function SubscriptionShow() {
       <Table
         rowKey="id"
         pagination={false}
+        scroll={{ x: 'max-content' }}
         dataSource={record?.generatedSales ?? []}
         locale={{ emptyText: translate('pages.subscriptions.noSales') }}
         columns={[

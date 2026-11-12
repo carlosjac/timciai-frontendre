@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Responsive, useContainerWidth, type Layout, type LayoutItem } from 'react-grid-layout';
+import GridLayout, { useContainerWidth, type Layout, type LayoutItem } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { useGetIdentity, useTranslate } from '@refinedev/core';
-import { Alert, Button, Card, Modal, Select, Space, Statistic, Typography } from 'antd';
+import { Alert, Button, Card, Grid, Modal, Select, Space, Statistic, Typography } from 'antd';
 import { Link } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { fetchTimciActionCodes } from '../../shared/timci/actionCodes.js';
@@ -34,20 +34,38 @@ import { WidgetBody, WidgetCard } from './widgets.js';
 
 const PERIODS = [7, 30, 90] as const;
 
+function orderByLayout(state: DashboardLayoutState): WidgetInstance[] {
+  const pos = new Map(state.layout.map((item) => [item.i, item]));
+  return [...state.instances].sort((a, b) => {
+    const pa = pos.get(a.id);
+    const pb = pos.get(b.id);
+    const ay = pa?.y ?? 0;
+    const by = pb?.y ?? 0;
+    if (ay !== by) return ay - by;
+    return (pa?.x ?? 0) - (pb?.x ?? 0);
+  });
+}
+
+function moveInstance(state: DashboardLayoutState, id: string, delta: -1 | 1): DashboardLayoutState {
+  const ordered = orderByLayout(state);
+  const index = ordered.findIndex((item) => item.id === id);
+  const next = index + delta;
+  if (index < 0 || next < 0 || next >= ordered.length) return state;
+  const swapped = [...ordered];
+  const [item] = swapped.splice(index, 1);
+  if (!item) return state;
+  swapped.splice(next, 0, item);
+  return { ...state, instances: swapped, layout: packLayout(swapped) };
+}
+
 function sameLayout(current: DashboardLayoutState['layout'], next: DashboardLayoutState['layout']): boolean {
   if (current.length !== next.length) return false;
+  const byId = new Map(next.map((item) => [item.i, item]));
 
-  return current.every((item, index) => {
-    const other = next[index];
+  return current.every((item) => {
+    const other = byId.get(item.i);
 
-    return (
-      other != null &&
-      item.i === other.i &&
-      item.x === other.x &&
-      item.y === other.y &&
-      item.w === other.w &&
-      item.h === other.h
-    );
+    return other != null && item.x === other.x && item.y === other.y && item.w === other.w && item.h === other.h;
   });
 }
 const REPORT_WIDGETS = new Set(['aging', 'invoiced', 'collected', 'tax']);
@@ -212,10 +230,8 @@ function DashboardBoard(props: {
   );
 
   const onLayoutChange = useCallback(
-    (_current: Layout, allLayouts?: Partial<Record<string, Layout>>) => {
-      const source = allLayouts?.lg;
-      if (!source) return;
-      const layout = source.map((item: LayoutItem) => ({
+    (next: Layout) => {
+      const layout = next.map((item: LayoutItem) => ({
         i: item.i,
         x: item.x,
         y: item.y,
@@ -234,6 +250,46 @@ function DashboardBoard(props: {
     currencies.find((item) => item.id === entity?.defaultCurrencyId) ??
     currencies[0];
   const todaySlice = todayCurrency ? entity?.byCurrency[todayCurrency.id] : undefined;
+  const screens = Grid.useBreakpoint();
+  const stacked = screens.md === false;
+
+  const widgetNode = (instance: WidgetInstance) => {
+    const def = widgetDef(instance.type);
+    const code = currencies.find((item) => item.id === instance.currencyId)?.code;
+    const title = def ? translate(def.titleKey) : instance.type;
+    const detailHref = reportDetailHref(
+      instance.type,
+      instance.currencyId,
+      entity?.from,
+      entity?.to,
+      props.canOpenReports,
+    );
+
+    return (
+      <WidgetCard
+        title={code ? `${title} (${code})` : title}
+        help={def ? translate(`dashboard.help.${instance.type}`) : undefined}
+        extra={
+          detailHref ? (
+            <span
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Link to={detailHref}>{translate('dashboard.openReport')}</Link>
+            </span>
+          ) : undefined
+        }
+      >
+        <WidgetBody
+          type={instance.type}
+          currencyId={instance.currencyId}
+          limit={instance.limit}
+          entity={entity ?? undefined}
+          platform={platform ?? undefined}
+        />
+      </WidgetCard>
+    );
+  };
 
   return (
     <div>
@@ -241,11 +297,22 @@ function DashboardBoard(props: {
         <Typography.Title level={3} style={{ margin: 0 }}>
           {translate(profile === 'platform' ? 'dashboard.platformTitle' : 'dashboard.entityTitle')}
         </Typography.Title>
-        {PERIODS.map((value) => (
-          <Button key={value} type={props.days === value ? 'primary' : 'default'} onClick={() => props.onDays(value)}>
-            {translate('dashboard.periodDays', { count: value })}
-          </Button>
-        ))}
+        <div
+          role="group"
+          aria-label={translate('dashboard.periodGroup')}
+          style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 8 }}
+        >
+          {PERIODS.map((value) => (
+            <Button
+              key={value}
+              type={props.days === value ? 'primary' : 'default'}
+              aria-pressed={props.days === value}
+              onClick={() => props.onDays(value)}
+            >
+              {translate('dashboard.periodDays', { count: value })}
+            </Button>
+          ))}
+        </div>
         <Button onClick={() => setCustomizing(true)}>{translate('dashboard.customize')}</Button>
         <Button onClick={() => persist(freshLayout(profile, entity?.defaultCurrencyId ?? null))}>
           {translate('dashboard.reset')}
@@ -276,57 +343,24 @@ function DashboardBoard(props: {
         </Card>
       ) : null}
 
-      <div ref={containerRef}>
-        {mounted ? (
-          <Responsive
+      <div ref={containerRef} style={{ width: '100%' }}>
+        {stacked ? (
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            {orderByLayout(layoutState).map((instance) => (
+              <div key={instance.id}>{widgetNode(instance)}</div>
+            ))}
+          </Space>
+        ) : mounted ? (
+          <GridLayout
             width={width}
-            layouts={{ lg: layoutState.layout }}
-            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-            cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-            rowHeight={36}
+            layout={layoutState.layout}
+            gridConfig={{ cols: 12, rowHeight: 36 }}
             onLayoutChange={onLayoutChange}
           >
-            {layoutState.instances.map((instance) => {
-              const def = widgetDef(instance.type);
-              const code = currencies.find((item) => item.id === instance.currencyId)?.code;
-              const title = def ? translate(def.titleKey) : instance.type;
-
-              const detailHref = reportDetailHref(
-                instance.type,
-                instance.currencyId,
-                entity?.from,
-                entity?.to,
-                props.canOpenReports,
-              );
-
-              return (
-                <div key={instance.id}>
-                  <WidgetCard
-                    title={code ? `${title} (${code})` : title}
-                    help={def ? translate(`dashboard.help.${instance.type}`) : undefined}
-                    extra={
-                      detailHref ? (
-                        <span
-                          onMouseDown={(event) => event.stopPropagation()}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Link to={detailHref}>{translate('dashboard.openReport')}</Link>
-                        </span>
-                      ) : undefined
-                    }
-                  >
-                    <WidgetBody
-                      type={instance.type}
-                      currencyId={instance.currencyId}
-                      limit={instance.limit}
-                      entity={entity ?? undefined}
-                      platform={platform ?? undefined}
-                    />
-                  </WidgetCard>
-                </div>
-              );
-            })}
-          </Responsive>
+            {layoutState.instances.map((instance) => (
+              <div key={instance.id}>{widgetNode(instance)}</div>
+            ))}
+          </GridLayout>
         ) : null}
       </div>
 
@@ -364,10 +398,10 @@ function CustomizeDialog(props: {
       title={translate('dashboard.customize')}
       onCancel={props.onClose}
       footer={null}
-      width={720}
+      width="min(720px, calc(100vw - 16px))"
     >
       <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        {props.state?.instances.map((instance) => {
+        {(props.state ? orderByLayout(props.state) : []).map((instance, index, ordered) => {
           const def = widgetDef(instance.type);
           const code = props.currencies.find((item) => item.id === instance.currencyId)?.code;
 
@@ -412,6 +446,26 @@ function CustomizeDialog(props: {
                   }}
                 />
               ) : null}
+              <Button
+                aria-label={translate('dashboard.moveUp')}
+                disabled={index === 0}
+                onClick={() => {
+                  if (!props.state) return;
+                  props.onChange(moveInstance(props.state, instance.id, -1));
+                }}
+              >
+                {translate('dashboard.moveUp')}
+              </Button>
+              <Button
+                aria-label={translate('dashboard.moveDown')}
+                disabled={index === ordered.length - 1}
+                onClick={() => {
+                  if (!props.state) return;
+                  props.onChange(moveInstance(props.state, instance.id, 1));
+                }}
+              >
+                {translate('dashboard.moveDown')}
+              </Button>
               <Button
                 onClick={() => {
                   if (!props.state) return;

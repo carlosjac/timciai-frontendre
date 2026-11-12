@@ -1,13 +1,9 @@
-import { useLink, useMenu, usePermissions, useTranslate, type TreeMenuItem } from '@refinedev/core';
+import { useMenu, usePermissions, useTranslate, type TreeMenuItem } from '@refinedev/core';
 import { ThemedTitle, useThemedLayoutContext, type RefineThemedLayoutSiderProps } from '@refinedev/antd';
-import {
-  BarsOutlined,
-  LeftOutlined,
-  RightOutlined,
-  UnorderedListOutlined,
-} from '@ant-design/icons';
+import { LeftOutlined, RightOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { Button, ConfigProvider, Drawer, Grid, Layout, Menu, Spin, theme, type MenuProps } from 'antd';
 import { useContext, useMemo, type CSSProperties } from 'react';
+import { useNavigate } from 'react-router';
 import {
   canSeeResourceMenuItem,
   menuLayoutForCodes,
@@ -18,19 +14,9 @@ import {
 const SIDER_WIDTH = 280;
 const SIDER_COLLAPSED_WIDTH = 80;
 
-const DRAWER_MENU_BUTTON_STYLE: CSSProperties = {
-  borderStartStartRadius: 0,
-  borderEndStartRadius: 0,
-  position: 'fixed',
-  top: 64,
-  zIndex: 999,
-};
-
 type MenuBuildCtx = {
   selectedKey: string | undefined;
   siderCollapsed: boolean;
-  activeItemDisabled: boolean;
-  Link: ReturnType<typeof useLink>;
 };
 
 /**
@@ -66,10 +52,9 @@ function treeToMenuItems(
   ctx: MenuBuildCtx,
 ): NonNullable<MenuProps['items']> {
   return tree.map((item) => {
-    const { key, name, children, meta, list: route } = item;
+    const { key, name, children, meta } = item;
     const labelText = item?.label ?? meta?.label ?? name;
     const icon = meta?.icon;
-    const { Link } = ctx;
 
     if (children.length > 0) {
       return {
@@ -83,20 +68,19 @@ function treeToMenuItems(
     const isSelected = key === ctx.selectedKey;
     const parentName = meta?.parent;
     const isRoute = !(parentName !== undefined && children.length === 0);
-    const linkStyle: CSSProperties =
-      ctx.activeItemDisabled && isSelected ? { pointerEvents: 'none' } : {};
 
     return {
       key: item.key,
       icon: icon ?? (isRoute ? <UnorderedListOutlined /> : undefined),
-      label: (
-        <>
-          <Link to={route ?? ''} style={linkStyle}>
+      label:
+        !ctx.siderCollapsed && isSelected ? (
+          <>
             {labelText}
-          </Link>
-          {!ctx.siderCollapsed && isSelected ? <div className="ant-menu-tree-arrow" /> : null}
-        </>
-      ),
+            <div className="ant-menu-tree-arrow" />
+          </>
+        ) : (
+          labelText
+        ),
     };
   });
 }
@@ -122,7 +106,7 @@ export function TimciThemedSider({
   } = useThemedLayoutContext();
 
   const direction = useContext(ConfigProvider.ConfigContext)?.direction;
-  const Link = useLink();
+  const navigate = useNavigate();
   const translate = useTranslate();
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta });
   const { data: permData, isLoading, isFetching } = usePermissions<TimciPermissionsData>({});
@@ -146,7 +130,7 @@ export function TimciThemedSider({
     const flat = flattenMenu(visibleTree);
     const byName = new Map(flat.map((item) => [item.name, item]));
     const used = new Set<string>();
-    const ctx = { selectedKey, siderCollapsed, activeItemDisabled, Link };
+    const ctx = { selectedKey, siderCollapsed };
     const take = (name: string) => {
       const item = byName.get(name);
       if (!item || used.has(name)) return undefined;
@@ -174,7 +158,7 @@ export function TimciThemedSider({
     });
     const rest = flat.filter((item) => !used.has(item.name));
     return [...treeToMenuItems(loose, ctx), ...groups, ...treeToMenuItems(rest, ctx)];
-  }, [visibleTree, permData?.actionCodes, selectedKey, siderCollapsed, activeItemDisabled, Link, translate]);
+  }, [visibleTree, permData?.actionCodes, selectedKey, siderCollapsed, translate]);
 
   const openGroupKeys = useMemo(() => {
     const codes = permData?.actionCodes ?? [];
@@ -188,6 +172,14 @@ export function TimciThemedSider({
 
   const defaultExpandMenuItems = siderItemsAreCollapsed ? openGroupKeys : visibleTree.map(({ key }) => key);
 
+  const routeByKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of flattenMenu(visibleTree)) {
+      if (item.list) map.set(item.key, item.list);
+    }
+    return map;
+  }, [visibleTree]);
+
   const renderMenu = () => (
     <Menu
       items={menuItemsProp}
@@ -200,8 +192,12 @@ export function TimciThemedSider({
         overflow: 'auto',
         height: 'calc(100% - 72px)',
       }}
-      onClick={() => {
+      onClick={({ key }) => {
+        const route = routeByKey.get(String(key));
+        if (!route) return;
+        if (activeItemDisabled && key === selectedKey) return;
         setMobileSiderOpen(false);
+        navigate(route);
       }}
     />
   );
@@ -210,6 +206,8 @@ export function TimciThemedSider({
     if (permissionsWaiting) {
       return (
         <div
+          role="status"
+          aria-label={translate('app.loadingPage')}
           style={{
             display: 'flex',
             justifyContent: 'center',
@@ -226,53 +224,46 @@ export function TimciThemedSider({
   };
 
   const renderDrawerSider = () => (
-    <>
-      <Drawer
-        open={mobileSiderOpen}
-        onClose={() => setMobileSiderOpen(false)}
-        placement={direction === 'rtl' ? 'right' : 'left'}
-        closable={false}
-        width={SIDER_WIDTH}
-        styles={{
-          body: {
-            padding: 0,
-          },
-        }}
-        maskClosable
-      >
-        <Layout>
-          <Layout.Sider
-            width={SIDER_WIDTH}
+    <Drawer
+      open={mobileSiderOpen}
+      onClose={() => setMobileSiderOpen(false)}
+      placement={direction === 'rtl' ? 'right' : 'left'}
+      title={translate('header.navigation')}
+      closable={{ 'aria-label': translate('buttons.close') }}
+      width={SIDER_WIDTH}
+      styles={{
+        body: {
+          padding: 0,
+        },
+      }}
+      maskClosable
+    >
+      <Layout>
+        <Layout.Sider
+          width={SIDER_WIDTH}
+          style={{
+            height: 'calc(100dvh - 57px)',
+            backgroundColor: token.colorBgContainer,
+            borderRight: `1px solid ${token.colorBgElevated}`,
+          }}
+        >
+          <div
             style={{
-              height: '100vh',
-              backgroundColor: token.colorBgContainer,
-              borderRight: `1px solid ${token.colorBgElevated}`,
+              width: SIDER_WIDTH,
+              padding: '0 16px',
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              height: '64px',
+              backgroundColor: token.colorBgElevated,
             }}
           >
-            <div
-              style={{
-                width: SIDER_WIDTH,
-                padding: '0 16px',
-                display: 'flex',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-                height: '64px',
-                backgroundColor: token.colorBgElevated,
-              }}
-            >
-              <RenderToTitle collapsed={false} />
-            </div>
-            {renderMenuBody()}
-          </Layout.Sider>
-        </Layout>
-      </Drawer>
-      <Button
-        style={DRAWER_MENU_BUTTON_STYLE}
-        size="large"
-        onClick={() => setMobileSiderOpen(true)}
-        icon={<BarsOutlined />}
-      />
-    </>
+            <RenderToTitle collapsed={false} />
+          </div>
+          {renderMenuBody()}
+        </Layout.Sider>
+      </Layout>
+    </Drawer>
   );
 
   if (isMobile) {
@@ -321,6 +312,10 @@ export function TimciThemedSider({
         trigger={
           <Button
             type="text"
+            aria-label={translate(
+              siderCollapsed ? 'header.expandNavigation' : 'header.collapseNavigation',
+            )}
+            aria-expanded={!siderCollapsed}
             style={{
               borderRadius: 0,
               height: '100%',
@@ -328,7 +323,7 @@ export function TimciThemedSider({
               backgroundColor: token.colorBgElevated,
             }}
           >
-            <IconComponent {...iconProps} />
+            <IconComponent {...iconProps} aria-hidden />
           </Button>
         }
       >

@@ -137,7 +137,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
   if (input.resource === 'sellable_items') {
     const tenantId = getStoredTenantId();
     const entityId =
-      (input.meta?.entityId as string | undefined) ?? (tenantId ?? undefined) ?? '';
+      (input.meta?.entityId as string | undefined) ?? tenantId ?? '';
     if (!tenantId || !entityId) {
       return { data: [], total: 0 };
     }
@@ -158,7 +158,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
   if (input.resource === 'price_lists') {
     const tenantId = getStoredTenantId();
     const entityId =
-      (input.meta?.entityId as string | undefined) ?? (tenantId ?? undefined) ?? '';
+      (input.meta?.entityId as string | undefined) ?? tenantId ?? '';
     if (!tenantId || !entityId) {
       return { data: [], total: 0 };
     }
@@ -179,7 +179,7 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
   if (input.resource === 'monetary_policies') {
     const tenantId = getStoredTenantId();
     const entityId =
-      (input.meta?.entityId as string | undefined) ?? (tenantId ?? undefined) ?? '';
+      (input.meta?.entityId as string | undefined) ?? tenantId ?? '';
     if (!tenantId || !entityId) {
       return { data: [], total: 0 };
     }

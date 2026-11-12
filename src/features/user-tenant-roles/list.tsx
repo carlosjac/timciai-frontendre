@@ -51,6 +51,7 @@ export function UserTenantRoleList() {
               resource="userTenantRoles"
               recordItemId={record.id}
               hideText
+              aria-label={translate('table.userTenantRoles.delete')}
               confirmTitle={translate('pages.userTenantRoles.deleteConfirmTitle')}
             />
           </span>

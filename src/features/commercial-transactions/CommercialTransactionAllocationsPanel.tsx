@@ -1,7 +1,7 @@
 import { useTranslate } from '@refinedev/core';
 import { Table } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
   commercialResourceFromType,
@@ -64,17 +64,21 @@ export function CommercialTransactionAllocationsPanel({
   const [settlementByTargetId, setSettlementByTargetId] = useState<
     Map<string, CurrentAccountSettlementLine>
   >(new Map());
+  const canLoadSettlement =
+    needsSettlementDisplay && Boolean(tenantId && customerId && currencyId);
+  if (!canLoadSettlement && settlementByTargetId.size > 0) {
+    setSettlementByTargetId(new Map());
+  }
 
   useEffect(() => {
-    if (!needsSettlementDisplay || !tenantId || !customerId || !currencyId) {
-      setSettlementByTargetId(new Map());
-      return;
-    }
+    if (!canLoadSettlement || !tenantId || !customerId || !currencyId) return;
     const asOf =
       transactionDate != null && String(transactionDate).trim() !== ''
         ? String(transactionDate).slice(0, 10)
         : new Date().toISOString().slice(0, 10);
     let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
     void (async () => {
       try {
         const { json } = await timciFetch(
@@ -91,10 +95,11 @@ export function CommercialTransactionAllocationsPanel({
         if (!cancelled) setSettlementByTargetId(new Map());
       }
     })();
+    });
     return () => {
       cancelled = true;
     };
-  }, [needsSettlementDisplay, tenantId, customerId, currencyId, transactionDate]);
+  }, [canLoadSettlement, tenantId, customerId, currencyId, transactionDate]);
 
   const displayAmountByRowKey = useMemo(() => {
     const map = new Map<string, string>();
@@ -174,8 +179,21 @@ export function CommercialTransactionAllocationsPanel({
           title: translate('pages.commercialTransactions.fields.entityTxnNumber'),
           key: 'entityTxnNumber',
           width: 64,
-          render: (_: unknown, row: AllocationRow) =>
-            row.targetEntityTxnNumber != null ? String(row.targetEntityTxnNumber) : '—',
+          render: (_: unknown, row: AllocationRow) => {
+            const label =
+              row.targetEntityTxnNumber != null ? String(row.targetEntityTxnNumber) : '—';
+            const id = row.targetTransactionId != null ? String(row.targetTransactionId) : '';
+            const res = commercialResourceFromType(row.targetType ?? '');
+            if (!id || !res || label === '—') return label;
+            return (
+              <Link
+                to={commercialTransactionShowPath(res, id)}
+                onClick={(event) => event.stopPropagation()}
+              >
+                {label}
+              </Link>
+            );
+          },
         },
         {
           title: translate('pages.commercialTransactions.fields.allocationType'),

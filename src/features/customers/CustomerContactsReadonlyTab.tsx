@@ -1,3 +1,4 @@
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { useTranslate } from '@refinedev/core';
 import { Descriptions, Empty, Tag, Typography } from 'antd';
 
@@ -27,6 +28,7 @@ function yesNo(translate: (k: string) => string, v: boolean | undefined) {
 
 export function CustomerContactsReadonlyTab({ contacts }: CustomerContactsReadonlyTabProps) {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const list = contacts ?? [];
 
   if (list.length === 0) {
@@ -52,7 +54,7 @@ export function CustomerContactsReadonlyTab({ contacts }: CustomerContactsReadon
             bordered
             column={1}
             size="small"
-            styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+            styles={descriptionStyles}
           >
             <Descriptions.Item label={translate('create.customer.contactName')}>
               {c.name?.trim() || '—'}

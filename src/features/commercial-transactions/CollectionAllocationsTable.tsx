@@ -14,7 +14,7 @@ import {
   parsePositiveAmount,
   type AllocationCandidateRow,
 } from './collectionAllocations.js';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Button, Form, InputNumber, Space, Table, Typography } from 'antd';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslate } from '@refinedev/core';
@@ -204,7 +204,19 @@ export function CollectionAllocationsTable({
               title: translate('pages.commercialTransactions.fields.entityTxnNumber'),
               dataIndex: 'entityTxnNumber',
               width: 64,
-              render: (v: unknown) => (v != null && v !== '' ? String(v) : '—'),
+              render: (v: unknown, row) => {
+                const label = v != null && v !== '' ? String(v) : '—';
+                const res = commercialResourceFromType(row.type);
+                if (!res || label === '—') return label;
+                return (
+                  <Link
+                    to={commercialTransactionShowPath(res, row.id)}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {label}
+                  </Link>
+                );
+              },
             },
             {
               title: translate('pages.commercialTransactions.fields.allocationType'),
@@ -270,9 +282,9 @@ export function CollectionAllocationsTable({
                       disabled={disabled}
                       value={cashByTargetId.get(row.id)}
                       onChange={(v) => setCashForTarget(row.id, v, row)}
-                      aria-label={translate(
-                        'pages.commercialTransactions.fields.allocationAmount',
-                      )}
+                      aria-label={`${translate('pages.commercialTransactions.fields.allocationAmount')}: ${
+                        row.entityTxnNumber != null ? String(row.entityTxnNumber) : row.id
+                      }`}
                     />
                   </span>
                 );

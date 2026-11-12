@@ -1,7 +1,7 @@
 import { useTranslate } from '@refinedev/core';
 import { Table, Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
   commercialResourceFromType,
@@ -72,14 +72,18 @@ export function CommercialTransactionIncomingAllocationsPanel({
   const [settlementByAsOf, setSettlementByAsOf] = useState<
     Map<string, CurrentAccountSettlementLine | null>
   >(new Map());
+  if (!needsSettlement && settlementByAsOf.size > 0) {
+    setSettlementByAsOf(new Map());
+  }
 
   useEffect(() => {
     if (!needsSettlement || !tenantId || !customerId || !currencyId || !targetTransactionId) {
-      setSettlementByAsOf(new Map());
       return;
     }
 
     let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
     void (async () => {
       const next = new Map<string, CurrentAccountSettlementLine | null>();
       await Promise.all(
@@ -98,6 +102,7 @@ export function CommercialTransactionIncomingAllocationsPanel({
       );
       if (!cancelled) setSettlementByAsOf(next);
     })();
+    });
     return () => {
       cancelled = true;
     };
@@ -171,7 +176,19 @@ export function CommercialTransactionIncomingAllocationsPanel({
             title: translate('pages.commercialTransactions.fields.entityTxnNumber'),
             dataIndex: 'sourceEntityTxnNumber',
             width: 64,
-            render: (v: unknown) => (v != null && v !== '' ? String(v) : '—'),
+            render: (v: unknown, row: IncomingAllocationRow) => {
+              const label = v != null && v !== '' ? String(v) : '—';
+              const res = commercialResourceFromType(row.sourceType);
+              if (!res || label === '—') return label;
+              return (
+                <Link
+                  to={commercialTransactionShowPath(res, row.sourceTransactionId)}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {label}
+                </Link>
+              );
+            },
           },
           {
             title: translate('pages.commercialTransactions.fields.allocationType'),

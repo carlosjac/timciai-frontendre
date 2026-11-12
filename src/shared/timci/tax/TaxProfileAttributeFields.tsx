@@ -38,7 +38,7 @@ export function TaxProfileAttributeFields({
 
   if (loading) {
     return (
-      <div style={{ marginBottom: 16 }}>
+      <div role="status" aria-label={translate('app.loadingPage')} style={{ marginBottom: 16 }}>
         <Spin size="small" />
       </div>
     );

@@ -1,3 +1,4 @@
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { Show } from '@refinedev/antd';
 import { usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Descriptions, Tag } from 'antd';
@@ -30,6 +31,7 @@ type RoleRecord = {
 
 export function RoleShow() {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const { dateFormat, timeZone } = useUserPreferences();
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const canUpdate = permData?.actionCodes?.includes('roles.update') ?? false;
@@ -86,7 +88,7 @@ export function RoleShow() {
           bordered
           column={1}
           size="middle"
-          styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+          styles={descriptionStyles}
         >
           <Descriptions.Item label={translate('table.roles.name')}>
             {record?.name ?? '—'}

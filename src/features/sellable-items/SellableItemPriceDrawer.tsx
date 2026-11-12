@@ -1,5 +1,5 @@
 import { useCreate, useInvalidate, useOne, useTranslate, useUpdate } from '@refinedev/core';
-import { Button, DatePicker, Drawer, Form, Input, Select, Typography } from 'antd';
+import { Button, DatePicker, Drawer, Form, Grid, Input, Select, Typography } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo } from 'react';
@@ -38,6 +38,7 @@ export function SellableItemPriceDrawer({
   sellableLabel,
   editingId,
 }: SellableItemPriceDrawerProps) {
+  const screens = Grid.useBreakpoint();
   const translate = useTranslate();
   const notify = useTimciNotify();
   const { dateFormat } = useUserPreferences();
@@ -164,7 +165,7 @@ export function SellableItemPriceDrawer({
           ? translate('pages.priceListItems.drawerEditTitle')
           : translate('pages.priceListItems.drawerCreateTitle')
       }
-      width={520}
+      width={screens.md ? 520 : '100%'}
       open={open}
       onClose={handleClose}
       extra={

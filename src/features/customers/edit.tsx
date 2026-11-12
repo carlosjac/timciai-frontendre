@@ -171,6 +171,7 @@ export function CustomerEdit() {
       }
     >
       <Tabs
+        aria-label={translate('tabs.group')}
         activeKey={activeTab}
         onChange={setActiveTab}
         items={[
@@ -264,7 +265,7 @@ export function CustomerEdit() {
                     />
                   </Form.Item>
                   {watchedCurrencyId && watchedPolicy && watchedTerm != null && !termsOpen ? (
-                    <Space style={{ marginBottom: 16 }}>
+                    <Space wrap style={{ marginBottom: 16 }}>
                       <Typography.Text type="secondary">
                         {translate('pages.customers.termsLine')}
                         {`: ${watchedTerm}`}

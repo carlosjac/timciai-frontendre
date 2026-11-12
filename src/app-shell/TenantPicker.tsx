@@ -53,7 +53,13 @@ export function TenantPicker({ compact = false }: TenantPickerProps) {
   }, [applySelection]);
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void load();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   useEffect(() => {

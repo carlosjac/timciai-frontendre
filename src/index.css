@@ -5,9 +5,32 @@ body,
   margin: 0;
 }
 
-/* Refine mobile sider: hide fixed hamburger (top: 64px); we open the drawer from AppHeader instead. */
-@media (max-width: 991px) {
-  .timci-app .ant-layout.ant-layout-has-sider > button.ant-btn.ant-btn-lg {
-    display: none !important;
-  }
+.timci-skip-link {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 1100;
+  padding: 8px 12px;
+  background: var(--ant-color-bg-elevated, #fff);
+  color: var(--ant-color-text, #1a2332);
+  border: 2px solid var(--ant-color-primary, #1677ff);
+  border-radius: 6px;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.timci-skip-link:focus {
+  clip: auto;
+  clip-path: none;
+  height: auto;
+  width: auto;
+  overflow: visible;
+}
+
+#timci-main:focus {
+  outline: none;
 }

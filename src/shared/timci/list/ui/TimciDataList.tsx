@@ -17,10 +17,9 @@ import {
   useRef,
   useState,
   type ComponentProps,
-  type CSSProperties,
   type ReactNode,
 } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import type { TimciColumnDef } from '../domain/timci-column-def.js';
 
 /** Alineado con `rc-pagination` `es_ES` por si el locale de antd no se resuelve en runtime. */
@@ -44,6 +43,48 @@ import { getStoredTenantId } from '../../apiUrl.js';
 import { isLogicalFilter } from '../../listQuery.js';
 import { AppliedFiltersBar } from './applied-filters-bar.js';
 import { ColumnFilterDropdown } from './column-filter-dropdown.js';
+
+/** Ant Design clones the header inside an aria-hidden row when the table scrolls. Only the visible copy gets a popover. */
+function ColumnFilterTrigger(props: {
+  open: boolean;
+  label: string;
+  iconColor?: string;
+  content: ReactNode;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [inHiddenCopy, setInHiddenCopy] = useState(true);
+
+  useEffect(() => {
+    setInHiddenCopy(buttonRef.current?.closest('[aria-hidden="true"]') != null);
+  }, []);
+
+  const button = (
+    <Button
+      ref={buttonRef}
+      type="text"
+      size="small"
+      aria-label={props.label}
+      aria-expanded={props.open}
+      aria-haspopup="dialog"
+      icon={<FilterOutlined aria-hidden style={{ color: props.iconColor }} />}
+    />
+  );
+
+  if (inHiddenCopy) return button;
+
+  return (
+    <Popover
+      trigger="click"
+      destroyOnHidden
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      content={props.content}
+    >
+      {button}
+    </Popover>
+  );
+}
 import { useTimciNotify } from '../../notifyTimci.js';
 import {
   timciAuditColumnKind,
@@ -65,6 +106,25 @@ function withPinnedListColumns(keys: Set<string>, columnKeys: Iterable<string>):
   return next;
 }
 
+function readStoredVisibleKeys(
+  storageKey: string,
+  columnKeys: string[],
+  fallback: Set<string>,
+): Set<string> {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return withPinnedListColumns(fallback, columnKeys);
+    const arr = JSON.parse(raw) as unknown;
+    if (!Array.isArray(arr)) return withPinnedListColumns(fallback, columnKeys);
+    const valid = new Set(columnKeys);
+    const next = arr.filter((k): k is string => typeof k === 'string' && valid.has(k));
+    if (next.length === 0) return withPinnedListColumns(fallback, columnKeys);
+    return withPinnedListColumns(new Set(next), columnKeys);
+  } catch {
+    return withPinnedListColumns(fallback, columnKeys);
+  }
+}
+
 /** Pinned columns (e.g. `actions`) render first regardless of `columnDefs` order. */
 function orderVisibleListColumnDefs<T extends Record<string, unknown>>(
   defs: TimciColumnDef<T>[],
@@ -76,19 +136,6 @@ function orderVisibleListColumnDefs<T extends Record<string, unknown>>(
 
   return [...pinned, ...rest];
 }
-
-/** Visually hidden text for filter trigger accessible name (WCAG A). */
-const SR_ONLY: CSSProperties = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: 'hidden',
-  clip: 'rect(0, 0, 0, 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
-};
 
 export type TimciDataListProps<T extends BaseRecord> = {
   resource: string;
@@ -142,6 +189,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
   const columnStorageKey =
     COLUMN_STORAGE_PREFIX + (props.columnVisibilityStorageId ?? props.resource);
   const [columnPopoverOpen, setColumnPopoverOpen] = useState(false);
+  const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
 
   const tenantReady =
     !props.requiresTenant || (typeof window !== 'undefined' && !!getStoredTenantId());
@@ -186,7 +234,9 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
 
   /** Refine does not reset the table page when filters change via setFilters; avoid empty pages after filtering. */
   const setFiltersRef = useRef(setFilters);
-  setFiltersRef.current = setFilters;
+  useEffect(() => {
+    setFiltersRef.current = setFilters;
+  }, [setFilters]);
   const setFiltersAndResetPage = useCallback(
     (updater: (prev: CrudFilter[]) => CrudFilter[]) => {
       setCurrentPage(1);
@@ -205,29 +255,30 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     [props.columnDefs],
   );
 
-  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(() =>
-    withPinnedListColumns(defaultVisible, columnKeys),
-  );
-
-  useEffect(() => {
-    setVisibleKeys(withPinnedListColumns(defaultVisible, columnKeys));
-  }, [defaultVisible, columnKeys]);
-
-  useEffect(() => {
-    const raw = localStorage.getItem(columnStorageKey);
-    if (!raw) return;
-    try {
-      const arr = JSON.parse(raw) as unknown;
-      if (!Array.isArray(arr)) return;
-      const valid = new Set(columnKeys);
-      const next = arr.filter((k): k is string => typeof k === 'string' && valid.has(k));
-      if (next.length > 0) {
-        setVisibleKeys(withPinnedListColumns(new Set(next), columnKeys));
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [columnStorageKey, columnKeys]);
+  const columnScope = `${columnStorageKey}\0${columnKeys.join('\0')}`;
+  const defaultScope = [...defaultVisible].sort().join('\0');
+  const [columnVisibility, setColumnVisibility] = useState(() => ({
+    columnScope,
+    defaultScope,
+    keys: readStoredVisibleKeys(columnStorageKey, columnKeys, defaultVisible),
+  }));
+  if (columnVisibility.columnScope !== columnScope) {
+    setColumnVisibility({
+      columnScope,
+      defaultScope,
+      keys: readStoredVisibleKeys(columnStorageKey, columnKeys, defaultVisible),
+    });
+  } else if (columnVisibility.defaultScope !== defaultScope) {
+    setColumnVisibility({
+      columnScope,
+      defaultScope,
+      keys: withPinnedListColumns(defaultVisible, columnKeys),
+    });
+  }
+  const visibleKeys = columnVisibility.keys;
+  const setVisibleKeys = useCallback((next: Set<string>) => {
+    setColumnVisibility((current) => ({ ...current, keys: next }));
+  }, []);
 
   const persistVisible = useCallback(
     (next: Set<string>) => {
@@ -239,7 +290,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         JSON.stringify([...merged].filter((k) => !isPinnedListColumn(k))),
       );
     },
-    [columnStorageKey, columnKeys],
+    [columnStorageKey, columnKeys, setVisibleKeys],
   );
 
   const removeFilterField = useCallback(
@@ -300,12 +351,13 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
 
   const antColumns: ColumnsType<T> = useMemo(() => {
     const primarySort = sorters?.[0];
-    return orderVisibleListColumnDefs(props.columnDefs, visibleKeys).map((def) => {
+    const dataColumns = orderVisibleListColumnDefs(props.columnDefs, visibleKeys).map((def) => {
         const columnTitleText = translate(def.titleKey, undefined, def.titleKey);
         const sortKey = def.sortField ?? def.key;
+        let title: ColumnsType<T>[number]['title'] = columnTitleText;
         const col: ColumnsType<T>[number] = {
           key: sortKey,
-          title: columnTitleText,
+          title,
           dataIndex: def.dataIndex as string,
           sorter: def.sorter,
           width: def.width,
@@ -335,41 +387,43 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
           const field = def.dataIndex as string;
           const filterKind = def.filter.kind;
           const lf = filterForField(filters, field);
-          col.filteredValue = lf != null ? ['on'] : null;
-
           const filterBtnLabel = `${translate('list.a11y.openColumnFilter')}: ${columnTitleText}`;
-          col.filterIcon = (filtered) => (
-            <>
-              <span style={SR_ONLY}>{filterBtnLabel}</span>
-              <FilterOutlined
-                aria-hidden
-                style={{ color: filtered ? token.colorPrimary : undefined }}
-              />
-            </>
+          title = (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span>{columnTitleText}</span>
+              <span onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+                <ColumnFilterTrigger
+                  open={openFilterKey === def.key}
+                  label={filterBtnLabel}
+                  iconColor={lf ? token.colorPrimary : undefined}
+                  onOpenChange={(open) => setOpenFilterKey(open ? def.key : null)}
+                  content={
+                    <ColumnFilterDropdown
+                      kind={filterKind}
+                      field={field}
+                      visible
+                      columnLabel={columnTitleText}
+                      current={lf}
+                      translate={translate}
+                      placeholder={translate('list.filter.placeholder')}
+                      onSearchLabel={translate('list.filter.search')}
+                      onResetLabel={translate('list.filter.reset')}
+                      pickerDateFormat={pickerDateFormat}
+                      onApply={(next) => {
+                        setFiltersAndResetPage((prev) => {
+                          const rest = prev.filter((f) => !isLogicalFilter(f) || f.field !== field);
+                          if (next == null) return rest;
+                          return [...rest, next];
+                        });
+                        setOpenFilterKey(null);
+                      }}
+                    />
+                  }
+                />
+              </span>
+            </span>
           );
-
-          col.filterDropdown = ({ confirm, clearFilters, visible }) => (
-            <ColumnFilterDropdown
-              kind={filterKind}
-              field={field}
-              visible={visible}
-              current={lf}
-              translate={translate}
-              placeholder={translate('list.filter.placeholder')}
-              onSearchLabel={translate('list.filter.search')}
-              onResetLabel={translate('list.filter.reset')}
-              pickerDateFormat={pickerDateFormat}
-              onApply={(next) => {
-                setFiltersAndResetPage((prev) => {
-                  const rest = prev.filter((f) => !isLogicalFilter(f) || f.field !== field);
-                  if (next == null) return rest;
-                  return [...rest, next];
-                });
-                if (next == null) clearFilters?.();
-                confirm();
-              }}
-            />
-          );
+          col.title = title;
         }
 
         if (def.key === 'actions' && props.getRowShowPath) {
@@ -380,6 +434,23 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
 
         return col;
       });
+    const getPath = props.getRowShowPath;
+    if (!getPath) return dataColumns;
+    const showColumn: ColumnsType<T>[number] = {
+      key: 'show',
+      title: translate('list.view'),
+      width: 72,
+      render: (_value, record) => {
+        const path = getPath(record);
+        if (!path) return null;
+        return (
+          <span data-timci-row-action onClick={(event) => event.stopPropagation()}>
+            <Link to={path}>{translate('list.view')}</Link>
+          </span>
+        );
+      },
+    };
+    return [showColumn, ...dataColumns];
   }, [
     props.columnDefs,
     props.getRowShowPath,
@@ -391,6 +462,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     token.colorTextSecondary,
     translate,
     visibleKeys,
+    openFilterKey,
   ]);
 
   const {
@@ -542,8 +614,14 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         columns={antColumns}
         onChange={handleTableChange}
         onRow={tableOnRow}
+        scroll={{ x: 'max-content' }}
         aria-label={tableAriaLabel}
-        locale={{ emptyText: translate('list.emptyData') }}
+        locale={{
+          emptyText: translate('list.emptyData'),
+          selectAll: translate('list.a11y.selectAll'),
+          selectInvert: translate('list.a11y.selectInvert'),
+          selectionAll: translate('list.a11y.selectAll'),
+        }}
       />
     </List>
   );

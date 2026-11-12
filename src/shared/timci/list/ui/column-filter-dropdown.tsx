@@ -12,8 +12,6 @@ import {
 } from '../domain/filter-operators.js';
 import { timciLogicalFilter } from '../../listQuery.js';
 
-const { RangePicker } = DatePicker;
-
 function toDayjs(s: string): Dayjs | null {
   if (!s || s.length < 10) return null;
   const d = dayjs(s.slice(0, 10));
@@ -32,6 +30,8 @@ type Props = {
   onSearchLabel: string;
   onResetLabel: string;
   placeholder: string;
+  /** Visible column title, used in accessible names for the filter controls. */
+  columnLabel: string;
   /** Ant Design DatePicker format (p. ej. preferencia de usuario). */
   pickerDateFormat: string;
 };
@@ -93,6 +93,7 @@ function ColumnFilterDropdownBody(props: Props) {
     onSearchLabel,
     onResetLabel,
     placeholder,
+    columnLabel,
     pickerDateFormat,
   } = props;
 
@@ -150,9 +151,18 @@ function ColumnFilterDropdownBody(props: Props) {
     onApply(null);
   };
 
+  const operatorLabel = translate('list.a11y.filterOperator', { column: columnLabel });
+  const valueLabel = translate('list.a11y.filterValue', { column: columnLabel });
+  const valueFromLabel = translate('list.a11y.filterValueFrom', { column: columnLabel });
+  const valueToLabel = translate('list.a11y.filterValueTo', { column: columnLabel });
+  const dateLabel = translate('list.a11y.filterDate', { column: columnLabel });
+  const dateFromLabel = translate('list.a11y.filterDateFrom', { column: columnLabel });
+  const dateToLabel = translate('list.a11y.filterDateTo', { column: columnLabel });
+
   const opSelect =
     kind === 'boolean' ? null : (
       <Select
+        aria-label={operatorLabel}
         style={{ width: '100%', marginBottom: token.marginSM }}
         value={op}
         options={opOptions}
@@ -168,6 +178,7 @@ function ColumnFilterDropdownBody(props: Props) {
       case 'text':
         return (
           <Input
+            aria-label={valueLabel}
             placeholder={placeholder}
             value={textVal}
             onChange={(e) => setTextVal(e.target.value)}
@@ -178,13 +189,24 @@ function ColumnFilterDropdownBody(props: Props) {
         if (op === 'between') {
           return (
             <Space.Compact style={{ width: '100%', marginBottom: token.marginSM }}>
-              <InputNumber style={{ width: '50%' }} value={num ?? undefined} onChange={(n) => setNum(n)} />
-              <InputNumber style={{ width: '50%' }} value={num2 ?? undefined} onChange={(n) => setNum2(n)} />
+              <InputNumber
+                aria-label={valueFromLabel}
+                style={{ width: '50%' }}
+                value={num ?? undefined}
+                onChange={(n) => setNum(n)}
+              />
+              <InputNumber
+                aria-label={valueToLabel}
+                style={{ width: '50%' }}
+                value={num2 ?? undefined}
+                onChange={(n) => setNum2(n)}
+              />
             </Space.Compact>
           );
         }
         return (
           <InputNumber
+            aria-label={valueLabel}
             style={{ width: '100%', marginBottom: token.marginSM }}
             value={num ?? undefined}
             onChange={(n) => setNum(n)}
@@ -193,6 +215,7 @@ function ColumnFilterDropdownBody(props: Props) {
       case 'boolean':
         return (
           <Select
+            aria-label={valueLabel}
             style={{ width: '100%', marginBottom: token.marginSM }}
             allowClear
             placeholder={translate('list.filter.boolPlaceholder')}
@@ -206,28 +229,38 @@ function ColumnFilterDropdownBody(props: Props) {
         );
       case 'date':
         if (op === 'between') {
+          const start = dateRange?.[0] ?? '';
+          const end = dateRange?.[1] ?? '';
           return (
-            <RangePicker
-              style={{ width: '100%', marginBottom: token.marginSM }}
-              format={pickerDateFormat}
-              locale={antdDatePickerLocaleEs}
-              value={
-                dateRange
-                  ? [toDayjs(dateRange[0]), toDayjs(dateRange[1])]
-                  : null
-              }
-              onChange={(dates) => {
-                if (!dates || !dates[0] || !dates[1]) {
-                  setDateRange(null);
-                  return;
-                }
-                setDateRange([dates[0].format('YYYY-MM-DD'), dates[1].format('YYYY-MM-DD')]);
-              }}
-            />
+            <Space direction="vertical" style={{ width: '100%', marginBottom: token.marginSM }}>
+              <DatePicker
+                aria-label={dateFromLabel}
+                style={{ width: '100%' }}
+                format={pickerDateFormat}
+                locale={antdDatePickerLocaleEs}
+                value={toDayjs(start)}
+                onChange={(d) => {
+                  const nextStart = d ? d.format('YYYY-MM-DD') : '';
+                  setDateRange(nextStart || end ? [nextStart, end] : null);
+                }}
+              />
+              <DatePicker
+                aria-label={dateToLabel}
+                style={{ width: '100%' }}
+                format={pickerDateFormat}
+                locale={antdDatePickerLocaleEs}
+                value={toDayjs(end)}
+                onChange={(d) => {
+                  const nextEnd = d ? d.format('YYYY-MM-DD') : '';
+                  setDateRange(start || nextEnd ? [start, nextEnd] : null);
+                }}
+              />
+            </Space>
           );
         }
         return (
           <DatePicker
+            aria-label={dateLabel}
             style={{ width: '100%', marginBottom: token.marginSM }}
             format={pickerDateFormat}
             locale={antdDatePickerLocaleEs}
@@ -243,7 +276,7 @@ function ColumnFilterDropdownBody(props: Props) {
   return (
     <Card
       size="small"
-      styles={{ body: { padding: token.paddingSM, width: kind === 'date' && op === 'between' ? 320 : 260 } }}
+      styles={{ body: { padding: token.paddingSM, width: 260, maxWidth: 'calc(100vw - 32px)' } }}
       onKeyDown={(e) => e.stopPropagation()}
     >
       {opSelect}

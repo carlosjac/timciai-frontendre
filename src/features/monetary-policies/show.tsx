@@ -1,3 +1,4 @@
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { Show } from '@refinedev/antd';
 import { usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, Descriptions, Tag } from 'antd';
@@ -38,6 +39,7 @@ type MonetaryPolicyRecord = {
 
 export function MonetaryPolicyShow() {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { data: permData } = usePermissions<TimciPermissionsData>({});
@@ -113,7 +115,7 @@ export function MonetaryPolicyShow() {
           bordered
           column={1}
           size="middle"
-          styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+          styles={descriptionStyles}
         >
           {showOrg ? (
             <Descriptions.Item label={translate('table.monetaryPolicies.organization')}>

@@ -1,6 +1,7 @@
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { Show } from '@refinedev/antd';
 import { usePermissions, useShow, useTranslate } from '@refinedev/core';
-import { Alert, Descriptions, Tag } from 'antd';
+import { Alert, Descriptions, Tag, theme } from 'antd';
 import { useCallback } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
@@ -36,6 +37,8 @@ type DocumentTypeRecord = {
 
 export function DocumentTypeShow() {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
+  const { token } = theme.useToken();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { data: permData } = usePermissions<TimciPermissionsData>({});
@@ -110,7 +113,7 @@ export function DocumentTypeShow() {
           bordered
           column={1}
           size="middle"
-          styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+          styles={descriptionStyles}
         >
           <Descriptions.Item label={translate('create.documentType.typeName')}>
             {record?.name ?? '—'}
@@ -124,7 +127,7 @@ export function DocumentTypeShow() {
           <Descriptions.Item label={translate('create.documentType.validationRuleNumber')}>
             {validationRuleDisplay}
             {record?.validationHint != null && String(record.validationHint).trim() !== '' ? (
-              <div style={{ marginTop: 4, color: 'rgba(0, 0, 0, 0.45)' }}>
+              <div style={{ marginTop: 4, color: token.colorTextSecondary }}>
                 {String(record.validationHint)}
               </div>
             ) : null}

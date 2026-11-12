@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslate } from '@refinedev/core';
 import { Alert, DatePicker, Select, Space, Table, Typography, theme } from 'antd';
 import dayjs from 'dayjs';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
 import {
@@ -219,6 +219,7 @@ export function CustomerSettlementTab({ customerId }: Props) {
               ? translate('pages.customers.currentAccountCurrencyPlaceholder')
               : translate('pages.customers.currentAccountSettlementEmpty'),
           }}
+          scroll={{ x: 'max-content' }}
           onRow={(row) => ({
             onClick: () => {
               const resource = commercialResourceFromType(row.type);
@@ -231,7 +232,19 @@ export function CustomerSettlementTab({ customerId }: Props) {
               title: translate('pages.commercialTransactions.fields.entityTxnNumber'),
               dataIndex: 'entityTxnNumber',
               width: 72,
-              render: (v: unknown) => (v != null && v !== '' ? String(v) : '—'),
+              render: (v: unknown, row) => {
+                const label = v != null && v !== '' ? String(v) : '—';
+                const resource = commercialResourceFromType(row.type);
+                if (!resource || label === '—') return label;
+                return (
+                  <Link
+                    to={commercialTransactionShowPath(resource, row.id)}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {label}
+                  </Link>
+                );
+              },
             },
             {
               title: translate('table.commercialTransactions.transactionDate'),

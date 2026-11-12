@@ -1,4 +1,4 @@
-import { EditButton } from '@refinedev/antd';
+import { TimciEditLink } from '../../shared/timci/TimciResourceLink.js';
 import { useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
@@ -45,13 +45,12 @@ export function RoleList() {
       render: (_: unknown, record: RoleRow) =>
         record.isActive === false ? null : (
           <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-            <EditButton
-              resource="roles"
-              recordItemId={record.id}
-              hideText
-              title={translate('table.roles.edit')}
-              aria-label={translate('table.roles.edit')}
-            />
+            <TimciEditLink
+            resource="roles"
+            recordItemId={record.id}
+            hideText
+            label={translate('table.roles.edit')}
+          />
           </span>
         ),
       exportValue: () => '',

@@ -248,6 +248,7 @@ export function CustomerCreate() {
         }}
       >
         <Tabs
+          aria-label={translate('tabs.group')}
           activeKey={activeTab}
           onChange={setActiveTab}
           items={[

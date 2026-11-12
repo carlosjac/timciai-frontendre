@@ -165,11 +165,11 @@ export function SubscriptionFormFields({ form, tenantId, pickerDateFormat, lockI
           <div>
             <div style={{ marginBottom: 8 }}>{translate('pages.subscriptions.lines')}</div>
             {fields.map((field) => (
-              <Space key={field.key} align="baseline" style={{ display: 'flex', marginBottom: 8 }}>
+              <Space key={field.key} align="baseline" wrap style={{ display: 'flex', marginBottom: 8, width: '100%' }}>
                 <Form.Item
                   name={[field.name, 'sellableItemId']}
                   rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-                  style={{ minWidth: 280, marginBottom: 0 }}
+                  style={{ flex: '1 1 160px', width: '100%', marginBottom: 0 }}
                 >
                   <Select
                     showSearch
@@ -184,7 +184,7 @@ export function SubscriptionFormFields({ form, tenantId, pickerDateFormat, lockI
                 <Form.Item
                   name={[field.name, 'quantity']}
                   rules={[{ required: true, message: translate('form.validation.requiredField') }]}
-                  style={{ width: 140, marginBottom: 0 }}
+                  style={{ flex: '1 1 120px', width: '100%', marginBottom: 0 }}
                 >
                   <InputNumber
                     min={0.0001}

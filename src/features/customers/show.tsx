@@ -16,6 +16,7 @@ import {
   TimciShowActivateHeaderButtons,
   useTimciActivateDeactivateToggle,
 } from '../../shared/timci/form/index.js';
+import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { timciPersonTypeLabel } from '../../shared/timci/personTypeLabel.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
@@ -54,6 +55,7 @@ type CustomerRecord = {
 
 export function CustomerShow() {
   const translate = useTranslate();
+  const descriptionStyles = useTimciDescriptionStyles();
   const { dateFormat, timeZone } = useUserPreferences();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { data: permData } = usePermissions<TimciPermissionsData>({});
@@ -152,6 +154,7 @@ export function CustomerShow() {
       >
         <TimciFormInactiveRecordBanner isActive={record?.isActive} />
         <Tabs
+          aria-label={translate('tabs.group')}
           activeKey={activeTab}
           onChange={setActiveTab}
           items={[
@@ -164,7 +167,7 @@ export function CustomerShow() {
                     bordered
                     column={1}
                     size="middle"
-                    styles={{ label: { width: 220, maxWidth: 280, verticalAlign: 'top' } }}
+                    styles={descriptionStyles}
                   >
                     <Descriptions.Item label={translate('table.customers.name')}>
                       {record?.name ?? '—'}

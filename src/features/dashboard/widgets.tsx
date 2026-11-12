@@ -99,13 +99,22 @@ export function WidgetBody(props: {
       ];
 
       return (
-        <Column
-          data={rows}
-          xField="bucket"
-          yField="amount"
-          height={160}
-          axis={{ y: { labelFormatter: (value: number) => formatTimciMoney(value) } }}
-        />
+        <>
+          <Column
+            data={rows}
+            xField="bucket"
+            yField="amount"
+            height={160}
+            axis={{ y: { labelFormatter: (value: number) => formatTimciMoney(value) } }}
+          />
+          <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+            {rows.map((row) => (
+              <li key={row.bucket}>
+                {row.bucket}: {formatTimciMoney(row.amount)}
+              </li>
+            ))}
+          </ul>
+        </>
       );
     }
     if (type === 'periodNet') {
@@ -162,6 +171,7 @@ export function WidgetBody(props: {
       return (
         <Table<QueueRow>
           size="small"
+          scroll={{ x: 'max-content' }}
           pagination={false}
           rowKey="customerId"
           dataSource={slice.collectionQueue.slice(0, limit)}
@@ -187,6 +197,7 @@ export function WidgetBody(props: {
       return (
         <Table<DebtorRow>
           size="small"
+          scroll={{ x: 'max-content' }}
           pagination={false}
           rowKey="customerId"
           dataSource={rows.slice(0, limit)}
@@ -261,6 +272,7 @@ export function WidgetBody(props: {
       return (
         <Table
           size="small"
+          scroll={{ x: 'max-content' }}
           pagination={false}
           rowKey="entityId"
           dataSource={platform.readiness}

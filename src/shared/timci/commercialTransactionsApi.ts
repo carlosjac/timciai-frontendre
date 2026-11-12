@@ -1,4 +1,5 @@
 import { getV1Base } from '../../config.js';
+import { asPdfBlob, pdfFileNameFromContentDisposition } from './pdfBytes.js';
 import { requireTimciPathSegment } from './pathSegment.js';
 import { timciFetch } from './http.js';
 
@@ -162,11 +163,12 @@ export async function downloadCustomerCurrentAccountStatementPdf(
   });
   if (!res.ok) return false;
   const raw = await res.blob();
-  const blob =
-    raw.type === 'application/pdf' ? raw : new Blob([raw], { type: 'application/pdf' });
-  const disposition = res.headers.get('Content-Disposition') ?? '';
-  const match = /filename="([^"]+)"/i.exec(disposition);
-  const fileName = match?.[1]?.trim() || `cuenta-corriente-${currencyId}.pdf`;
+  const blob = await asPdfBlob(raw);
+  if (!blob) return false;
+  const fileName = pdfFileNameFromContentDisposition(
+    res.headers.get('Content-Disposition'),
+    `cuenta-corriente-${currencyId}.pdf`,
+  );
   const href = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = href;

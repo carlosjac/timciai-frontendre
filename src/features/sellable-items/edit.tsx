@@ -88,6 +88,7 @@ export function SellableItemEdit() {
       }
     >
       <Tabs
+        aria-label={translate('tabs.group')}
         activeKey={activeTab}
         onChange={setActiveTab}
         items={[

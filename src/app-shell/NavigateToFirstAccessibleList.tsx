@@ -1,6 +1,7 @@
 import { usePermissions } from '@refinedev/core';
 import { Spin } from 'antd';
 import { Navigate } from 'react-router';
+import { esMessages } from '../i18n/locale.es.js';
 import {
   getFirstAccessibleListPath,
   type TimciPermissionsData,
@@ -15,7 +16,11 @@ export function NavigateToFirstAccessibleList() {
   const waiting = isLoading || (isFetching && data == null);
   if (waiting) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 16px' }}>
+      <div
+        role="status"
+        aria-label={esMessages.app.loadingPage}
+        style={{ display: 'flex', justifyContent: 'center', padding: '48px 16px' }}
+      >
         <Spin size="large" />
       </div>
     );

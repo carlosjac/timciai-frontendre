@@ -253,6 +253,7 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
         dataSource={movementsEnabled ? movements : []}
         pagination={{ pageSize: 25, showSizeChanger: true }}
         locale={{ emptyText: translate('list.emptyData') }}
+        scroll={{ x: 'max-content' }}
         onRow={(row) => ({
           onClick: () => openMovementShow(row),
           style: { cursor: 'pointer' },
@@ -262,7 +263,19 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
             title: translate('pages.commercialTransactions.fields.entityTxnNumber'),
             dataIndex: 'entityTxnNumber',
             width: 72,
-            render: (v: unknown) => (v != null && v !== '' ? String(v) : '—'),
+            render: (v: unknown, row: MovementRow) => {
+              const label = v != null && v !== '' ? String(v) : '—';
+              const resource = commercialResourceFromType(row.type);
+              if (!resource || label === '—') return label;
+              return (
+                <Link
+                  to={commercialTransactionShowPath(resource, row.id)}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {label}
+                </Link>
+              );
+            },
           },
           {
             title: translate('table.commercialTransactions.transactionDate'),

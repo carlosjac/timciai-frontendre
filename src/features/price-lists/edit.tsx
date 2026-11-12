@@ -81,6 +81,7 @@ export function PriceListEdit() {
       }
     >
         <Tabs
+          aria-label={translate('tabs.group')}
           activeKey={activeTab}
           onChange={setActiveTab}
           items={[

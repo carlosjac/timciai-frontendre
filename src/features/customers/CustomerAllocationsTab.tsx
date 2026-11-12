@@ -175,7 +175,6 @@ export function CustomerAllocationsTab({ customerId }: Props) {
                     type="link"
                     style={{ padding: 0, height: 'auto', whiteSpace: 'normal', textAlign: 'left' }}
                     onClick={() => openTxShow(row.source.id, row.source.type)}
-                    aria-label={translate('pages.customers.currentAccountOpen')}
                   >
                     {label}
                   </Button>
@@ -212,7 +211,6 @@ export function CustomerAllocationsTab({ customerId }: Props) {
                     type="link"
                     style={{ padding: 0, height: 'auto', whiteSpace: 'normal', textAlign: 'left' }}
                     onClick={() => openTxShow(row.target.id, row.target.type)}
-                    aria-label={translate('pages.customers.currentAccountOpen')}
                   >
                     {label}
                   </Button>

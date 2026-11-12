@@ -23,11 +23,12 @@ export function TestModeBanner() {
     };
   }, []);
 
+  if ((!canView || !tenantId) && inTest) {
+    setInTest(false);
+  }
+
   useEffect(() => {
-    if (!canView || !tenantId) {
-      setInTest(false);
-      return;
-    }
+    if (!canView || !tenantId) return;
     let cancelled = false;
     void timciFetch(getEntityByIdUrl(tenantId, tenantId))
       .then(({ json }) => {

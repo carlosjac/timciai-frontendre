@@ -170,16 +170,36 @@ export function ReportsPage(): ReactElement {
           topic={translate(`reports.kind.${reportKey}`)}
           text={translate(`reports.help.${reportKey}`)}
         />
-        {STOCK_REPORTS.has(reportKey)
-          ? null
-          : PERIODS.map((days) => (
-              <Button key={days} onClick={() => {
-                const range = periodRange(days);
-                patchSearch({ from: range.from, to: range.to });
-              }}>
-                {translate('reports.periodDays', { count: days })}
-              </Button>
-            ))}
+        {STOCK_REPORTS.has(reportKey) ? null : (
+          <div
+            role="group"
+            aria-label={translate('reports.period')}
+            style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 8 }}
+          >
+            {PERIODS.map((days) => {
+              const range = periodRange(days);
+              const selected = range.from === from && range.to === to;
+              return (
+                <Button
+                  key={days}
+                  type={selected ? 'primary' : 'default'}
+                  aria-pressed={selected}
+                  onClick={() => patchSearch({ from: range.from, to: range.to })}
+                >
+                  {translate('reports.periodDays', { count: days })}
+                </Button>
+              );
+            })}
+          </div>
+        )}
+        {from && to ? (
+          <Typography.Text>
+            {translate('reports.activeRange', {
+              from: formatTimciUserDateOnly(from, { dateFormat, timeZone }),
+              to: formatTimciUserDateOnly(to, { dateFormat, timeZone }),
+            })}
+          </Typography.Text>
+        ) : null}
         <Select
           aria-label={translate('reports.currency')}
           value={currencyId || ''}

@@ -1,4 +1,4 @@
-import { EditButton } from '@refinedev/antd';
+import { TimciEditLink } from '../../shared/timci/TimciResourceLink.js';
 import { useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
@@ -59,13 +59,12 @@ export function MonetaryPolicyList() {
       render: (_: unknown, record: MonetaryPolicyRow) =>
         record.isActive === false ? null : (
           <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-            <EditButton
-              resource="monetary_policies"
-              recordItemId={record.id}
-              hideText
-              title={translate('table.monetaryPolicies.edit')}
-              aria-label={translate('table.monetaryPolicies.edit')}
-            />
+            <TimciEditLink
+            resource="monetary_policies"
+            recordItemId={record.id}
+            hideText
+            label={translate('table.monetaryPolicies.edit')}
+          />
           </span>
         ),
       exportValue: () => '',

@@ -1,4 +1,4 @@
-import { EditButton } from '@refinedev/antd';
+import { TimciEditLink } from '../../shared/timci/TimciResourceLink.js';
 import { useList, usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
 import { useMemo } from 'react';
@@ -78,12 +78,11 @@ export function CommercialTransactionList({ resource }: Props) {
         if (record.status !== 'draft') return null;
         return (
           <span data-timci-row-action onClick={(e) => e.stopPropagation()}>
-            <EditButton
+            <TimciEditLink
               resource={resource}
               recordItemId={record.id}
               hideText
-              title={translate('table.commercialTransactions.edit')}
-              aria-label={translate('table.commercialTransactions.edit')}
+              label={translate('table.commercialTransactions.edit')}
             />
           </span>
         );
