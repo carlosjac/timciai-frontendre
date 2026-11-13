@@ -44,6 +44,24 @@ Guardar deja la nota en borrador.
 
 Revise el concepto, lo imputado y lo que sigue sin imputar. En la cuenta corriente del cliente, la nota registrada muestra Imputado o Sin imputar. Registrar está en el borrador. Anular está en la registrada.
 
+**Modificar imputaciones** está en la cabecera de esta ficha, junto a Anular. Aparece cuando la nota está registrada, no está anulada y usted puede actualizar créditos. En un borrador no está: ahí el reparto se cambia con Editar, y todavía no movió saldos.
+
+El botón abre un panel con el mismo título y reemplaza el reparto entero de esta nota. El importe, el cliente, la fecha, la moneda y el concepto siguen igual. El movimiento de la cuenta corriente de esta nota también: ya bajó por el importe. Lo que cambia es qué ventas o débitos quedan saldados y cuánto queda sin imputar.
+
+El panel lista las ventas y los débitos registrados del mismo cliente y la misma moneda que todavía tienen saldo, y los que esta nota ya tenía imputados. En cada fila, «Efectivo a imputar» es la parte de esta nota que va a esa deuda. Puede:
+
+- Pasar el crédito de una factura a otra.
+- Imputar menos y dejar el resto sin imputar, a favor del cliente.
+- Imputar más, hasta el importe de la nota, mientras la deuda tenga lugar.
+- Dejar todas las filas en cero. La nota queda entera sin imputar.
+- Usar «Imputar automáticamente». Reparte el importe de la nota entre las deudas de la tabla, de la más antigua a la más nueva.
+
+Al guardar, Timci devuelve el saldo a las deudas del reparto anterior y aplica el nuevo. Un tramo que no cierra la deuda baja ese saldo por el mismo importe y no genera descuento ni recargo. Un tramo que la cierra calcula la política monetaria de esa deuda con la fecha de la nota: anula el ajuste que esta nota había generado y, si la política corresponde, deja el descuento o el recargo nuevo.
+
+La suma imputada no puede superar el importe de la nota. Cada fila no puede superar lo que esa deuda puede recibir: su saldo abierto más lo que esta nota ya tenía aplicado ahí. El destino tiene que ser una venta o un débito registrados, del mismo cliente y la misma moneda.
+
+Lo que queda sin imputar puede aplicarse solo al registrar una venta posterior, de la más antigua a la más nueva. «No auto-imputar», en esta misma ficha, deja ese resto para una imputación manual. Ese interruptor no reescribe las imputaciones que ya guardó. Para poder anular una venta o un débito que recibió esta nota, deje en cero la fila de esa deuda y guarde. Una nota anulada no muestra el botón.
+
 ## Qué puede salir mal
 
 Sin concepto no se guarda. Sin cotización, una nota en otra moneda no se registra. El destino de una imputación tiene que estar registrado, con saldo abierto y en la misma moneda. Un borrador no reduce la deuda hasta que lo registre.

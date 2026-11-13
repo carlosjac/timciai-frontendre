@@ -41,7 +41,23 @@ La cotización puede quedar vacía en el borrador y hace falta al registrar si l
 
 ## Ficha
 
-Revise importe, concepto, vencimiento, política, saldo pendiente e imputaciones. Registrar está en el borrador. En la nota registrada, Modificar imputaciones cambia a qué deudas se aplicó, sin anularla. Anular la revierte en la cuenta corriente.
+Revise importe, concepto, vencimiento, política, saldo pendiente e imputaciones. Registrar está en el borrador. Anular está en la nota registrada y revierte el movimiento en la cuenta corriente.
+
+**Modificar imputaciones** está en la cabecera de esta ficha, junto a Anular. Aparece cuando la nota está registrada, no está anulada y usted puede actualizar débitos. En un borrador no está: ahí el reparto se cambia con Editar, y todavía no movió saldos.
+
+El botón abre un panel con el mismo título y reemplaza a qué deudas se aplicó esta nota. El importe, el cliente, la fecha, la moneda, el concepto, el vencimiento y la política siguen igual. El movimiento de la cuenta corriente de esta nota también: ya sumó su importe. Lo que cambia es el saldo pendiente de la nota y el saldo abierto de los destinos.
+
+El saldo pendiente de la nota pasa a ser el importe menos lo que deje imputado. Cada tramo se suma al saldo abierto de la venta o del débito destino. Lo que no impute queda abierto en esta nota y se puede cobrar después. No queda como saldo a favor del cliente.
+
+El panel lista las ventas y los débitos registrados del mismo cliente y la misma moneda, y los que esta nota ya tenía imputados. En cada fila, «Efectivo a imputar» es la parte de esta nota que pasa a esa deuda. Puede:
+
+- Pasar el cargo de un documento a otro.
+- Imputar menos. El resto queda pendiente en esta nota.
+- Imputar más, hasta el importe de la nota.
+- Dejar todas las filas en cero. Toda la deuda queda en esta nota.
+- Usar «Imputar automáticamente». Reparte el importe de la nota entre las deudas de la tabla, de la más antigua a la más nueva.
+
+Al guardar, Timci quita el efecto del reparto anterior y aplica el nuevo. Esta corrección no genera el descuento ni el recargo de la política: esa política se aplica cuando un cobro o un crédito cierra la deuda. La suma imputada no puede superar el importe de la nota. El destino tiene que ser una venta o un débito registrados, del mismo cliente y la misma moneda. Para poder anular una venta o un débito que recibió esta nota, deje en cero la fila de esa deuda y guarde. Una nota anulada no muestra el botón.
 
 ## Qué puede salir mal
 

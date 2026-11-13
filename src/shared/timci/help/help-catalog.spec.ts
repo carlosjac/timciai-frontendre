@@ -172,6 +172,29 @@ describe('help catalog', () => {
     expect(resolveHelpArticle(helpArticles, undefined, 'list')).toBeNull();
   });
 
+  it('explains how to replace allocations from the show screen of a collection, credit or debit', () => {
+    for (const id of ['collections', 'credits', 'debits'] as const) {
+      const article = helpArticles.find((item) => item.id === id);
+      const ficha = sliceHelpSection(article?.html ?? '', 'ficha');
+      expect(ficha?.html).toContain('Modificar imputaciones');
+      expect(ficha?.html).toContain('Imputar automáticamente');
+      expect(ficha?.html).toContain('junto a Anular');
+      expect(ficha?.html).toContain('mismo cliente');
+    }
+    const collection = sliceHelpSection(
+      helpArticles.find((item) => item.id === 'collections')?.html ?? '',
+      'ficha',
+    );
+    expect(collection?.html).toContain('No auto-imputar');
+    expect(collection?.html).toContain('política monetaria');
+    const debit = sliceHelpSection(
+      helpArticles.find((item) => item.id === 'debits')?.html ?? '',
+      'ficha',
+    );
+    expect(debit?.html).toContain('saldo pendiente');
+    expect(debit?.html).not.toContain('No auto-imputar');
+  });
+
   it('explains draft versus register on every commercial transaction', () => {
     for (const id of ['sales', 'debits', 'credits', 'collections'] as const) {
       const article = helpArticles.find((item) => item.id === id);
