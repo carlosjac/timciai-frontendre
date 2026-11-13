@@ -1,7 +1,7 @@
 {
   "name": "timci-admin-refine",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "packageManager": "pnpm@9.15.0",
   "scripts": {

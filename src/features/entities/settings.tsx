@@ -56,7 +56,13 @@ export function EntitySettingsPage() {
     action: 'edit',
     id: tenantId ?? undefined,
     redirect: false,
-    queryOptions: { enabled: !!tenantId },
+    queryOptions: {
+      enabled: !!tenantId,
+      // The URL `tab` is copied into Refine's getOne key. Changing it (or a focus
+      // refetch) swaps the cached record and resetFields() wipes the form.
+      refetchOnWindowFocus: false,
+      queryKey: ['timci', 'entity-settings', tenantId ?? ''],
+    },
   });
 
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
@@ -64,6 +70,9 @@ export function EntitySettingsPage() {
   });
 
   const record = query?.data?.data as EntityRecord | undefined;
+  // Card `loading` unmounts children. `formLoading` is also true on background
+  // refetch and while saving, which wiped in-progress edits.
+  const showInitialSkeleton = formLoading && record == null;
   const defaultCurrencyIdWatched = Form.useWatch('defaultCurrencyId', form);
   const supportedCurrencyIdsWatched = Form.useWatch('supportedCurrencyIds', form) as
     | string[]
@@ -187,7 +196,7 @@ export function EntitySettingsPage() {
 
   return (
     <List title={translate('pages.entitySettings.title')}>
-      <Card style={{ maxWidth: 960, width: '100%' }} loading={formLoading}>
+      <Card style={{ maxWidth: 960, width: '100%' }} loading={showInitialSkeleton}>
         <Form
           {...formProps}
           form={form}
@@ -197,7 +206,9 @@ export function EntitySettingsPage() {
           <TimciFormServerAlert messages={generalMessages} />
           <Tabs
             activeKey={activeTab}
-            onChange={(key) => setSearchParams(key === 'general' ? {} : { tab: key })}
+            onChange={(key) =>
+              setSearchParams(key === 'general' ? {} : { tab: key }, { replace: true })
+            }
             aria-label={translate('pages.entitySettings.tabsLabel')}
             items={[
               {

@@ -16,6 +16,25 @@ export const esMessages = {
   },
   help: {
     open: 'Ayuda sobre {{topic}}',
+    center: {
+      open: 'Ayuda',
+      title: 'Ayuda',
+      search: 'Buscar en la ayuda',
+      searchPlaceholder: 'Escriba una palabra',
+      noResults: 'No hay artículos con ese texto.',
+      index: 'Índice',
+      current: 'En esta pantalla',
+      noArticle: 'Esta pantalla todavía no tiene un artículo. Use el índice para buscar otro tema.',
+      groups: {
+        start: 'Puesta en marcha',
+        configuration: 'Configuración',
+        daily: 'Operación diaria',
+        platform: 'Plataforma',
+        catalogs: 'Catálogos',
+        mail: 'Correo',
+        access: 'Acceso',
+      },
+    },
   },
   notifications: {
     success: 'Se guardó',
@@ -193,6 +212,8 @@ export const esMessages = {
       optional: 'Opcional',
       later: 'Después',
       go: 'Ir',
+      howTo: 'Cómo se hace',
+      howToNamed: 'Cómo se hace: {{step}}',
       skip: 'Omitir',
       hide: 'No volver a mostrar',
       showDetail: 'Ver detalle',
@@ -212,7 +233,7 @@ export const esMessages = {
         },
         priceLists: {
           name: 'Listas de precios',
-          purpose: 'Crea una lista y cargale el precio de cada producto.',
+          purpose: 'Crea una lista de precios. El precio de cada producto se carga en esa lista.',
         },
         monetary: {
           name: 'Políticas monetarias',
@@ -407,12 +428,12 @@ export const esMessages = {
     empty: 'Sin datos',
     currency: 'Moneda',
     currencyAll: 'Todas las monedas',
-    bucket: 'Antigüedad',
-    bucketAll: 'Todos los cubos',
+    bucket: 'Tramo de atraso',
+    bucketAll: 'Todos los tramos',
     period: 'Período',
     periodDays: 'Últimos {{count}} días',
     activeRange: '{{from}} – {{to}}',
-    asOfNote: 'Este informe es el saldo a la fecha. El período no lo filtra.',
+    asOfNote: 'Saldo a hoy. Este informe no usa período.',
     yes: 'Sí',
     no: 'No',
     kind: {
@@ -429,7 +450,7 @@ export const esMessages = {
     },
     help: {
       aging:
-        'Cada venta o débito que todavía tiene saldo, y el tramo según los días de atraso a hoy. Al día significa que todavía no venció. El total de cada tramo es el mismo número que el gráfico de antigüedad del tablero.',
+        'Cada venta o débito que todavía tiene saldo, ubicado según los días de atraso a hoy. Es el saldo abierto de hoy: use la moneda y el tramo de atraso. Todos los tramos muestra la deuda completa. Al día significa que todavía no venció. El total de cada tramo es el mismo número que el gráfico de antigüedad del tablero.',
       invoiced:
         'Cada venta registrada en el período. La suma es el facturado del tablero. No incluye notas de débito ni de crédito.',
       collected:
@@ -441,13 +462,13 @@ export const esMessages = {
       allocations:
         'Qué cobro o nota de crédito se aplicó a qué venta o débito. Aplicado es lo que se descontó de esa deuda. Ajuste es el descuento o recargo que se generó al cancelarla. Parcial: el documento de destino sigue con saldo. Cierre: quedó en cero.',
       unallocated:
-        'Cobros y notas de crédito que todavía tienen un resto sin aplicar a ninguna deuda. Fuera de FIFO: ese resto no se aplica solo a la próxima venta; hay que imputarlo a mano. El total es el saldo a favor del tablero.',
+        'Cobros y notas de crédito que todavía tienen un resto sin aplicar a ninguna deuda. Es el saldo a hoy: la moneda lo recorta. Fuera de FIFO: ese resto no se aplica solo a la próxima venta; hay que imputarlo a mano. El total es el saldo a favor del tablero.',
       adjustments:
         'Descuentos y recargos creados al cobrar, con el cobro que los originó. Con signo: el crédito resta y el débito suma, igual que el ajuste del tablero. Anulaciones: documentos anulados en el período y el comprobante que los revirtió.',
       portfolio:
-        'Saldo de la cuenta corriente de cada cliente y moneda. Positivo: el cliente debe. Negativo: tiene saldo a favor. Es el saldo de la cuenta, no el detalle de cada comprobante, y no se filtra por el período.',
+        'Saldo de la cuenta corriente de cada cliente y moneda. Positivo: el cliente debe. Negativo: tiene saldo a favor. Es el saldo de hoy: la moneda lo recorta. No es el detalle de cada comprobante.',
       management:
-        'Recordatorios de deuda enviados en el período. Rebotes duros: mails rechazados de forma permanente. Suscripciones: abonos, con la próxima fecha de facturación, si vence en 7 días y si la última facturación falló.',
+        'Recordatorios enviados en el período, también por moneda. Rebotes duros del mismo período: la moneda no los recorta. Suscripciones: todos los abonos, recortados por moneda; el período no los cambia. Muestra la próxima facturación, si vence en 7 días y si la última falló.',
     },
     totals: {
       open: 'Abierto',
@@ -487,7 +508,7 @@ export const esMessages = {
       open: 'Abierto',
       due: 'Vencimiento',
       days: 'Días',
-      bucket: 'Cubo',
+      bucket: 'Tramo',
       concept: 'Concepto',
       date: 'Fecha',
       amount: 'Importe',

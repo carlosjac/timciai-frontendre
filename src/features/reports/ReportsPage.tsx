@@ -20,7 +20,16 @@ import {
 
 const PERIODS = [7, 30, 90] as const;
 const AGING_BUCKETS = ['current', 'd1To30', 'd31To60', 'd61To90', 'd90Plus'] as const;
-const STOCK_REPORTS = new Set<ReportKey>(['unallocated', 'portfolio']);
+/** Date range changes these reports. Aging, unallocated and portfolio are a snapshot as of today. */
+const PERIOD_REPORTS = new Set<ReportKey>([
+  'invoiced',
+  'collected',
+  'tax',
+  'period',
+  'allocations',
+  'adjustments',
+  'management',
+]);
 
 type Row = Record<string, unknown>;
 
@@ -180,7 +189,7 @@ export function ReportsPage(): ReactElement {
           topic={translate(`reports.kind.${reportKey}`)}
           text={translate(`reports.help.${reportKey}`)}
         />
-        {STOCK_REPORTS.has(reportKey) ? null : (
+        {PERIOD_REPORTS.has(reportKey) ? (
           <div
             role="group"
             aria-label={translate('reports.period')}
@@ -201,8 +210,8 @@ export function ReportsPage(): ReactElement {
               );
             })}
           </div>
-        )}
-        {from && to ? (
+        ) : null}
+        {PERIOD_REPORTS.has(reportKey) && from && to ? (
           <Typography.Text>
             {translate('reports.activeRange', {
               from: formatTimciUserDateOnly(from, { dateFormat, timeZone }),
@@ -236,9 +245,9 @@ export function ReportsPage(): ReactElement {
           {translate('reports.export')}
         </Button>
       </Space>
-      {STOCK_REPORTS.has(reportKey) ? (
+      {PERIOD_REPORTS.has(reportKey) ? null : (
         <Typography.Paragraph type="secondary">{translate('reports.asOfNote')}</Typography.Paragraph>
-      ) : null}
+      )}
       {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} /> : null}
       {data && data.totals.length > 0 ? (
         <Space wrap style={{ marginBottom: 16 }}>

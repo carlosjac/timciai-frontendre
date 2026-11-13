@@ -3,6 +3,8 @@ import { useTranslate } from '@refinedev/core';
 import { Alert, Button, Card, Typography } from 'antd';
 import { Link } from 'react-router';
 import { getV1Base } from '../../config.js';
+import { helpArticleIdForSetupStep } from '../../shared/timci/help/catalog.js';
+import { useTimciHelp } from '../../shared/timci/help/TimciHelpContext.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import {
   dismissReadyBanner,
@@ -14,7 +16,7 @@ import {
 
 type SetupProgress = {
   hasActiveSellableItem: boolean;
-  hasPricedPriceList: boolean;
+  hasActivePriceList: boolean;
   hasCustomer: boolean;
   monetaryPolicyIsDefaultNone: boolean;
 };
@@ -35,6 +37,7 @@ export function FirstSteps({
   tenantId: string;
 }): ReactElement | null {
   const translate = useTranslate();
+  const { openHelp } = useTimciHelp();
   const [progress, setProgress] = useState<SetupProgress | null>(null);
   const [error, setError] = useState(false);
   const [skipped, setSkipped] = useState(() => isMonetaryPolicySkipped(userId, tenantId));
@@ -69,16 +72,16 @@ export function FirstSteps({
           later: false,
         },
         {
-          key: 'products',
-          href: '/sellable-items',
-          done: progress.hasActiveSellableItem,
+          key: 'priceLists',
+          href: '/price-lists',
+          done: progress.hasActivePriceList,
           optional: false,
           later: false,
         },
         {
-          key: 'priceLists',
-          href: '/price-lists',
-          done: progress.hasPricedPriceList,
+          key: 'products',
+          href: '/sellable-items',
+          done: progress.hasActiveSellableItem,
           optional: false,
           later: false,
         },
@@ -130,6 +133,7 @@ export function FirstSteps({
               ? translate('dashboard.firstSteps.optional')
               : translate('dashboard.firstSteps.pending');
         const isCurrent = current?.key === step.key;
+        const articleId = helpArticleIdForSetupStep(step.key);
 
         return (
           <li
@@ -156,6 +160,17 @@ export function FirstSteps({
               <Link ref={isCurrent ? currentRef : undefined} to={step.href}>
                 {translate('dashboard.firstSteps.go')}
               </Link>
+              {articleId ? (
+                <Button
+                  type="link"
+                  aria-label={translate('dashboard.firstSteps.howToNamed', {
+                    step: translate(`dashboard.firstSteps.steps.${step.key}.name`),
+                  })}
+                  onClick={() => openHelp(articleId)}
+                >
+                  {translate('dashboard.firstSteps.howTo')}
+                </Button>
+              ) : null}
               {step.key === 'monetary' && !step.done ? (
                 <Button
                   type="link"

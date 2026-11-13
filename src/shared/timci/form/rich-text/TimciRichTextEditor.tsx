@@ -4,7 +4,7 @@ import Underline from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Button } from 'antd';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { sanitizeRichTextHtml } from './richTextSanitize.js';
 
 export type TimciRichTextEditorProps = {
@@ -38,6 +38,23 @@ const editorBodyStyle = `
 }
 `;
 
+/** Stable extension instances. A new array on each render makes TipTap call setOptions and reset the cursor. */
+const richTextExtensions = [
+  StarterKit.configure({
+    heading: false,
+    blockquote: false,
+    codeBlock: false,
+    horizontalRule: false,
+    bulletList: false,
+    orderedList: false,
+    listItem: false,
+    code: false,
+    link: false,
+    strike: false,
+  }),
+  Underline,
+];
+
 /** WYSIWYG editor for Timci rich-text fields (bold, italic, underline, paragraphs). */
 export function TimciRichTextEditor({
   value,
@@ -49,27 +66,23 @@ export function TimciRichTextEditor({
   'aria-invalid': ariaInvalid,
 }: TimciRichTextEditorProps) {
   const translate = useTranslate();
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const emittedRef = useRef<string | null>(null);
+  const initialContentRef = useRef<string | null>(null);
+  if (initialContentRef.current === null) {
+    initialContentRef.current = sanitizeRichTextHtml(value ?? '');
+  }
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: false,
-        blockquote: false,
-        codeBlock: false,
-        horizontalRule: false,
-        bulletList: false,
-        orderedList: false,
-        listItem: false,
-        code: false,
-        link: false,
-        strike: false,
-      }),
-      Underline,
-    ],
-    content: sanitizeRichTextHtml(value ?? ''),
+    extensions: richTextExtensions,
+    content: initialContentRef.current,
     editable: !disabled,
+    shouldRerenderOnTransaction: true,
     onUpdate: ({ editor: ed }) => {
-      onChange?.(sanitizeRichTextHtml(ed.getHTML()));
+      const next = sanitizeRichTextHtml(ed.getHTML());
+      emittedRef.current = next;
+      onChangeRef.current?.(next);
     },
   });
 
@@ -92,11 +105,11 @@ export function TimciRichTextEditor({
 
   useEffect(() => {
     if (!editor) return;
-    const current = editor.getHTML();
     const next = sanitizeRichTextHtml(value ?? '');
-    if (next !== current) {
-      editor.commands.setContent(next, { emitUpdate: false });
-    }
+    if (emittedRef.current === next) return;
+    const current = editor.getHTML();
+    if (current === next || sanitizeRichTextHtml(current) === next) return;
+    editor.commands.setContent(next, { emitUpdate: false });
   }, [editor, value]);
 
   if (!editor) return null;

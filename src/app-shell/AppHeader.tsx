@@ -1,7 +1,8 @@
 import { useThemedLayoutContext } from '@refinedev/antd';
 import { useTranslate } from '@refinedev/core';
-import { MenuOutlined } from '@ant-design/icons';
+import { MenuOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { Button, Grid, Space } from 'antd';
+import { useTimciHelp } from '../shared/timci/help/TimciHelpContext.js';
 import { HeaderUserMenu } from './HeaderUserMenu.js';
 import { ImpersonationBanner } from './ImpersonationBanner.js';
 import { AlertsBanner } from '../features/alerts/AlertsBanner.js';
@@ -10,6 +11,7 @@ import { TenantPicker } from './TenantPicker.js';
 
 export function AppHeader() {
   const translate = useTranslate();
+  const { open: helpOpen, openHelp } = useTimciHelp();
   const { setMobileSiderOpen } = useThemedLayoutContext();
   const screens = Grid.useBreakpoint();
   const comfortable = !!screens.md;
@@ -54,6 +56,16 @@ export function AppHeader() {
             minWidth: 0,
           }}
         >
+          <Button
+            type="text"
+            icon={<QuestionCircleOutlined aria-hidden />}
+            aria-expanded={helpOpen}
+            aria-haspopup="dialog"
+            aria-label={comfortable ? undefined : translate('help.center.open')}
+            onClick={() => openHelp()}
+          >
+            {comfortable ? translate('help.center.open') : null}
+          </Button>
           <TenantPicker compact={!comfortable} />
           {comfortable ? (
             <HeaderUserMenu />

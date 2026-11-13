@@ -15,6 +15,12 @@ export function invalidateTimciActionCodes(): void {
   inflight = null;
 }
 
+/** Cached action codes when the TTL is still valid. Does not start a request. */
+export function peekTimciActionCodes(): string[] | null {
+  if (cached !== null && Date.now() - cachedAt < ACTION_CODES_TTL_MS) return cached;
+  return null;
+}
+
 /**
  * GET /authorization/me/action-codes — mismo origen que el menú de timci-admin (react-admin).
  * Respuestas fallidas no se cachean para permitir reintento. Cache TTL 60s.

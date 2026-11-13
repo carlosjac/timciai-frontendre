@@ -36,6 +36,7 @@ import esES from 'antd/locale/es_ES';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router';
 import { Suspense, useMemo } from 'react';
 import { AppHeader } from './app-shell/AppHeader.js';
+import { TimciHelpProvider } from './shared/timci/help/TimciHelpProvider.js';
 import { useTimciNotificationProvider } from './shared/timci/notificationProvider.js';
 import { lazyPage } from './app-shell/lazyPage.js';
 import { TimciPageChunkFallback } from './app-shell/TimciPageChunkFallback.js';
@@ -520,16 +521,18 @@ function TimciRefineTree() {
             <Route
               element={
                 <Authenticated key="app" redirectOnFail="/login">
-                  <a className="timci-skip-link" href="#timci-main">
-                    {esMessages.header.skipToContent}
-                  </a>
-                  <ThemedLayout Header={AppHeader} Sider={TimciThemedSider} Title={TimciBrandTitle}>
-                    <main id="timci-main" tabIndex={-1}>
-                      <Suspense fallback={<TimciPageChunkFallback />}>
-                        <Outlet />
-                      </Suspense>
-                    </main>
-                  </ThemedLayout>
+                  <TimciHelpProvider>
+                    <a className="timci-skip-link" href="#timci-main">
+                      {esMessages.header.skipToContent}
+                    </a>
+                    <ThemedLayout Header={AppHeader} Sider={TimciThemedSider} Title={TimciBrandTitle}>
+                      <main id="timci-main" tabIndex={-1}>
+                        <Suspense fallback={<TimciPageChunkFallback />}>
+                          <Outlet />
+                        </Suspense>
+                      </main>
+                    </ThemedLayout>
+                  </TimciHelpProvider>
                 </Authenticated>
               }
             >

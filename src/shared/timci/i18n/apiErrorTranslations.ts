@@ -49,7 +49,12 @@ export const apiErrorMessagesEs: Record<string, string> = {
     'Ya existe una moneda inactiva con ese nombre. Búscala en el listado (Activo: No) y reactívala.',
   CONFLICT_EMAIL: 'Ya existe un usuario con ese email',
   SIGNUP_NOT_ACCEPTED:
-    'No pudimos aceptar la solicitud. Revisa los datos o espera la revisión.',
+    'No pudimos aceptar la solicitud. Revise los datos o espere la revisión.',
+  SIGNUP_NAME_PENDING: 'Ya hay una solicitud pendiente con ese nombre de entidad.',
+  SIGNUP_DOCUMENT_TAKEN: 'Ya existe una entidad con ese tipo y número de documento.',
+  SIGNUP_DOCUMENT_PENDING: 'Ya hay una solicitud pendiente con ese documento.',
+  SIGNUP_EMAIL_TAKEN: 'Ya existe una cuenta con ese correo de acceso.',
+  SIGNUP_EMAIL_PENDING: 'Ya hay una solicitud pendiente con ese correo de acceso.',
   SIGNUP_NOT_PENDING: 'La solicitud ya no está pendiente.',
   CONFLICT_DOCUMENT: 'Ya existe un cliente con ese tipo y número de documento en esta entidad',
   IMPORT_FILE_UNREADABLE: 'No se pudo leer el archivo. Usá la plantilla Excel descargada.',

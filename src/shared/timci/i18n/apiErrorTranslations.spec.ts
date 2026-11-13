@@ -29,6 +29,15 @@ describe('translateTimciApiErrorMessage', () => {
     );
   });
 
+  it('translates signup identity conflicts onto a Spanish message', () => {
+    expect(translateTimciApiErrorMessage('SIGNUP_EMAIL_TAKEN', 'An account with this email already exists')).toBe(
+      'Ya existe una cuenta con ese correo de acceso.',
+    );
+    expect(
+      translateTimciApiErrorMessage('SIGNUP_DOCUMENT_TAKEN', 'An entity with this document already exists'),
+    ).toBe('Ya existe una entidad con ese tipo y número de documento.');
+  });
+
   it('translates the rate-limit message with its wait time', () => {
     expect(translateTimciApiErrorMessage(undefined, 'Rate limit exceeded, retry in 25 minutes')).toBe(
       'Demasiados intentos. Volvé a intentar en 25 minutos.',

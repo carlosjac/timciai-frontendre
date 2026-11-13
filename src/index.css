@@ -34,3 +34,29 @@ body,
 #timci-main:focus {
   outline: none;
 }
+
+.timci-help-article h2 {
+  font-size: 1rem;
+  line-height: 1.4;
+  margin: 1.1rem 0 0.4rem;
+}
+
+.timci-help-article p {
+  margin: 0.4rem 0;
+}
+
+.timci-help-article ul,
+.timci-help-article ol {
+  margin: 0.4rem 0;
+  padding-left: 1.25rem;
+}
+
+.timci-help-article li + li {
+  margin-top: 0.25rem;
+}
+
+.timci-help-index {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
