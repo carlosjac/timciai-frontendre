@@ -22,7 +22,11 @@ export function TimciAccessDeniedPage() {
     <main aria-labelledby="timci-access-denied-title">
       <Result
         status="403"
-        title={<span id="timci-access-denied-title">{title}</span>}
+        title={
+          <span id="timci-access-denied-title" data-timci-page-title={title}>
+            {title}
+          </span>
+        }
         subTitle={description}
         extra={
           <Button

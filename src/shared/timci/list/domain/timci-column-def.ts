@@ -17,7 +17,11 @@ export type TimciColumnDef<T extends Record<string, unknown> = Record<string, un
   titleKey: string;
   sorter?: boolean;
   /** Server-side filter with operators suited to the column type (Timci JSON filter). */
-  filter?: { kind: TimciFilterKind };
+  filter?: {
+    kind: TimciFilterKind;
+    /** Choices when `kind` is `select`. `labelKey` is an i18n key. */
+    options?: ReadonlyArray<{ value: string; labelKey: string }>;
+  };
   /** If false, column starts hidden (user can show via picker). */
   defaultVisible?: boolean;
   width?: number | string;

@@ -1,6 +1,8 @@
 import { AuthPage } from '@refinedev/antd';
-import { Navigate, useSearchParams } from 'react-router';
+import { Typography } from 'antd';
+import { Link, Navigate, useSearchParams } from 'react-router';
 import { esMessages } from '../i18n/locale.es.js';
+import { TimciWordmark } from './TimciBrand.js';
 import { isPostLogoutLoginHome } from '../shared/timci/postLogoutLoginHome.js';
 import { sanitizeLoginReturnTo } from '../shared/timci/safeLoginReturnTo.js';
 
@@ -22,8 +24,27 @@ export function TimciLoginPage() {
   }
 
   return (
-    <main style={{ minHeight: '100vh' }} aria-label={esMessages.pages.login.title}>
-      <AuthPage type="login" registerLink={false} forgotPasswordLink={false} />
+    <main
+      style={{ minHeight: '100vh' }}
+      aria-label={esMessages.pages.login.title}
+      data-timci-page-title={esMessages.pages.login.title}
+    >
+      <AuthPage
+        type="login"
+        title={
+          <Link to="/" style={{ lineHeight: 0 }}>
+            <TimciWordmark height={48} />
+          </Link>
+        }
+        rememberMe={false}
+        forgotPasswordLink={false}
+        registerLink={
+          <Typography.Paragraph style={{ marginTop: 8, marginBottom: 0, fontSize: 12 }}>
+            {esMessages.pages.login.buttons.noAccount}{' '}
+            <Link to="/signup">{esMessages.pages.login.requestSignup}</Link>
+          </Typography.Paragraph>
+        }
+      />
     </main>
   );
 }

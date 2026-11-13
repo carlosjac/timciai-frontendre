@@ -1,6 +1,6 @@
 import { Authenticated, Refine } from '@refinedev/core';
 import { ThemedLayout } from '@refinedev/antd';
-import refineRouterProvider, { DocumentTitleHandler } from '@refinedev/react-router';
+import refineRouterProvider from '@refinedev/react-router';
 import {
   ApartmentOutlined,
   ClusterOutlined,
@@ -29,6 +29,7 @@ import {
   SendOutlined,
   DashboardOutlined,
   FileSearchOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
 import { App as AntdApp, ConfigProvider, theme as antdTheme } from 'antd';
 import esES from 'antd/locale/es_ES';
@@ -38,10 +39,13 @@ import { AppHeader } from './app-shell/AppHeader.js';
 import { useTimciNotificationProvider } from './shared/timci/notificationProvider.js';
 import { lazyPage } from './app-shell/lazyPage.js';
 import { TimciPageChunkFallback } from './app-shell/TimciPageChunkFallback.js';
+import { TimciDocumentTitle } from './app-shell/TimciDocumentTitle.js';
 import { TimciLoginPage } from './app-shell/TimciLoginPage.js';
+import { EntitySignupPage } from './features/entity-signups/signup.js';
 import { NavigateToFirstAccessibleList } from './app-shell/NavigateToFirstAccessibleList.js';
 import { TimciNotFoundPage } from './app-shell/TimciNotFoundPage.js';
 import { timciGuarded } from './app-shell/timciGuarded.js';
+import { TimciBrandTitle } from './app-shell/TimciBrand.js';
 import { TimciThemedSider } from './app-shell/TimciThemedSider.js';
 import { createTimciAuthProvider } from './providers/authProvider.js';
 import { createTimciAccessControlProvider } from './providers/accessControlProvider.js';
@@ -134,6 +138,14 @@ const MonetaryPolicyEdit = lazyPage(
   'MonetaryPolicyEdit',
 );
 const DashboardPage = lazyPage(() => import('./features/dashboard/DashboardPage.js'), 'DashboardPage');
+const EntitySignupListPage = lazyPage(
+  () => import('./features/entity-signups/list.js'),
+  'EntitySignupListPage',
+);
+const EntitySignupShow = lazyPage(
+  () => import('./features/entity-signups/show.js'),
+  'EntitySignupShow',
+);
 const ReportsPage = lazyPage(() => import('./features/reports/ReportsPage.js'), 'ReportsPage');
 const CustomerList = lazyPage(() => import('./features/customers/list.js'), 'CustomerList');
 const CustomerImportJobsList = lazyPage(
@@ -245,7 +257,8 @@ function TimciRefineTree() {
   const { theme: themeMode } = useUserPreferences();
   const antdThemeConfig = useMemo(() => {
     const light = themeMode !== 'dark';
-    const primary = light ? '#1554C0' : '#1D4ED8';
+    // Logo cyan #0080A0. Dark uses the same hue, a step lighter so it reads on #1C2128.
+    const primary = light ? '#0080A0' : '#0093B8';
     const base = light ? antdTheme.defaultAlgorithm : antdTheme.darkAlgorithm;
     const algorithm = ((seed: Parameters<typeof antdTheme.defaultAlgorithm>[0]) => {
       const derived = base(seed);
@@ -448,6 +461,12 @@ function TimciRefineTree() {
         meta: { label: esMessages.nav.tenants, icon: <ClusterOutlined /> },
       },
       {
+        name: 'entitySignups',
+        list: '/entity-requests',
+        show: '/entity-requests/show/:id',
+        meta: { label: esMessages.nav.entitySignups, icon: <AuditOutlined /> },
+      },
+      {
         name: 'roles',
         list: '/roles',
         create: '/roles/create',
@@ -494,16 +513,17 @@ function TimciRefineTree() {
               title: { text: esMessages.app.title },
             }}
           >
-          <DocumentTitleHandler />
+          <TimciDocumentTitle />
           <Routes>
             <Route path="/login" element={<TimciLoginPage />} />
+            <Route path="/signup" element={<EntitySignupPage />} />
             <Route
               element={
                 <Authenticated key="app" redirectOnFail="/login">
                   <a className="timci-skip-link" href="#timci-main">
                     {esMessages.header.skipToContent}
                   </a>
-                  <ThemedLayout Header={AppHeader} Sider={TimciThemedSider}>
+                  <ThemedLayout Header={AppHeader} Sider={TimciThemedSider} Title={TimciBrandTitle}>
                     <main id="timci-main" tabIndex={-1}>
                       <Suspense fallback={<TimciPageChunkFallback />}>
                         <Outlet />
@@ -523,6 +543,14 @@ function TimciRefineTree() {
               <Route path="/users/edit/:id" element={timciGuarded('users', 'edit', <UserEdit />)} />
               <Route path="/sessions" element={timciGuarded('sessions', 'list', <SessionList />)} />
               <Route path="/tenants" element={timciGuarded('tenants', 'list', <TenantList />)} />
+              <Route
+                path="/entity-requests"
+                element={timciGuarded('entitySignups', 'list', <EntitySignupListPage />)}
+              />
+              <Route
+                path="/entity-requests/show/:id"
+                element={timciGuarded('entitySignups', 'show', <EntitySignupShow />)}
+              />
               <Route
                 path="/tenants/create"
                 element={timciGuarded('tenants', 'create', <TenantCreate />)}

@@ -2,7 +2,7 @@
  * Timci list filter kinds and operators (aligned with backend shared filter types).
  */
 
-export type TimciFilterKind = 'text' | 'number' | 'boolean' | 'date';
+export type TimciFilterKind = 'text' | 'number' | 'boolean' | 'date' | 'select';
 
 export const TIMCI_TEXT_OPERATORS = ['eq', 'contains', 'startsWith', 'endsWith'] as const;
 export const TIMCI_NUMBER_OPERATORS = ['eq', 'gt', 'gte', 'lt', 'lte', 'between'] as const;
@@ -27,6 +27,7 @@ export function operatorsForKind(kind: TimciFilterKind): readonly string[] {
     case 'number':
       return TIMCI_NUMBER_OPERATORS;
     case 'boolean':
+    case 'select':
       return TIMCI_BOOLEAN_OPERATORS;
     case 'date':
       return TIMCI_DATE_OPERATORS;
@@ -41,6 +42,7 @@ export function defaultOperatorForKind(kind: TimciFilterKind): string {
       return 'contains';
     case 'number':
     case 'boolean':
+    case 'select':
       return 'eq';
     case 'date':
       return 'onOrAfter';

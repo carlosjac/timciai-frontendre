@@ -1,8 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Column } from '@ant-design/charts';
-import { Card, Statistic, Table, Typography } from 'antd';
+import { Card, Statistic, Table, Typography, theme as antdTheme } from 'antd';
 import { Link } from 'react-router';
 import { useTranslate } from '@refinedev/core';
+import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { TimciHelpButton } from '../../shared/timci/help/TimciHelpButton.js';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import type { CurrencySlice, DebtorRow, EntityDashboard, PlatformDashboard, QueueRow } from './api.js';
@@ -58,7 +59,15 @@ export function WidgetBody(props: {
   platform?: PlatformDashboard;
 }): ReactElement {
   const translate = useTranslate();
+  const { token } = antdTheme.useToken();
+  const { theme: themeMode } = useUserPreferences();
   const { type, currencyId, limit = 10, entity, platform } = props;
+  const axisText = {
+    labelFill: token.colorText,
+    labelOpacity: 1,
+    titleFill: token.colorText,
+    titleOpacity: 1,
+  };
 
   if (type === 'bouncedEmails' && entity) {
     return <Statistic title={translate('dashboard.widgets.bouncedEmails')} value={entity.bouncedEmails} />;
@@ -101,11 +110,19 @@ export function WidgetBody(props: {
       return (
         <>
           <Column
+            key={themeMode}
             data={rows}
             xField="bucket"
             yField="amount"
             height={160}
-            axis={{ y: { labelFormatter: (value: number) => formatTimciMoney(value) } }}
+            theme={themeMode === 'dark' ? 'classicDark' : 'classic'}
+            axis={{
+              x: axisText,
+              y: {
+                ...axisText,
+                labelFormatter: (value: number) => formatTimciMoney(value),
+              },
+            }}
           />
           <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
             {rows.map((row) => (

@@ -31,6 +31,8 @@ import {
   type WidgetSize,
 } from './model.js';
 import { WidgetBody, WidgetCard } from './widgets.js';
+import { FirstSteps } from './FirstSteps.js';
+import { PendingSignupAlert } from './PendingSignupAlert.js';
 
 const PERIODS = [7, 30, 90] as const;
 
@@ -95,6 +97,7 @@ export function DashboardPage(): ReactElement {
   const userId = identity.data?.id ?? 'anonymous';
   const [profile, setProfile] = useState<DashboardProfile | null | undefined>(undefined);
   const [canOpenReports, setCanOpenReports] = useState(false);
+  const [isRoot, setIsRoot] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +105,7 @@ export function DashboardPage(): ReactElement {
       if (!cancelled) {
         setProfile(dashboardProfile(codes));
         setCanOpenReports(codes.includes('menu.reports'));
+        setIsRoot(codes.includes('menu.allEntities'));
       }
     });
 
@@ -117,7 +121,12 @@ export function DashboardPage(): ReactElement {
     return <Alert type="info" showIcon message={translate('dashboard.noAccess')} />;
   }
 
-  return <DashboardLoaded userId={userId} profile={profile} canOpenReports={canOpenReports} />;
+  return (
+    <>
+      {isRoot ? <PendingSignupAlert /> : null}
+      <DashboardLoaded userId={userId} profile={profile} canOpenReports={canOpenReports} />
+    </>
+  );
 }
 
 function DashboardLoaded({
@@ -183,11 +192,13 @@ function DashboardLoaded({
   }
 
   const dataReady = profile === 'platform' ? platform !== null : entity !== null;
-  if (!dataReady && !error) {
-    return <Typography.Text type="secondary">{translate('dashboard.loading')}</Typography.Text>;
-  }
 
   return (
+    <>
+      {profile === 'entity' && tenantId ? <FirstSteps userId={userId} tenantId={tenantId} /> : null}
+      {!dataReady && !error ? (
+        <Typography.Text type="secondary">{translate('dashboard.loading')}</Typography.Text>
+      ) : (
     <DashboardBoard
       key={`${userId}:${profile}:${entity?.defaultCurrencyId ?? 'platform'}`}
       userId={userId}
@@ -199,6 +210,8 @@ function DashboardLoaded({
       error={error}
       canOpenReports={canOpenReports}
     />
+      )}
+    </>
   );
 }
 
@@ -294,7 +307,13 @@ function DashboardBoard(props: {
   return (
     <div>
       <Space style={{ marginBottom: 16 }} wrap>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+        <Typography.Title
+          level={3}
+          style={{ margin: 0 }}
+          data-timci-page-title={translate(
+            profile === 'platform' ? 'dashboard.platformTitle' : 'dashboard.entityTitle',
+          )}
+        >
           {translate(profile === 'platform' ? 'dashboard.platformTitle' : 'dashboard.entityTitle')}
         </Typography.Title>
         <div

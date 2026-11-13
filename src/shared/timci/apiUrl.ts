@@ -10,6 +10,7 @@ const GLOBAL_LIST: Record<string, string> = {
   permissions: 'authorization/permissions',
   userTenantRoles: 'authorization/user-tenant-roles',
   rateSnapshots: 'currency-conversion/rate-snapshots',
+  entitySignups: 'entity-signups',
 };
 
 /** Path segment under /tenants/:id/ */

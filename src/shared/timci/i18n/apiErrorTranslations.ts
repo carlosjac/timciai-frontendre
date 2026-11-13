@@ -48,6 +48,9 @@ export const apiErrorMessagesEs: Record<string, string> = {
   CONFLICT_INACTIVE_CURRENCY_NAME:
     'Ya existe una moneda inactiva con ese nombre. Búscala en el listado (Activo: No) y reactívala.',
   CONFLICT_EMAIL: 'Ya existe un usuario con ese email',
+  SIGNUP_NOT_ACCEPTED:
+    'No pudimos aceptar la solicitud. Revisa los datos o espera la revisión.',
+  SIGNUP_NOT_PENDING: 'La solicitud ya no está pendiente.',
   CONFLICT_DOCUMENT: 'Ya existe un cliente con ese tipo y número de documento en esta entidad',
   IMPORT_FILE_UNREADABLE: 'No se pudo leer el archivo. Usá la plantilla Excel descargada.',
   IMPORT_TEMPLATE_INVALID: 'El archivo no coincide con la plantilla de importación de clientes',
@@ -210,8 +213,29 @@ function subjectEs(raw: string): string {
   return mapped ?? raw.trim();
 }
 
+const RATE_LIMIT_UNIT_ES: Record<string, [string, string]> = {
+  millisecond: ['milisegundo', 'milisegundos'],
+  second: ['segundo', 'segundos'],
+  minute: ['minuto', 'minutos'],
+  hour: ['hora', 'horas'],
+  day: ['día', 'días'],
+  week: ['semana', 'semanas'],
+  year: ['año', 'años'],
+};
+
 /** Mensajes de validación tipo Fastify/Ajv en inglés → español. */
 export function normalizeValidationMessage(message: string): string {
+  const trimmedEarly = message.trim();
+  const rateLimit = trimmedEarly.match(
+    /^Rate limit exceeded, retry in (\d+) (millisecond|second|minute|hour|day|week|year)s?$/i,
+  );
+  if (rateLimit) {
+    const count = Number(rateLimit[1]);
+    const unit = RATE_LIMIT_UNIT_ES[rateLimit[2]!.toLowerCase()];
+    const label = count === 1 ? unit![0] : unit![1];
+    return `Demasiados intentos. Volvé a intentar en ${count} ${label}.`;
+  }
+
   const m = message.toLowerCase();
   if (m.includes('body/') || m.includes('body.')) {
     if (m.includes('phone') && (m.includes('50') || m.includes('more')))
@@ -329,6 +353,10 @@ export function translateTimciApiErrorMessage(code: string | undefined, message:
       'document type': 'tipo de documento',
     };
     return `Valor no válido para ${labels[kind] ?? kind}: ${value}`;
+  }
+
+  if (trimmed.startsWith('Password must be at least 8 characters')) {
+    return 'La contraseña debe tener al menos 8 caracteres, con mayúscula, minúscula, número y símbolo.';
   }
 
   if (c === 'VALIDATION') {

@@ -25,6 +25,7 @@ function formatChipValue(
   translate: Translate,
   dateFormat: string,
   timeZone: string,
+  selectOptions: ReadonlyArray<{ value: string; labelKey: string }> | undefined,
 ): string {
   const op = String(f.operator);
   const datePrefs = { dateFormat, timeZone };
@@ -45,6 +46,10 @@ function formatChipValue(
     return f.value === true
       ? translate('list.filter.boolYes', undefined, 'Sí')
       : translate('list.filter.boolNo', undefined, 'No');
+  }
+  if (kind === 'select') {
+    const match = selectOptions?.find((option) => option.value === String(f.value ?? ''));
+    return match ? translate(match.labelKey, undefined, match.labelKey) : String(f.value ?? '');
   }
   if (typeof f.value === 'object' && f.value !== null) {
     return JSON.stringify(f.value);
@@ -75,14 +80,22 @@ export function AppliedFiltersBar<T extends BaseRecord>(props: Props<T>) {
           {translate('list.filter.applied')}
         </Text>
         {logical.map((f) => {
+          const column = columnDefs.find((c) => c.dataIndex === f.field);
           const kind = filterKindForField(columnDefs, f.field);
-          const titleKey = columnDefs.find((c) => c.dataIndex === f.field)?.titleKey;
+          const titleKey = column?.titleKey;
           const colTitle = titleKey
             ? translate(titleKey, undefined, titleKey)
             : f.field;
           const opKey = `list.filter.op.${String(f.operator)}`;
           const opLabel = translate(opKey, undefined, String(f.operator));
-          const valStr = formatChipValue(f, kind, translate, dateFormat, timeZone);
+          const valStr = formatChipValue(
+            f,
+            kind,
+            translate,
+            dateFormat,
+            timeZone,
+            column?.filter?.options,
+          );
           const removeLabel = `${translate('list.a11y.removeFilterForColumn')}: ${colTitle}`;
           return (
             <Tag

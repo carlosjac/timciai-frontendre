@@ -34,6 +34,8 @@ type Props = {
   columnLabel: string;
   /** Ant Design DatePicker format (p. ej. preferencia de usuario). */
   pickerDateFormat: string;
+  /** Choices when `kind` is `select`. */
+  options?: ReadonlyArray<{ value: string; label: string }>;
 };
 
 function initialFromCurrent(kind: TimciFilterKind, current: LogicalFilter | undefined) {
@@ -44,6 +46,7 @@ function initialFromCurrent(kind: TimciFilterKind, current: LogicalFilter | unde
   let boolVal: boolean | null = null;
   let dateSingle = '';
   let dateRange: [string, string] | null = null;
+  let selectVal = '';
 
   if (current) {
     const v = current.value;
@@ -70,12 +73,15 @@ function initialFromCurrent(kind: TimciFilterKind, current: LogicalFilter | unde
           dateSingle = String(v ?? '').slice(0, 10);
         }
         break;
+      case 'select':
+        selectVal = String(v ?? '');
+        break;
       default:
         break;
     }
   }
 
-  return { nextOp, textVal, num, num2, boolVal, dateSingle, dateRange };
+  return { nextOp, textVal, num, num2, boolVal, dateSingle, dateRange, selectVal };
 }
 
 /**
@@ -95,6 +101,7 @@ function ColumnFilterDropdownBody(props: Props) {
     placeholder,
     columnLabel,
     pickerDateFormat,
+    options = [],
   } = props;
 
   const initial = initialFromCurrent(kind, current);
@@ -105,6 +112,7 @@ function ColumnFilterDropdownBody(props: Props) {
   const [boolVal, setBoolVal] = useState<boolean | null>(() => initial.boolVal);
   const [dateSingle, setDateSingle] = useState(() => initial.dateSingle);
   const [dateRange, setDateRange] = useState<[string, string] | null>(() => initial.dateRange);
+  const [selectVal, setSelectVal] = useState(() => initial.selectVal);
 
   const opOptions = operatorsForKind(kind).map((o) => ({
     value: o,
@@ -138,6 +146,10 @@ function ColumnFilterDropdownBody(props: Props) {
         if (dateSingle.length < 10) return null;
         return timciLogicalFilter(field, op, dateSingle);
       }
+      case 'select': {
+        if (!selectVal) return null;
+        return timciLogicalFilter(field, 'eq', selectVal);
+      }
       default:
         return null;
     }
@@ -160,7 +172,7 @@ function ColumnFilterDropdownBody(props: Props) {
   const dateToLabel = translate('list.a11y.filterDateTo', { column: columnLabel });
 
   const opSelect =
-    kind === 'boolean' ? null : (
+    kind === 'boolean' || kind === 'select' ? null : (
       <Select
         aria-label={operatorLabel}
         style={{ width: '100%', marginBottom: token.marginSM }}
@@ -266,6 +278,17 @@ function ColumnFilterDropdownBody(props: Props) {
             locale={antdDatePickerLocaleEs}
             value={toDayjs(dateSingle)}
             onChange={(d) => setDateSingle(d ? d.format('YYYY-MM-DD') : '')}
+          />
+        );
+      case 'select':
+        return (
+          <Select
+            aria-label={valueLabel}
+            style={{ width: '100%', marginBottom: token.marginSM }}
+            placeholder={translate('list.filter.boolPlaceholder')}
+            value={selectVal || undefined}
+            options={options.map((option) => ({ value: option.value, label: option.label }))}
+            onChange={(value) => setSelectVal(String(value))}
           />
         );
       default:

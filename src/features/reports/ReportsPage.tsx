@@ -147,14 +147,24 @@ export function ReportsPage(): ReactElement {
       .finally(() => setExporting(false));
   }, [bucket, currencyId, data, dateFormat, from, reportKey, requestKey, tenantId, to, translate]);
 
+  const kindLabel = translate(`reports.kind.${reportKey}`);
+  const pageTitle =
+    kindLabel === `reports.kind.${reportKey}`
+      ? translate('reports.title')
+      : `${translate('reports.title')} · ${kindLabel}`;
+
   if (!tenantId) {
-    return <Alert type="info" showIcon message={translate('tenant.selectFirst')} />;
+    return (
+      <div data-timci-page-title={pageTitle}>
+        <Alert type="info" showIcon message={translate('tenant.selectFirst')} />
+      </div>
+    );
   }
 
   const currencies = data?.currencies ?? [];
 
   return (
-    <div>
+    <div data-timci-page-title={pageTitle}>
       <Space style={{ marginBottom: 16 }} wrap>
         <Typography.Title level={3} style={{ margin: 0 }}>
           {translate('reports.title')}

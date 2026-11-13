@@ -109,6 +109,7 @@ export function useTimciFormServerErrors(options: UseTimciFormServerErrorsOption
 
       if (fieldEntries.length > 0) {
         form.setFields(fieldEntries);
+        form.scrollToField(fieldEntries[0]!.name, { block: 'center' });
       }
 
       setGeneralMessages(dedupeMessages(generalOut));

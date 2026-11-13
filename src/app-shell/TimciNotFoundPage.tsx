@@ -22,7 +22,11 @@ export function TimciNotFoundPage() {
     <main aria-labelledby="timci-not-found-title">
       <Result
         status="404"
-        title={<span id="timci-not-found-title">{title}</span>}
+        title={
+          <span id="timci-not-found-title" data-timci-page-title={title}>
+            {title}
+          </span>
+        }
         subTitle={description}
         extra={
           <Button

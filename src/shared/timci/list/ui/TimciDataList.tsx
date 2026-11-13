@@ -157,6 +157,8 @@ export type TimciDataListProps<T extends BaseRecord> = {
   listCreateButtonProps?: ComponentProps<typeof List>['createButtonProps'];
   /** Orden inicial del listado en servidor (sustituye el default de Refine si se indica). */
   initialSorters?: CrudSort[];
+  /** Filtros iniciales (p. ej. estado pendiente). Si la URL ya trae filtros, esos ganan. */
+  initialFilters?: CrudFilter[];
   /** Si devuelve ruta, la fila es clicable y navega a la pantalla de detalle (p. ej. show). */
   getRowShowPath?: (record: T) => string | undefined;
   /** Incluye registros inactivos en el listado (envía includeInactive=true al API). */
@@ -216,6 +218,10 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     sorters:
       props.initialSorters != null && props.initialSorters.length > 0
         ? { initial: props.initialSorters, mode: 'server' }
+        : undefined,
+    filters:
+      props.initialFilters != null && props.initialFilters.length > 0
+        ? { initial: props.initialFilters }
         : undefined,
     queryOptions: {
       ...props.queryOptions,
@@ -409,6 +415,10 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
                       onSearchLabel={translate('list.filter.search')}
                       onResetLabel={translate('list.filter.reset')}
                       pickerDateFormat={pickerDateFormat}
+                      options={def.filter.options?.map((option) => ({
+                        value: option.value,
+                        label: translate(option.labelKey, undefined, option.labelKey),
+                      }))}
                       onApply={(next) => {
                         setFiltersAndResetPage((prev) => {
                           const rest = prev.filter((f) => !isLogicalFilter(f) || f.field !== field);

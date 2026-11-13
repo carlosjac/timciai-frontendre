@@ -29,6 +29,15 @@ describe('translateTimciApiErrorMessage', () => {
     );
   });
 
+  it('translates the rate-limit message with its wait time', () => {
+    expect(translateTimciApiErrorMessage(undefined, 'Rate limit exceeded, retry in 25 minutes')).toBe(
+      'Demasiados intentos. Volvé a intentar en 25 minutos.',
+    );
+    expect(translateTimciApiErrorMessage(undefined, 'Rate limit exceeded, retry in 1 minute')).toBe(
+      'Demasiados intentos. Volvé a intentar en 1 minuto.',
+    );
+  });
+
   it('translates catalog and document messages that can appear per import row', () => {
     expect(translateTimciApiErrorMessage('VALIDATION', 'Unknown country: Narnia')).toBe(
       'Valor no válido para país: Narnia',

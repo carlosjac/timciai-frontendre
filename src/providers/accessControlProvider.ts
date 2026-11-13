@@ -154,6 +154,9 @@ export function createTimciAccessControlProvider(): AccessControlProvider {
       if (action === 'delete' && resource === 'permissions') {
         return { can: codes.includes('permissions.admin') };
       }
+      if (resource === 'entitySignups' && action !== 'list' && action !== 'show') {
+        return { can: false };
+      }
       return { can: canSeeResourceMenuItem(resource, codes) };
     },
     options: {

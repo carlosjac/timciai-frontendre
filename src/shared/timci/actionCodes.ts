@@ -152,6 +152,8 @@ export function canSeeResourceMenuItem(resource: string | undefined, codes: stri
       return has('menu.users');
     case 'tenants':
       return has('menu.tenants');
+    case 'entitySignups':
+      return has('menu.entitySignups');
     case 'roles':
       return has('menu.roles');
     case 'actions':
@@ -198,6 +200,7 @@ export const TIMCI_RESOURCE_LIST_ORDER: { name: string; path: string }[] = [
   { name: 'users', path: '/users' },
   { name: 'sessions', path: '/sessions' },
   { name: 'tenants', path: '/tenants' },
+  { name: 'entitySignups', path: '/entity-requests' },
   { name: 'roles', path: '/roles' },
   { name: 'actions', path: '/actions' },
   { name: 'userTenantRoles', path: '/user-tenant-roles' },
@@ -236,7 +239,7 @@ export const ENTITY_ADMIN_MENU: TimciMenuLayout = {
 };
 
 export const ROOT_MENU: TimciMenuLayout = {
-  loose: ['dashboard', 'entities', 'tenants', 'users', 'userTenantRoles'],
+  loose: ['dashboard', 'entities', 'entitySignups', 'tenants', 'users', 'userTenantRoles'],
   groups: [
     {
       key: 'catalogs',

@@ -1,5 +1,5 @@
 import { List, useForm } from '@refinedev/antd';
-import { usePermissions, useTranslate } from '@refinedev/core';
+import { useGetIdentity, usePermissions, useTranslate } from '@refinedev/core';
 import { Alert, Button, Card, Form, Spin, Tabs } from 'antd';
 import { Navigate, useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -24,6 +24,7 @@ import { useEntityFormResources } from './useEntityFormResources.js';
 import { useEntityPaymentOptionToggle } from './useEntityPaymentOptionToggle.js';
 import { filterSelectOptionsByIds } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
+import { markEntitySettingsReviewed } from '../../shared/timci/setupProgress.js';
 
 const GENERAL_FIELD_NAMES = [
   ...ENTITY_GENERAL_SETTINGS_FIELD_NAMES,
@@ -34,6 +35,7 @@ const PAYMENT_FIELD_NAMES = ['paymentOptions'];
 export function EntitySettingsPage() {
   const translate = useTranslate();
   const notify = useTimciNotify();
+  const identity = useGetIdentity<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
@@ -162,6 +164,7 @@ export function EntitySettingsPage() {
           : [],
       });
       notify.success(translate('pages.entitySettings.savedGeneral'));
+      if (identity.data?.id && tenantId) markEntitySettingsReviewed(identity.data.id, tenantId);
     } catch (e) {
       applyServerError(form, e);
     }
@@ -176,6 +179,7 @@ export function EntitySettingsPage() {
       );
       await submitRecord({ paymentOptions });
       notify.success(translate('pages.entitySettings.savedPaymentOptions'));
+      if (identity.data?.id && tenantId) markEntitySettingsReviewed(identity.data.id, tenantId);
     } catch (e) {
       applyServerError(form, e);
     }

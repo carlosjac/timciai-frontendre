@@ -134,6 +134,10 @@ export const esMessages = {
     title: 'Timci',
     loadingPage: 'Cargando página',
   },
+  documentTitle: {
+    default: 'Timci',
+    suffix: ' | Timci',
+  },
   auth: {
     login: {
       missingCredentials: 'Introduce correo y contraseña.',
@@ -143,6 +147,7 @@ export const esMessages = {
     users: 'Usuarios',
     sessions: 'Sesiones',
     tenants: 'Inquilinos',
+    entitySignups: 'Solicitudes de alta',
     roles: 'Roles',
     actions: 'Acciones',
     assignments: 'Asignaciones',
@@ -178,6 +183,66 @@ export const esMessages = {
   },
   dashboard: {
     entityTitle: 'Tablero',
+    firstSteps: {
+      title: 'Primeros pasos',
+      intro:
+        'Sigue este orden antes de empezar a cobrar. El menú sigue disponible. Esta lista te indica por dónde empezar.',
+      statusLabel: 'Estado',
+      pending: 'Pendiente',
+      done: 'Listo',
+      optional: 'Opcional',
+      later: 'Después',
+      go: 'Ir',
+      skip: 'Omitir',
+      hide: 'No volver a mostrar',
+      showDetail: 'Ver detalle',
+      hideDetail: 'Ocultar detalle',
+      loadError: 'No se pudo leer el avance de la configuración.',
+      readyTitle: 'Ya puedes operar',
+      readyBody:
+        'Los pasos obligatorios están listos. Si cobras algo recurrente, sigue con Abonos. Si no, registra una venta.',
+      steps: {
+        settings: {
+          name: 'Revisar configuración de entidad',
+          purpose: 'Corrige el medio de pago, el correo de prueba y las monedas, y guarda.',
+        },
+        products: {
+          name: 'Productos y servicios',
+          purpose: 'Carga al menos un producto o servicio activo.',
+        },
+        priceLists: {
+          name: 'Listas de precios',
+          purpose: 'Crea una lista y cargale el precio de cada producto.',
+        },
+        monetary: {
+          name: 'Políticas monetarias',
+          purpose:
+            'Opcional. Ya existe «Sin descuentos ni recargos». Agrega otra y déjala por defecto, u omite este paso.',
+        },
+        customers: {
+          name: 'Clientes',
+          purpose: 'Crea al menos un cliente. Si quieres avisos, agrega un contacto con correo.',
+        },
+        subscriptions: {
+          name: 'Abonos',
+          purpose: 'Si cobras algo recurrente, usa el cliente, la lista y los productos.',
+        },
+        sales: {
+          name: 'Ventas',
+          purpose: 'Con cliente y producto ya puedes registrar una venta.',
+        },
+        collections: {
+          name: 'Cobros',
+          purpose: 'Cuando esa venta quedó registrada, puedes cobrarla.',
+        },
+      },
+    },
+    pendingSignups: {
+      one: 'Hay 1 solicitud de alta pendiente de aprobación',
+      many: 'Hay {{count}} solicitudes de alta pendientes de aprobación',
+      description: 'Revísalas para aprobar o rechazar el alta de la entidad.',
+      review: 'Revisar solicitudes',
+    },
     platformTitle: 'Panel de plataforma',
     customize: 'Personalizar',
     reset: 'Restablecer',
@@ -567,6 +632,7 @@ export const esMessages = {
       },
       signin: 'Entrar',
       signup: 'Registrarse',
+      requestSignup: 'Solicitar el alta',
     },
     accessDenied: {
       title: 'Sin permiso',
@@ -577,6 +643,84 @@ export const esMessages = {
       title: 'Página no encontrada',
       description: 'Esa página no existe.',
       goHome: 'Ir al inicio',
+    },
+    signup: {
+      title: 'Solicitar el alta',
+      loading: 'Cargando países, documentos y monedas…',
+      intro:
+        'Completa los datos de la entidad y de la cuenta de administrador. La entidad se crea cuando se aprueba la solicitud.',
+      identity: 'Identidad',
+      contact: 'Contacto',
+      operation: 'Operación',
+      account: 'Cuenta de administrador',
+      entityEmail: 'Correo de la entidad',
+      adminName: 'Nombre del administrador',
+      adminEmail: 'Correo de acceso',
+      adminEmailHint: 'Puede ser distinto del correo de la entidad. Con este correo vas a entrar.',
+      password: 'Contraseña',
+      passwordConfirm: 'Repetir contraseña',
+      passwordHint: 'Al menos 8 caracteres, con mayúscula, minúscula, número y símbolo.',
+      passwordMismatch: 'Las contraseñas no coinciden.',
+      hints: {
+        personType:
+          'Persona física: una persona humana. Persona jurídica: una empresa, sociedad u otra organización.',
+        entityName:
+          'Si es una empresa, el nombre legal. Si es una persona física, el nombre y los apellidos completos.',
+        country:
+          'Si es una empresa, el país donde está constituida. Si es una persona física, el país de residencia.',
+        documentType: 'El documento que identifica a la entidad en ese país.',
+        documentNumber: 'El número tal como figura en el documento.',
+        documentNumberFormat: 'Formato: {{format}}.',
+        address: 'Domicilio de la entidad: calle, número, localidad y código postal.',
+        entityEmail: 'Correo de contacto de la entidad. Ahí llegan los avisos de la cuenta.',
+        phone: 'Teléfono de contacto, con código de área o de país.',
+        defaultCountry:
+          'País que se propone al crear un registro que pide país. Empieza igual que el país de la entidad y se puede cambiar.',
+        supportedCurrencies:
+          'Monedas en las que la entidad puede operar. Si elegís una sola, esa queda como moneda por defecto, moneda base y moneda del medio de pago inicial.',
+        defaultCurrency:
+          'Moneda que se propone al crear operaciones. Tiene que ser una de las aceptadas.',
+        baseCurrency:
+          'Moneda en la que se expresan los totales de la entidad. Tiene que ser una de las aceptadas.',
+        paymentTermDays:
+          'Días desde la venta hasta el vencimiento del cobro, cuando el registro no indica otro plazo.',
+        paymentSection:
+          'Cada medio de pago tiene un nombre, el dato que ve quien paga (cuenta, alias, CBU u otra instrucción) y las monedas en las que se usa. Si hay una sola moneda aceptada, queda marcada en el medio inicial.',
+        paymentOptionName: 'Nombre para reconocer el medio, por ejemplo Transferencia o Efectivo.',
+        paymentOptionDetails: 'Datos para pagar: cuenta, alias, CBU o las instrucciones.',
+        paymentOptionCurrencies: 'Monedas de este medio. Solo podés elegir entre las aceptadas.',
+        adminName: 'Nombre y apellidos de quien va a administrar la cuenta.',
+        adminEmail:
+          'Correo con el que entra el administrador. Puede ser distinto del correo de la entidad.',
+        passwordConfirm: 'Repetí la misma contraseña para confirmarla.',
+      },
+      submit: 'Enviar solicitud',
+      catalogError: 'No se pudieron cargar países, documentos y monedas. Recarga la página.',
+      sentTitle: 'Recibimos la solicitud',
+      sentBody: 'Cuando se apruebe, el correo de la entidad recibe el aviso con la dirección de ingreso.',
+      goLogin: 'Ir a ingresar',
+    },
+    entityRequests: {
+      title: 'Solicitudes de alta',
+      showTitle: 'Solicitud de alta',
+      intro: 'Al aprobar se crea la organización, la entidad, el usuario y se envía el correo.',
+      decidedAt: 'Decidida',
+      approve: 'Aprobar',
+      reject: 'Rechazar',
+      approved: 'Solicitud aprobada',
+      rejectedOk: 'Solicitud rechazada',
+      actionError: 'No se pudo actualizar la solicitud.',
+      inactiveOption: 'Inactivo',
+      confirmApproveTitle: '¿Aprobar esta solicitud?',
+      confirmApproveBody:
+        'Se crea la organización, la entidad y el usuario, y se envía el correo de ingreso.',
+      confirmRejectTitle: '¿Rechazar esta solicitud?',
+      confirmRejectBody: 'La solicitud queda rechazada. No se crea la entidad.',
+      status: {
+        pending: 'Pendiente',
+        accepted: 'Aprobada',
+        rejected: 'Rechazada',
+      },
     },
     users: {
       title: 'Usuarios',
@@ -1490,6 +1634,14 @@ export const esMessages = {
       attemptNumber: 'Intento',
       startedAt: 'Inicio',
       outcome: 'Resultado',
+    },
+    entitySignups: {
+      entityName: 'Entidad',
+      entityEmail: 'Correo de la entidad',
+      adminName: 'Administrador',
+      adminEmail: 'Correo de acceso',
+      createdAt: 'Fecha',
+      status: 'Estado',
     },
     emailBounces: {
       actions: 'Acciones',
