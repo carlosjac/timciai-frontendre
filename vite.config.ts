@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
   const port = env.VITE_BACKEND_PORT?.trim() || '3000';
   const proxyTarget = explicitTarget || `http://127.0.0.1:${port}`;
   if (mode === 'development') {
-    console.info(`[vite] Dev server will proxy /v1, /api, /health → ${proxyTarget}`);
+    console.info(`[vite] Dev server will proxy /v1, /api, /health, /version → ${proxyTarget}`);
   }
 
   const proxyCommon = {
@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
         '^/v1/': proxyCommon,
         '^/api': proxyCommon,
         '^/health': proxyCommon,
+        '^/version': proxyCommon,
       },
     },
     build: {

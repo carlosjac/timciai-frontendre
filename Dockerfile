@@ -13,7 +13,9 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY . .
 
+ARG VITE_TIMCI_REVISION=dev
 ENV VITE_API_URL=
+ENV VITE_TIMCI_REVISION=${VITE_TIMCI_REVISION}
 ENV NODE_OPTIONS=--max-old-space-size=4096
 
 RUN pnpm build

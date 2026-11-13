@@ -9,10 +9,13 @@ import {
   menuLayoutForCodes,
   type TimciPermissionsData,
 } from '../shared/timci/actionCodes.js';
+import { SiderInstalledRevision } from './SiderInstalledRevision.js';
 
 /** Ancho del menú lateral expandido (desktop y drawer móvil). */
 const SIDER_WIDTH = 280;
 const SIDER_COLLAPSED_WIDTH = 80;
+/** Alto del disparador de Ant Design (`controlHeightLG + marginXXS * 2`). */
+const SIDER_TRIGGER_PX = 48;
 
 type MenuBuildCtx = {
   selectedKey: string | undefined;
@@ -189,8 +192,6 @@ export function TimciThemedSider({
       style={{
         paddingTop: '8px',
         border: 'none',
-        overflow: 'auto',
-        height: 'calc(100% - 72px)',
       }}
       onClick={({ key }) => {
         const route = routeByKey.get(String(key));
@@ -213,7 +214,7 @@ export function TimciThemedSider({
             justifyContent: 'center',
             alignItems: 'center',
             minHeight: 120,
-            height: 'calc(100% - 72px)',
+            height: '100%',
           }}
         >
           <Spin />
@@ -222,6 +223,40 @@ export function TimciThemedSider({
     }
     return renderMenu();
   };
+
+  const renderNavigation = (
+    showRevision: boolean,
+    titleCollapsed: boolean,
+    fillAboveTrigger: boolean,
+  ) => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: fillAboveTrigger ? `calc(100vh - ${SIDER_TRIGGER_PX}px)` : '100%',
+        minHeight: 0,
+        position: fillAboveTrigger ? 'sticky' : 'relative',
+        top: 0,
+      }}
+    >
+      <div
+        style={{
+          flex: '0 0 64px',
+          width: titleCollapsed ? SIDER_COLLAPSED_WIDTH : SIDER_WIDTH,
+          padding: titleCollapsed ? '0' : '0 16px',
+          display: 'flex',
+          justifyContent: titleCollapsed ? 'center' : 'flex-start',
+          alignItems: 'center',
+          backgroundColor: token.colorBgElevated,
+          fontSize: '14px',
+        }}
+      >
+        <RenderToTitle collapsed={titleCollapsed} />
+      </div>
+      <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'auto' }}>{renderMenuBody()}</div>
+      {showRevision ? <SiderInstalledRevision /> : null}
+    </div>
+  );
 
   const renderDrawerSider = () => (
     <Drawer
@@ -247,20 +282,7 @@ export function TimciThemedSider({
             borderRight: `1px solid ${token.colorBgElevated}`,
           }}
         >
-          <div
-            style={{
-              width: SIDER_WIDTH,
-              padding: '0 16px',
-              display: 'flex',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              height: '64px',
-              backgroundColor: token.colorBgElevated,
-            }}
-          >
-            <RenderToTitle collapsed={false} />
-          </div>
-          {renderMenuBody()}
+          {renderNavigation(true, false, false)}
         </Layout.Sider>
       </Layout>
     </Drawer>
@@ -327,21 +349,7 @@ export function TimciThemedSider({
           </Button>
         }
       >
-        <div
-          style={{
-            width: siderCollapsed ? SIDER_COLLAPSED_WIDTH : SIDER_WIDTH,
-            padding: siderCollapsed ? '0' : '0 16px',
-            display: 'flex',
-            justifyContent: siderCollapsed ? 'center' : 'flex-start',
-            alignItems: 'center',
-            height: '64px',
-            backgroundColor: token.colorBgElevated,
-            fontSize: '14px',
-          }}
-        >
-          <RenderToTitle collapsed={siderCollapsed} />
-        </div>
-        {renderMenuBody()}
+        {renderNavigation(!siderCollapsed, siderCollapsed, true)}
       </Layout.Sider>
     </>
   );

@@ -554,6 +554,12 @@ export const esMessages = {
     selectFirst: 'Selecciona una entidad en la cabecera para cargar este listado.',
     required: 'Selecciona una entidad en la cabecera.',
   },
+  sider: {
+    installedRevision: 'API {{api}} · Admin {{admin}}',
+    installedRevisionName: 'Versión instalada. API {{api}}. Admin {{admin}}.',
+    installedRevisionAdminOnly: 'Admin {{admin}}',
+    installedRevisionAdminOnlyName: 'Versión instalada. Admin {{admin}}.',
+  },
   header: {
     logout: 'Cerrar sesión',
     openNavigation: 'Abrir menú de navegación',
