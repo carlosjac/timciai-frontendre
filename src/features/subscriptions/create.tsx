@@ -1,12 +1,14 @@
 import { Create, useForm } from '@refinedev/antd';
-import { useTranslate } from '@refinedev/core';
+import { useOne, useTranslate } from '@refinedev/core';
 import { Alert, Form } from 'antd';
-import dayjs from 'dayjs';
+import { useEffect } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
+import type { EntityRecord } from '../entities/entity-types.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { SubscriptionFormFields } from './SubscriptionFormFields.js';
+import { emptySubscriptionLine, normalizeSubscriptionLines } from './subscriptionLineSchedule.js';
 
 export function SubscriptionCreate() {
   const translate = useTranslate();
@@ -14,6 +16,20 @@ export function SubscriptionCreate() {
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const { formProps, saveButtonProps, onFinish, form } = useForm({ errorNotification: false, resource: 'subscriptions' });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors();
+  const { result: entityRecord } = useOne<EntityRecord>({
+    resource: 'entities',
+    id: tenantId ?? '',
+    queryOptions: { enabled: Boolean(tenantId) },
+    errorNotification: false,
+  });
+
+  useEffect(() => {
+    const policyId = entityRecord?.defaultMonetaryPolicyId?.trim();
+    if (!form || !policyId) return;
+    const current = form.getFieldValue('monetaryPolicyId');
+    if (current != null && String(current).trim() !== '') return;
+    form.setFieldValue('monetaryPolicyId', policyId);
+  }, [entityRecord, form]);
 
   if (!tenantId) {
     return (
@@ -31,9 +47,8 @@ export function SubscriptionCreate() {
         layout="vertical"
         initialValues={{
           intervalMonths: 1,
-          startsOn: dayjs().format('YYYY-MM-DD'),
           periodMode: 'advance',
-          lines: [{ quantity: '1' }],
+          lines: [{ ...emptySubscriptionLine }],
         }}
         onFinish={async (values: Record<string, unknown>) => {
           clearServerErrors(form);
@@ -42,6 +57,7 @@ export function SubscriptionCreate() {
               ...values,
               endsOn: values.endsOn || null,
               intervalMonths: Number(values.intervalMonths),
+              lines: normalizeSubscriptionLines(values.lines),
             });
           } catch (e) {
             applyServerError(form, e);

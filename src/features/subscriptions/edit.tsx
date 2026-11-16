@@ -6,6 +6,7 @@ import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAle
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { SubscriptionFormFields } from './SubscriptionFormFields.js';
+import { normalizeSubscriptionLines } from './subscriptionLineSchedule.js';
 import type { SubscriptionRecord } from './types.js';
 
 export function SubscriptionEdit() {
@@ -42,16 +43,17 @@ export function SubscriptionEdit() {
         onFinish={async (values: Record<string, unknown>) => {
           clearServerErrors(form);
           const payload: Record<string, unknown> = {
-            intervalMonths: Number(values.intervalMonths),
             endsOn: values.endsOn || null,
-            periodMode: values.periodMode,
             priceListId: values.priceListId,
             monetaryPolicyId: values.monetaryPolicyId,
-            lines: values.lines,
+            lines: normalizeSubscriptionLines(values.lines),
           };
           if (!lockIdentity) {
             payload.customerId = values.customerId;
             payload.startsOn = values.startsOn;
+            payload.currencyId = values.currencyId;
+            payload.intervalMonths = Number(values.intervalMonths);
+            payload.periodMode = values.periodMode;
           }
           try {
             await onFinish(payload);

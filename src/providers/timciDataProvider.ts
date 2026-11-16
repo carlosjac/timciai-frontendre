@@ -485,7 +485,11 @@ export function createTimciDataProvider(): DataProvider {
       params: DeleteOneParams<TVariables>,
     ): Promise<DeleteOneResponse<TData>> => {
       const { resource, id } = params;
-      if (resource === 'sessions' || isCommercialTransactionResource(resource)) {
+      if (
+        resource === 'sessions' ||
+        resource === 'subscriptions' ||
+        isCommercialTransactionResource(resource)
+      ) {
         const base = getResourceApiBase(resource);
         if (!base) {
           throw toHttpError(400, 'Invalid resource for delete.');

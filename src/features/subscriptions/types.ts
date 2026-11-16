@@ -3,6 +3,13 @@ export type SubscriptionLineRecord = {
   sellableItemId: string;
   sellableItemName: string;
   quantity: string;
+  description: string | null;
+  discountPercent: string;
+  startsOn: string | null;
+  endsOn: string | null;
+  includeSellableItemName: boolean;
+  includeDescription: boolean;
+  includePeriod: boolean;
 };
 
 export type SubscriptionGeneratedSale = {
@@ -22,6 +29,7 @@ export type SubscriptionRecord = {
   startsOn: string;
   endsOn: string | null;
   periodMode: string;
+  status?: 'draft' | 'registered';
   priceListName: string;
   monetaryPolicyName: string;
   active: boolean;

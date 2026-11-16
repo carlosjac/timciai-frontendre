@@ -255,8 +255,44 @@ export function normalizeValidationMessage(message: string): string {
   if (/body\/email must match format "email"/i.test(message)) return 'El email no tiene un formato válido';
 
   const trimmed = message.trim();
+  if (trimmed === 'Currency cannot change after a sale was issued') {
+    return 'La moneda no se puede cambiar después de emitir una venta';
+  }
+  if (trimmed === 'Billing interval cannot change after a sale was issued') {
+    return 'El intervalo no se puede cambiar después de emitir una venta';
+  }
+  if (trimmed === 'Period mode cannot change after a sale was issued') {
+    return 'El modo de período no se puede cambiar después de emitir una venta';
+  }
+  if (trimmed === 'Only a draft subscription can be registered') {
+    return 'Solo se puede registrar un abono en borrador';
+  }
+  if (trimmed === 'Only a draft subscription can be deleted') {
+    return 'Solo se puede eliminar un abono en borrador';
+  }
   if (trimmed === 'Subscription start date cannot be more than one year before today') {
     return 'La fecha desde puede tener como máximo un año de antigüedad';
+  }
+  if (trimmed === 'Line date must be a billing date of the subscription') {
+    return 'La fecha tiene que ser un vencimiento del abono';
+  }
+  if (trimmed === 'Line date cannot be after the subscription end date') {
+    return 'La fecha no puede ser posterior al fin del abono';
+  }
+  if (trimmed === 'Line end date cannot be before the start date') {
+    return 'La fecha hasta no puede ser anterior a la fecha desde';
+  }
+  if (trimmed === 'Discount percent must be between 0 and 100') {
+    return 'El descuento tiene que estar entre 0 y 100';
+  }
+  if (trimmed === 'Line description is required when name and period are omitted') {
+    return 'La descripción es obligatoria si no se incluyen el nombre ni el período';
+  }
+  if (trimmed === 'At least one line description option must be included') {
+    return 'Tenés que incluir al menos una parte de la descripción';
+  }
+  if (trimmed === 'Line description must not exceed 500 characters') {
+    return 'La descripción no puede superar 500 caracteres';
   }
   const formatMatch =
     trimmed.match(/^(.+) does not have a valid format$/i) ??

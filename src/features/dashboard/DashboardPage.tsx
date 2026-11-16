@@ -31,6 +31,7 @@ import {
   type WidgetSize,
 } from './model.js';
 import { WidgetBody, WidgetCard } from './widgets.js';
+import { DraftNotice } from '../drafts/DraftNotice.js';
 import { FirstSteps } from './FirstSteps.js';
 import { PendingSignupAlert } from './PendingSignupAlert.js';
 
@@ -195,7 +196,12 @@ function DashboardLoaded({
 
   return (
     <>
-      {profile === 'entity' && tenantId ? <FirstSteps userId={userId} tenantId={tenantId} /> : null}
+      {profile === 'entity' && tenantId ? (
+        <>
+          <DraftNotice placement="panel" />
+          <FirstSteps userId={userId} tenantId={tenantId} />
+        </>
+      ) : null}
       {!dataReady && !error ? (
         <Typography.Text type="secondary">{translate('dashboard.loading')}</Typography.Text>
       ) : (

@@ -3,8 +3,9 @@ import { parseHelpMarkdown } from './parse-help-markdown.js';
 
 export const HELP_GROUP_ORDER = [
   'start',
+  'main',
   'configuration',
-  'daily',
+  'followUp',
   'platform',
   'catalogs',
   'mail',

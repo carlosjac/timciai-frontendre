@@ -223,23 +223,28 @@ export type TimciMenuGroup = { key: string; labelKey: string; names: string[] };
 export type TimciMenuLayout = { loose: string[]; groups: TimciMenuGroup[] };
 
 export const ENTITY_ADMIN_MENU: TimciMenuLayout = {
-  loose: ['dashboard', 'customers', 'sales', 'collections', 'debits', 'credits', 'alerts'],
+  loose: [
+    'dashboard',
+    'customers',
+    'sellable_items',
+    'sales',
+    'collections',
+    'debits',
+    'credits',
+    'subscriptions',
+    'documents',
+    'reports',
+  ],
   groups: [
     {
       key: 'configuration',
       labelKey: 'nav.groupConfiguration',
-      names: [
-        'entity_settings',
-        'sellable_items',
-        'price_lists',
-        'monetary_policies',
-        'subscriptions',
-      ],
+      names: ['entity_settings', 'price_lists', 'monetary_policies'],
     },
     {
       key: 'followUp',
       labelKey: 'nav.groupFollowUp',
-      names: ['reports', 'documents', 'outboundEmails', 'emailBounces'],
+      names: ['alerts', 'outboundEmails', 'emailBounces'],
     },
   ],
 };

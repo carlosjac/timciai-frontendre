@@ -69,18 +69,18 @@ describe('help catalog', () => {
     expect(reader('entity').map((article) => article.id)).toEqual([
       'dashboard',
       'getting-started',
-      'entity-settings',
-      'price-lists',
-      'sellable-items',
-      'monetary-policies',
       'customers',
-      'subscriptions',
+      'sellable-items',
       'sales',
+      'collections',
       'debits',
       'credits',
-      'collections',
+      'subscriptions',
       'documents',
       'reports',
+      'entity-settings',
+      'price-lists',
+      'monetary-policies',
       'alerts',
       'outbound-emails-entity',
       'email-bounces-entity',
@@ -205,6 +205,14 @@ describe('help catalog', () => {
     }
   });
 
+  it('explains subscription draft, register and field examples', () => {
+    const article = helpArticles.find((item) => item.id === 'subscriptions');
+    expect(article?.sectionIds).toContain('borrador-y-registrar');
+    const text = article?.plainText ?? '';
+    expect(text).toContain('Adelantado cubre marzo');
+    expect(text).toContain('10 %');
+  });
+
   it('explains customer tabs, settlement and how the customer is sold to', () => {
     const customers = helpArticles.find((item) => item.id === 'customers');
     expect(customers?.sectionIds).toEqual(
@@ -244,10 +252,31 @@ describe('help catalog', () => {
   });
 
   it('groups articles in menu order', () => {
-    expect(groupHelpArticles(reader('entity')).map((block) => block.group)).toEqual([
+    const entity = groupHelpArticles(reader('entity'));
+    expect(entity.map((block) => block.group)).toEqual([
       'start',
+      'main',
       'configuration',
-      'daily',
+      'followUp',
+    ]);
+    expect(entity.find((block) => block.group === 'main')?.articles.map((article) => article.id)).toEqual([
+      'customers',
+      'sellable-items',
+      'sales',
+      'collections',
+      'debits',
+      'credits',
+      'subscriptions',
+      'documents',
+      'reports',
+    ]);
+    expect(
+      entity.find((block) => block.group === 'configuration')?.articles.map((article) => article.id),
+    ).toEqual(['entity-settings', 'price-lists', 'monetary-policies']);
+    expect(entity.find((block) => block.group === 'followUp')?.articles.map((article) => article.id)).toEqual([
+      'alerts',
+      'outbound-emails-entity',
+      'email-bounces-entity',
     ]);
     expect(groupHelpArticles(reader('root')).map((block) => block.group)).toEqual([
       'start',

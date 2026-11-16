@@ -14,7 +14,7 @@ Personalizar agrega o quita indicadores, cambia el tamaño, la moneda y, en las 
 
 Si un indicador tiene «Ver detalle», abre el informe del mismo período y la misma moneda.
 
-Los importes salen de operaciones registradas. Una venta, un débito, un crédito o un cobro en borrador no entra en estos recuadros ni en la cuenta corriente: hace falta Registrar en la ficha de esa operación.
+Los importes salen de operaciones registradas. Una venta, un débito, un crédito o un cobro en borrador no entra en estos recuadros ni en la cuenta corriente: hace falta Registrar en la ficha de esa operación. Si quedó alguna operación o un abono en borrador, el tablero lo avisa y enlaza a esa lista.
 
 ## Hoy
 

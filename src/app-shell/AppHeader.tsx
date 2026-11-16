@@ -6,6 +6,7 @@ import { useTimciHelp } from '../shared/timci/help/TimciHelpContext.js';
 import { HeaderUserMenu } from './HeaderUserMenu.js';
 import { ImpersonationBanner } from './ImpersonationBanner.js';
 import { AlertsBanner } from '../features/alerts/AlertsBanner.js';
+import { DraftNotice } from '../features/drafts/DraftNotice.js';
 import { TestModeBanner } from './TestModeBanner.js';
 import { TenantPicker } from './TenantPicker.js';
 
@@ -23,6 +24,7 @@ export function AppHeader() {
       <ImpersonationBanner />
       <TestModeBanner />
       <AlertsBanner />
+      <DraftNotice placement="banner" />
       <div
         style={{
           display: 'flex',

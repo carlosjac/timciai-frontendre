@@ -6,6 +6,7 @@ import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
 import { TimciDataList } from '../../shared/timci/list/ui/TimciDataList.js';
+import { commercialStatusTagColor } from '../commercial-transactions/statusLabel.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 
 type SubscriptionLine = { sellableItemName?: string };
@@ -18,6 +19,7 @@ type SubscriptionRow = BaseRecord & {
   intervalMonths?: number;
   periodMode?: string;
   priceListName?: string;
+  status?: string;
   active?: boolean;
   lines?: SubscriptionLine[];
 };
@@ -125,6 +127,30 @@ export function SubscriptionList() {
         key: 'priceListName',
         dataIndex: 'priceListName',
         titleKey: 'table.subscriptions.priceList',
+      },
+      {
+        key: 'status',
+        dataIndex: 'status',
+        titleKey: 'table.subscriptions.status',
+        sorter: true,
+        render: (value) => {
+          const status = typeof value === 'string' ? value : undefined;
+          return (
+            <Tag color={commercialStatusTagColor(status)}>
+              {translate(
+                status === 'draft'
+                  ? 'pages.subscriptions.status.draft'
+                  : 'pages.subscriptions.status.registered',
+              )}
+            </Tag>
+          );
+        },
+        exportValue: (record) =>
+          translate(
+            record.status === 'draft'
+              ? 'pages.subscriptions.status.draft'
+              : 'pages.subscriptions.status.registered',
+          ),
       },
       {
         key: 'active',

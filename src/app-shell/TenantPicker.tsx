@@ -7,6 +7,17 @@ import { timciFetch } from '../shared/timci/http.js';
 
 type TenantOption = { id: string; name: string };
 
+/** Dashboard route (`App` and `TIMCI_RESOURCE_LIST_ORDER`). */
+const DASHBOARD_PATH = '/bi';
+
+function openDashboard(): void {
+  if (window.location.pathname === DASHBOARD_PATH) {
+    window.location.reload();
+    return;
+  }
+  window.location.assign(DASHBOARD_PATH);
+}
+
 type TenantPickerProps = {
   /** Narrow header: full-width select and smaller min width. */
   compact?: boolean;
@@ -117,7 +128,7 @@ export function TenantPicker({ compact = false }: TenantPickerProps) {
             setStoredTenantId(id);
             setValue(id);
           }
-          window.location.reload();
+          openDashboard();
         }}
       />
     </Space>

@@ -9,6 +9,12 @@ describe('translateTimciApiErrorMessage', () => {
         'Subscription start date cannot be more than one year before today',
       ),
     ).toBe('La fecha desde puede tener como máximo un año de antigüedad');
+    expect(
+      translateTimciApiErrorMessage('VALIDATION', 'Line date must be a billing date of the subscription'),
+    ).toBe('La fecha tiene que ser un vencimiento del abono');
+    expect(
+      translateTimciApiErrorMessage('VALIDATION', 'Discount percent must be between 0 and 100'),
+    ).toBe('El descuento tiene que estar entre 0 y 100');
     expect(translateTimciApiErrorMessage('VALIDATION', 'Email does not have a valid format')).toBe(
       'El email no tiene un formato válido',
     );

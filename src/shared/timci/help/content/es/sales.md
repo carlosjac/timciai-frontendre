@@ -12,7 +12,7 @@ Cuando entrega un producto o un servicio y tiene que cobrarlo. Mientras arma el 
 
 ## Borrador y Registrar
 
-Guardar crea o actualiza la venta en borrador. El borrador se puede corregir y se puede eliminar. Todavía no entra en la cuenta corriente, no emite comprobante y no avisa al cliente. El tablero tampoco la cuenta.
+Guardar crea o actualiza la venta en borrador. El borrador se puede corregir y se puede eliminar. Todavía no entra en la cuenta corriente, no emite comprobante y no avisa al cliente. El tablero tampoco la cuenta. El aviso azul de la cabecera y del tablero cuenta los borradores y enlaza a la lista.
 
 Registrar confirma la venta. Hace falta porque el borrador es el preparativo: puede armar ítems, precios e impuestos sin mover saldos ni enviar avisos. Al registrar ocurre esto:
 
@@ -49,7 +49,7 @@ El total es la suma de los ítems. La cotización a moneda base puede quedar vac
 
 ## Ficha
 
-Revise ítems, impuestos si la entidad los gestiona, la cotización y el importe en moneda base. En una venta registrada ve el saldo pendiente y si está Pagada o Impaga. Las imputaciones recibidas muestran qué cobro o nota de crédito se aplicó a esta venta, y por cuánto. El comprobante, cuando existe, se abre desde el enlace. Desde aquí también puede reenviar el aviso si el contacto ya está corregido.
+Si un abono generó la venta, ya está registrada: no hay que volver a registrarla. La ficha lo dice en Generada por abono y el enlace Ver abono abre ese abono. Revise ítems, impuestos si la entidad los gestiona, la cotización y el importe en moneda base. En una venta registrada ve el saldo pendiente y si está Pagada o Impaga. Las imputaciones recibidas muestran qué cobro o nota de crédito se aplicó a esta venta, y por cuánto. El comprobante, cuando existe, se abre desde el enlace. Desde aquí también puede reenviar el aviso si el contacto ya está corregido.
 
 Registrar está en la ficha del borrador. Anular está en la ficha de la registrada. Eliminar solo aparece en el borrador.
 

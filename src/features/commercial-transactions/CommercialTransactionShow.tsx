@@ -3,7 +3,7 @@ import { useOne, usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, App as AntdApp, Button, Collapse, DatePicker, Descriptions, Form, Input, Modal, Radio, Space, Switch, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -530,6 +530,15 @@ export function CommercialTransactionShow({ resource }: Props) {
           <Descriptions.Item label={translate('pages.commercialTransactions.fields.customer')}>
             {customerResult?.name?.trim() || record?.customerId || '—'}
           </Descriptions.Item>
+          {resource === 'sales' && record?.subscriptionId ? (
+            <Descriptions.Item
+              label={translate('pages.commercialTransactions.fields.generatedBySubscription')}
+            >
+              <Link to={`/subscriptions/show/${encodeURIComponent(record.subscriptionId)}`}>
+                {translate('pages.commercialTransactions.fields.openSubscription')}
+              </Link>
+            </Descriptions.Item>
+          ) : null}
           <Descriptions.Item label={translate('table.commercialTransactions.transactionDate')}>
             {formatTimciUserDateOnly(record?.transactionDate, { dateFormat, timeZone })}
           </Descriptions.Item>

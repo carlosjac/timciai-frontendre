@@ -65,6 +65,7 @@ export type CommercialTransactionRecord = {
   reversedByTransactionId?: string | null;
   originTransactionId?: string | null;
   triggeredByCollectionId?: string | null;
+  subscriptionId?: string | null;
   registeredAt?: string | null;
   voidedAt?: string | null;
   items?: Array<{
