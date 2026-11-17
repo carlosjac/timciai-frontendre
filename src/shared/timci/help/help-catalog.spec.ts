@@ -4,6 +4,7 @@ import {
   REPORT_HELP_SECTIONS,
   helpArticleIdForSetupStep,
   helpArticles,
+  replaceAllocationsResourceFromPath,
   reportHelpSectionFromPath,
   resolveScreenHelpArticle,
 } from './catalog.js';
@@ -193,6 +194,44 @@ describe('help catalog', () => {
     );
     expect(debit?.html).toContain('saldo pendiente');
     expect(debit?.html).not.toContain('No auto-imputar');
+  });
+
+  it('opens Modificar imputaciones for the allocations page of a collection, credit or debit', () => {
+    const articles = reader('entity');
+    const cases = [
+      ['collections', '/collections/show/1/allocations', 'Cobro Nº 12'],
+      ['credits', '/credits/show/abc/allocations', 'Crédito Nº 12'],
+      ['debits', '/debits/show/9/allocations/', 'Débito Nº 12'],
+    ] as const;
+    for (const [id, path, example] of cases) {
+      expect(replaceAllocationsResourceFromPath(path)).toBe(id);
+      expect(resolveScreenHelpArticle(articles, id, 'edit', path)).toMatchObject({
+        article: { id },
+        sectionId: 'modificar-imputaciones',
+      });
+      const section = sliceHelpSection(
+        helpArticles.find((item) => item.id === id)?.html ?? '',
+        'modificar-imputaciones',
+      );
+      expect(section?.heading).toBe('Modificar imputaciones');
+      expect(section?.html).toContain('Total a imputar');
+      expect(section?.html).toContain(example);
+      expect(section?.html).toContain('Imputar automáticamente');
+      expect(section?.html).toContain('número corto');
+      expect(section?.html).toContain('Guardar');
+      expect(section?.html).toContain('Una venta no se imputa');
+    }
+    const debit = sliceHelpSection(
+      helpArticles.find((item) => item.id === 'debits')?.html ?? '',
+      'modificar-imputaciones',
+    );
+    expect(debit?.html).toContain('saldo pendiente');
+    expect(debit?.html).not.toContain('No auto-imputar');
+    expect(replaceAllocationsResourceFromPath('/collections/show/1')).toBeUndefined();
+    expect(resolveScreenHelpArticle(articles, 'collections', 'show', '/collections/show/1')).toMatchObject({
+      article: { id: 'collections' },
+      sectionId: 'ficha',
+    });
   });
 
   it('explains draft versus register on every commercial transaction', () => {

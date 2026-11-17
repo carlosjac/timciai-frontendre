@@ -30,6 +30,9 @@ describe('timciDocumentTitle', () => {
     expect(timciDocumentTitle('/reports/aging', 'reports', 'list')).toBe(
       'Informes · Antigüedad de saldos | Timci',
     );
+    expect(timciDocumentTitle('/collections/show/1/allocations', 'collections', 'show')).toBe(
+      'Modificar imputaciones | Timci',
+    );
     expect(timciDocumentTitle('/bi', 'dashboard', 'list', 'Panel de plataforma')).toBe(
       'Panel de plataforma | Timci',
     );

@@ -40,6 +40,16 @@ function useReaderHelpArticles(): HelpArticle[] {
   });
 }
 
+function focusedHelpSection(
+  article: HelpArticle | null | undefined,
+  sectionId: string | null,
+  onThisScreen: boolean,
+) {
+  if (!article || !onThisScreen || !sectionId) return null;
+  if (article.id !== 'reports' && sectionId !== 'modificar-imputaciones') return null;
+  return sliceHelpSection(article.html, sectionId);
+}
+
 function TimciHelpPanel(): ReactElement {
   const translate = useTranslate();
   const articles = useReaderHelpArticles();
@@ -57,10 +67,7 @@ function TimciHelpPanel(): ReactElement {
   const results = searchHelpArticles(articles, query);
   const groups = groupHelpArticles(results);
   const onThisScreen = shown != null && routeMatch?.article.id === shown.id;
-  const reportSection =
-    shown && onThisScreen && routeMatch?.article.id === 'reports' && sectionId
-      ? sliceHelpSection(shown.html, sectionId)
-      : null;
+  const reportSection = focusedHelpSection(shown, sectionId, onThisScreen);
   const bodyHtml = reportSection?.html ?? shown?.html;
 
   useEffect(() => {
@@ -162,10 +169,11 @@ export function TimciHelpDrawer(): ReactElement {
     ? articles.find((article) => article.id === pinnedArticleId)
     : undefined;
   const pinnedOther = pinned && pinned.id !== routeMatch?.article.id ? pinned : undefined;
-  const reportSection =
-    !pinnedOther && routeMatch?.article.id === 'reports' && routeMatch.sectionId
-      ? sliceHelpSection(routeMatch.article.html, routeMatch.sectionId)
-      : null;
+  const reportSection = focusedHelpSection(
+    pinnedOther ? null : routeMatch?.article,
+    routeMatch?.sectionId ?? null,
+    !pinnedOther,
+  );
   const title =
     pinnedOther?.title ??
     reportSection?.heading ??

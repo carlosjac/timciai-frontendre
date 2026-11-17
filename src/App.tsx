@@ -184,10 +184,18 @@ const DebitList = lazyPage(() => import('./features/debits/list.js'), 'DebitList
 const DebitCreate = lazyPage(() => import('./features/debits/create.js'), 'DebitCreate');
 const DebitShow = lazyPage(() => import('./features/debits/show.js'), 'DebitShow');
 const DebitEdit = lazyPage(() => import('./features/debits/edit.js'), 'DebitEdit');
+const DebitReplaceAllocations = lazyPage(
+  () => import('./features/debits/replace-allocations.js'),
+  'DebitReplaceAllocations',
+);
 const CreditList = lazyPage(() => import('./features/credits/list.js'), 'CreditList');
 const CreditCreate = lazyPage(() => import('./features/credits/create.js'), 'CreditCreate');
 const CreditShow = lazyPage(() => import('./features/credits/show.js'), 'CreditShow');
 const CreditEdit = lazyPage(() => import('./features/credits/edit.js'), 'CreditEdit');
+const CreditReplaceAllocations = lazyPage(
+  () => import('./features/credits/replace-allocations.js'),
+  'CreditReplaceAllocations',
+);
 const CollectionList = lazyPage(() => import('./features/collections/list.js'), 'CollectionList');
 const CollectionCreate = lazyPage(
   () => import('./features/collections/create.js'),
@@ -195,6 +203,10 @@ const CollectionCreate = lazyPage(
 );
 const CollectionShow = lazyPage(() => import('./features/collections/show.js'), 'CollectionShow');
 const CollectionEdit = lazyPage(() => import('./features/collections/edit.js'), 'CollectionEdit');
+const CollectionReplaceAllocations = lazyPage(
+  () => import('./features/collections/replace-allocations.js'),
+  'CollectionReplaceAllocations',
+);
 const DocumentList = lazyPage(() => import('./features/documents/list.js'), 'DocumentList');
 const DocumentShow = lazyPage(() => import('./features/documents/show.js'), 'DocumentShow');
 const AlertList = lazyPage(() => import('./features/alerts/list.js'), 'AlertList');
@@ -719,6 +731,10 @@ function TimciRefineTree() {
                 path="/debits/show/:id"
                 element={timciGuarded('debits', 'show', <DebitShow />)}
               />
+              <Route
+                path="/debits/show/:id/allocations"
+                element={timciGuarded('debits', 'edit', <DebitReplaceAllocations />)}
+              />
               <Route path="/debits/edit/:id" element={timciGuarded('debits', 'edit', <DebitEdit />)} />
               <Route path="/credits" element={timciGuarded('credits', 'list', <CreditList />)} />
               <Route
@@ -728,6 +744,10 @@ function TimciRefineTree() {
               <Route
                 path="/credits/show/:id"
                 element={timciGuarded('credits', 'show', <CreditShow />)}
+              />
+              <Route
+                path="/credits/show/:id/allocations"
+                element={timciGuarded('credits', 'edit', <CreditReplaceAllocations />)}
               />
               <Route
                 path="/credits/edit/:id"
@@ -744,6 +764,10 @@ function TimciRefineTree() {
               <Route
                 path="/collections/show/:id"
                 element={timciGuarded('collections', 'show', <CollectionShow />)}
+              />
+              <Route
+                path="/collections/show/:id/allocations"
+                element={timciGuarded('collections', 'edit', <CollectionReplaceAllocations />)}
               />
               <Route
                 path="/collections/edit/:id"

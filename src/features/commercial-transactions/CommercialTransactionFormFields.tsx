@@ -42,7 +42,10 @@ import {
 import { getV1Base } from '../../config.js';
 import { requireTimciPathSegment } from '../../shared/timci/pathSegment.js';
 import { timciFetch } from '../../shared/timci/http.js';
-import { type AllocationCandidateRow } from './collectionAllocations.js';
+import {
+  compareAllocationRowsByDateThenTxnNumber,
+  type AllocationCandidateRow,
+} from './collectionAllocations.js';
 import { CollectionAllocationsTable } from './CollectionAllocationsTable.js';
 import { computeSaleLineAmounts, computeSaleItemsTotal } from './saleLineAmounts.js';
 import { formatTimciMoneyOrEmpty } from '../../shared/timci/formatMoney.js';
@@ -793,11 +796,18 @@ export function CommercialTransactionFormFields({
       const open = r.openAmount != null ? Number(r.openAmount) : Number(r.amount);
       return Number.isFinite(open) ? open > 0 : true;
     });
-    rows.sort((a, b) => {
-      const da = String(a.transactionDate ?? '');
-      const db = String(b.transactionDate ?? '');
-      return da.localeCompare(db);
-    });
+    rows.sort((a, b) =>
+      compareAllocationRowsByDateThenTxnNumber(
+        {
+          transactionDate: a.transactionDate != null ? String(a.transactionDate) : null,
+          entityTxnNumber: a.entityTxnNumber != null ? Number(a.entityTxnNumber) : null,
+        },
+        {
+          transactionDate: b.transactionDate != null ? String(b.transactionDate) : null,
+          entityTxnNumber: b.entityTxnNumber != null ? Number(b.entityTxnNumber) : null,
+        },
+      ),
+    );
     return rows.map((r) => {
       const id = String(r.id);
       const settlement = settlementByTargetId.get(id);

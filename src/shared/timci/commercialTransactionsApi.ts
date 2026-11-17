@@ -72,6 +72,13 @@ export function commercialTransactionShowPath(
   return `/${segment}/show/${requireTimciPathSegment(id)}`;
 }
 
+export function commercialTransactionReplaceAllocationsPath(
+  resource: CommercialTransactionResource,
+  id: string,
+): string {
+  return `${commercialTransactionShowPath(resource, id)}/allocations`;
+}
+
 export function getCommercialTransactionRegisterUrl(
   tenantId: string,
   resource: CommercialTransactionResource,

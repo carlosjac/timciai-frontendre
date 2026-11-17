@@ -184,7 +184,17 @@ export function resolveScreenHelpArticle(
 ): HelpMatch | null {
   const reportSection = reportHelpSectionFromPath(pathname);
   if (reportSection) return resolveHelpArticle(articles, 'reports', 'list', reportSection);
+  const allocationsResource = replaceAllocationsResourceFromPath(pathname);
+  if (allocationsResource) {
+    return resolveHelpArticle(articles, allocationsResource, 'show', 'modificar-imputaciones');
+  }
   return resolveHelpArticle(articles, resourceName, action);
+}
+
+/** Cobro, crédito o débito en la página Modificar imputaciones. */
+export function replaceAllocationsResourceFromPath(pathname: string): string | undefined {
+  const match = /^\/(collections|credits|debits)\/show\/[^/]+\/allocations\/?$/.exec(pathname);
+  return match?.[1];
 }
 
 export function reportHelpSectionFromPath(pathname: string): string | undefined {

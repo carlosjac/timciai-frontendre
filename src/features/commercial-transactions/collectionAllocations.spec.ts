@@ -4,6 +4,7 @@ import {
   cashAllocatedToNominal,
   cashDisplayForCollectionAllocation,
   cashDisplayForStoredAllocation,
+  compareAllocationRowsByDateThenTxnNumber,
   nominalAllocatedToCash,
   parsePositiveAmount,
   type AllocationCandidateRow,
@@ -69,6 +70,33 @@ describe('buildFifoAllocations', () => {
     expect(
       buildFifoAllocations(30, candidates([{ id: 'a', amount: '50', settlementAmount: '50' }])),
     ).toEqual([{ targetTransactionId: 'a', amount: '30.00' }]);
+  });
+});
+
+describe('compareAllocationRowsByDateThenTxnNumber', () => {
+  it('orders by date, then by the short transaction number', () => {
+    const rows = [
+      { id: 'later-low', transactionDate: '2026-03-02', entityTxnNumber: 1 },
+      { id: 'same-day-high', transactionDate: '2026-03-01', entityTxnNumber: 20 },
+      { id: 'same-day-low', transactionDate: '2026-03-01', entityTxnNumber: 4 },
+      { id: 'earlier', transactionDate: '2026-02-28', entityTxnNumber: 99 },
+    ];
+    const ordered = [...rows].sort(compareAllocationRowsByDateThenTxnNumber);
+    expect(ordered.map((r) => r.id)).toEqual([
+      'earlier',
+      'same-day-low',
+      'same-day-high',
+      'later-low',
+    ]);
+  });
+
+  it('puts rows without a short number after numbered rows on the same date', () => {
+    const rows = [
+      { id: 'no-number', transactionDate: '2026-03-01', entityTxnNumber: null },
+      { id: 'numbered', transactionDate: '2026-03-01', entityTxnNumber: 3 },
+    ];
+    const ordered = [...rows].sort(compareAllocationRowsByDateThenTxnNumber);
+    expect(ordered.map((r) => r.id)).toEqual(['numbered', 'no-number']);
   });
 });
 

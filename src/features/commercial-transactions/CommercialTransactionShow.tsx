@@ -13,6 +13,7 @@ import {
   getCommercialTransactionRegisterUrl,
   getCommercialTransactionVoidUrl,
   commercialResourceFromType,
+  commercialTransactionReplaceAllocationsPath,
   commercialTransactionShowPath,
   type CommercialTransactionResource,
   type FxQuoteDto,
@@ -35,7 +36,6 @@ import { CommercialTransactionItemsPanel } from './CommercialTransactionItemsPan
 import { CommercialTransactionDocumentsPanel } from './CommercialTransactionDocumentsPanel.js';
 import { CommercialTransactionOpenAlertsBanner } from './CommercialTransactionOpenAlertsBanner.js';
 import { CommercialTransactionOutboundEmailsPanel } from './CommercialTransactionOutboundEmailsPanel.js';
-import { ReplaceAllocationsDrawer } from './ReplaceAllocationsDrawer.js';
 import { commercialResourceCanHaveAllocations } from './commercialTransactionPanels.js';
 import {
   documentTaxAmountDisplayRows,
@@ -113,8 +113,6 @@ export function CommercialTransactionShow({ resource }: Props) {
   const [draftFxSnapshot, setDraftFxSnapshot] = useState<FxSnapshot | null>(null);
   const [currentFxSnapshot, setCurrentFxSnapshot] = useState<FxSnapshot | null>(null);
   const [registerForm] = Form.useForm<RegisterCommercialTransactionBody>();
-  const [replaceAllocationsOpen, setReplaceAllocationsOpen] = useState(false);
-
   const { result: customerResult } = useOne<{ name?: string }>({
     resource: 'customers',
     id: record?.customerId ?? '',
@@ -475,8 +473,15 @@ export function CommercialTransactionShow({ resource }: Props) {
             {canUpdate &&
             isRegistered &&
             !record?.reversedByTransactionId &&
+            record?.id &&
             commercialResourceCanHaveAllocations(resource) ? (
-              <Button onClick={() => setReplaceAllocationsOpen(true)}>
+              <Button
+                onClick={() =>
+                  navigate(
+                    commercialTransactionReplaceAllocationsPath(resource, String(record.id)),
+                  )
+                }
+              >
                 {translate('pages.commercialTransactions.replaceAllocations')}
               </Button>
             ) : null}
@@ -746,18 +751,6 @@ export function CommercialTransactionShow({ resource }: Props) {
           />
         )}
       </Show>
-
-      {record && commercialResourceCanHaveAllocations(resource) ? (
-        <ReplaceAllocationsDrawer
-          open={replaceAllocationsOpen}
-          onClose={() => setReplaceAllocationsOpen(false)}
-          resource={resource}
-          record={record}
-          onSuccess={() => {
-            void query?.refetch?.();
-          }}
-        />
-      ) : null}
 
       <Modal
         open={registerOpen}

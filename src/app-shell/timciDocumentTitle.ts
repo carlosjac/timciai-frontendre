@@ -149,6 +149,9 @@ function pathTitle(pathname: string): string | null {
     return translateEs('pages.customers.import.resultsTitle');
   }
   if (pathname === '/customers/import-jobs') return translateEs('pages.customers.import.historyTitle');
+  if (/^\/(debits|credits|collections)\/show\/[^/]+\/allocations$/.test(pathname)) {
+    return translateEs('pages.commercialTransactions.replaceAllocationsTitle');
+  }
   return reportTitle(pathname);
 }
 

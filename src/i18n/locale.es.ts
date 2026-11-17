@@ -1406,8 +1406,12 @@ export const esMessages = {
       deleteConfirmTitle: '¿Eliminar borrador?',
       replaceAllocations: 'Modificar imputaciones',
       replaceAllocationsTitle: 'Modificar imputaciones',
+      replaceAllocationsSourceTitle: '{{type}} Nº {{number}} · Total a imputar: {{amount}}',
+      replaceAllocationsSourceTitleNoNumber: '{{type}} · Total a imputar: {{amount}}',
       replaceAllocationsSuccess: 'Imputaciones actualizadas',
       replaceAllocationsError: 'No se pudieron actualizar las imputaciones',
+      replaceAllocationsUnavailable:
+        'Solo se pueden modificar las imputaciones de un comprobante registrado que no esté anulado.',
       onlyDraftCanEdit: 'Solo se pueden editar transacciones en borrador.',
       fields: {
         customer: 'Cliente',

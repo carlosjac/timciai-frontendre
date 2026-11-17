@@ -29,6 +29,26 @@ function formatMoney2(n: number): string {
   return formatTimciMoneyOrEmpty(n) || '0.00';
 }
 
+/** Missing or non-numeric short numbers sort after numbered rows. */
+function txnNumberSortKey(value: number | null | undefined): number {
+  if (value == null) return Number.POSITIVE_INFINITY;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+}
+
+/**
+ * Oldest transaction date first, then the short entity number (not the id).
+ * Same order the allocations table shows and FIFO auto-allocate consumes.
+ */
+export function compareAllocationRowsByDateThenTxnNumber(
+  a: { transactionDate?: string | null; entityTxnNumber?: number | null },
+  b: { transactionDate?: string | null; entityTxnNumber?: number | null },
+): number {
+  const byDate = String(a.transactionDate ?? '').localeCompare(String(b.transactionDate ?? ''));
+  if (byDate !== 0) return byDate;
+  return txnNumberSortKey(a.entityTxnNumber) - txnNumberSortKey(b.entityTxnNumber);
+}
+
 /**
  * True when cash covers full-open settlement (closes the document → policy applies).
  * Partials are 1:1 (cash = nominal).
@@ -58,6 +78,7 @@ export function buildFifoAllocations(
     const takeNominal = closesDocument(takeCash, open, settlement)
       ? roundMoney2((takeCash / settlement) * open)
       : Math.min(takeCash, open);
+    if (takeNominal <= 0) continue;
     out.push({ targetTransactionId: row.id, amount: formatMoney2(takeNominal) });
     remaining = roundMoney2(remaining - takeCash);
   }
