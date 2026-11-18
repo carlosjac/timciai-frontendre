@@ -871,7 +871,7 @@ export function CommercialTransactionShow({ resource }: Props) {
             name="amountInBase"
             rules={[{ required: true, message: translate('form.validation.requiredField') }]}
           >
-            <Input inputMode="decimal" />
+            <Input inputMode="decimal" readOnly aria-readonly="true" />
           </Form.Item>
         </Form>
       </Modal>
