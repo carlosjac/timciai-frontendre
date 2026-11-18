@@ -136,7 +136,7 @@ const documentValidationMessagesEs: Record<string, string> = {
   'Invalid person type': 'Tipo de persona no válido',
   'Document type is required': 'El tipo de documento es obligatorio',
   'Contact name is required': 'El nombre de contacto es obligatorio',
-  'Contact email is required': 'El email de contacto es obligatorio',
+  'Contact email is required': 'El correo de contacto es obligatorio',
   'Price list is required when the entity has more than one':
     'La lista de precios es obligatoria cuando la entidad tiene más de una',
   'Entity has no active price list': 'La entidad no tiene una lista de precios activa',
@@ -152,9 +152,9 @@ const documentValidationMessagesEs: Record<string, string> = {
   'Failed to save import results': 'No se pudieron guardar los resultados de la importación',
   'Unexpected error processing row': 'Error inesperado al procesar la fila',
   'Import job failed': 'La importación no pudo completarse',
-  'Email is required': 'El email es obligatorio',
-  'Email does not have a valid format': 'El email no tiene un formato válido',
-  'Email format is invalid': 'El email no tiene un formato válido',
+  'Email is required': 'El correo es obligatorio',
+  'Email does not have a valid format': 'El correo no tiene un formato válido',
+  'Email format is invalid': 'El correo no tiene un formato válido',
   'Phone is required': 'El teléfono es obligatorio',
   'Country is required': 'El país es obligatorio',
   'Entity is required': 'La entidad es obligatoria',
@@ -194,19 +194,25 @@ const documentValidationMessagesEs: Record<string, string> = {
 };
 
 const ENGLISH_SUBJECT_ES: Record<string, string> = {
-  email: 'El email',
+  email: 'El correo',
   name: 'El nombre',
   address: 'El domicilio',
   phone: 'El teléfono',
   'contact name': 'El nombre de contacto',
-  'contact email': 'El email de contacto',
+  'contact email': 'El correo de contacto',
   'document type': 'El tipo de documento',
   'document number': 'El número de documento',
   amount: 'El importe',
   'fx rate': 'La cotización',
+  'fx quote': 'La cotización',
   'amount in base': 'El importe en moneda base',
   currency: 'La moneda',
+  'currency iso code': 'El código de moneda',
   'price list': 'La lista de precios',
+  'price list item': 'El precio',
+  'sellable item': 'El producto o servicio',
+  'payment option': 'El medio de pago',
+  'contact id': 'El identificador del contacto',
   'person type': 'El tipo de persona',
   country: 'El país',
   entity: 'La entidad',
@@ -246,13 +252,13 @@ export function normalizeValidationMessage(message: string): string {
     if (m.includes('phone') && (m.includes('50') || m.includes('more')))
       return 'El teléfono del contacto no puede superar 50 caracteres';
     if (m.includes('email') && (m.includes('255') || m.includes('more')))
-      return 'El email del contacto no puede superar 255 caracteres';
+      return 'El correo del contacto no puede superar 255 caracteres';
     if (m.includes('name') && (m.includes('100') || m.includes('more')))
       return 'El nombre del contacto no puede superar 100 caracteres';
     if (m.includes('more') && m.includes('character'))
       return 'El valor no puede superar el máximo de caracteres permitido';
   }
-  if (/body\/email must match format "email"/i.test(message)) return 'El email no tiene un formato válido';
+  if (/body\/email must match format "email"/i.test(message)) return 'El correo no tiene un formato válido';
 
   const trimmed = message.trim();
   if (trimmed === 'Currency cannot change after a sale was issued') {
@@ -349,7 +355,7 @@ export function translateTimciApiErrorMessage(code: string | undefined, message:
     };
     const translated = kinds
       .split(', ')
-      .map((k) => kindEs[k] ?? k)
+      .map((k) => kindEs[k] ?? 'otro registro')
       .join(', ');
     return `No se puede quitar una moneda que tiene registros relacionados (${translated})`;
   }
@@ -359,7 +365,9 @@ export function translateTimciApiErrorMessage(code: string | undefined, message:
 
   const requiredField = trimmed.match(/^(.+) is required$/);
   if (requiredField && !documentValidationMessagesEs[trimmed]) {
-    return `${requiredField[1]} es obligatorio`;
+    const subject = subjectEs(requiredField[1]);
+    if (subject === requiredField[1].trim()) return 'Este campo es obligatorio';
+    return `${subject} es obligatorio`;
   }
 
   if (/invalid input syntax for type json/i.test(trimmed)) {

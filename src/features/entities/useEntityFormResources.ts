@@ -1,53 +1,47 @@
-import { useSelect } from '@refinedev/antd';
-import { useList } from '@refinedev/core';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchOverduePolicyCatalog, type OverduePolicyItem } from '../../shared/timci/auxiliaryApi.js';
-import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
+import { useBoundedCatalog } from '../../shared/timci/useBoundedCatalog.js';
 import type { DocTypeRow } from './entity-types.js';
+
+type CountryRow = { id?: string; name?: string };
+type CurrencyRow = { id?: string; code?: string; name?: string };
 
 export function useEntityFormResources(tenantId: string | null) {
   const [policies, setPolicies] = useState<OverduePolicyItem[]>([]);
+  const enabled = !!tenantId;
+  const { rows: countries } = useBoundedCatalog<CountryRow>('countries', enabled);
+  const { rows: currencies } = useBoundedCatalog<CurrencyRow>('currencies', enabled);
+  const { rows: documentTypes } = useBoundedCatalog<DocTypeRow>('document_types', enabled);
 
-  const { selectProps: countrySelect } = useSelect({
-    resource: 'countries',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
+  const countrySelect = useMemo(
+    () => ({
+      options: countries.map((row) => ({
+        value: String(row.id),
+        label: String(row.name ?? row.id ?? ''),
+      })),
+      showSearch: true,
+      optionFilterProp: 'label' as const,
+    }),
+    [countries],
+  );
 
-  const { selectProps: currencySelectRaw } = useSelect({
-    resource: 'currencies',
-    optionLabel: (item) => {
-      const code = (item as { code?: string }).code;
-      const name = (item as { name?: string }).name;
-      return code != null && code !== '' ? `${code} — ${name ?? ''}` : (name ?? '');
-    },
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-  const currencySelect = stripSelectServerSearch(currencySelectRaw);
+  const currencySelect = useMemo(
+    () => ({
+      options: currencies.map((row) => {
+        const code = row.code;
+        const name = row.name ?? '';
+        return {
+          value: String(row.id),
+          label: code != null && code !== '' ? `${code} — ${name}` : name,
+        };
+      }),
+      showSearch: true,
+      optionFilterProp: 'label' as const,
+    }),
+    [currencies],
+  );
 
-  const { result: docTypeResult } = useList<DocTypeRow>({
-    resource: 'document_types',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-
-  const { result: countryResult } = useList({
-    resource: 'countries',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-
-  const { result: currencyResult } = useList({
-    resource: 'currencies',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-
-  const docTypes = (docTypeResult.data ?? []).filter((dt) => dt.isActive !== false);
+  const docTypes = documentTypes.filter((dt) => dt.isActive !== false);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -65,15 +59,15 @@ export function useEntityFormResources(tenantId: string | null) {
 
   const countryNameById = useMemo(() => {
     const map = new Map<string, string>();
-    for (const row of countryResult.data ?? []) {
+    for (const row of countries) {
       if (row.id != null) map.set(String(row.id), String(row.name ?? row.id));
     }
     return map;
-  }, [countryResult.data]);
+  }, [countries]);
 
   const currencyLabelById = useMemo(() => {
     const map = new Map<string, string>();
-    for (const row of currencyResult.data ?? []) {
+    for (const row of currencies) {
       const id = row.id != null ? String(row.id) : '';
       if (!id) continue;
       const code = (row as { code?: string }).code;
@@ -81,7 +75,7 @@ export function useEntityFormResources(tenantId: string | null) {
       map.set(id, code != null && code !== '' ? `${code} — ${name ?? ''}` : (name ?? id));
     }
     return map;
-  }, [currencyResult.data]);
+  }, [currencies]);
 
   const policyLabelByKey = useMemo(() => {
     const map = new Map<string, string>();

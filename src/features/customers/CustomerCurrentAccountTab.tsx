@@ -98,6 +98,9 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
   const [accountsLoading, setAccountsLoading] = useState(false);
   const [currencyId, setCurrencyId] = useCustomerAccountCurrencyParam();
   const [movements, setMovements] = useState<MovementRow[]>([]);
+  const [movementsTotal, setMovementsTotal] = useState(0);
+  const [movementsPage, setMovementsPage] = useState(1);
+  const [movementsPageSize, setMovementsPageSize] = useState(25);
   const [movementsLoading, setMovementsLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -147,15 +150,22 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
     void (async () => {
       setMovementsLoading(true);
       try {
+        const start = (movementsPage - 1) * movementsPageSize;
         const { json } = await timciFetch(
-          getCustomerCurrentAccountMovementsUrl(tenantId, customerId, currencyId),
+          getCustomerCurrentAccountMovementsUrl(tenantId, customerId, currencyId, [
+            start,
+            start + movementsPageSize - 1,
+          ]),
         );
         if (cancelled) return;
-        setMovements(Array.isArray(json) ? (json as MovementRow[]) : []);
+        const page = json as { data?: MovementRow[]; total?: number };
+        setMovements(Array.isArray(page.data) ? page.data : []);
+        setMovementsTotal(typeof page.total === 'number' ? page.total : 0);
       } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.currentAccountMovementsError'));
           setMovements([]);
+          setMovementsTotal(0);
         }
       } finally {
         if (!cancelled) setMovementsLoading(false);
@@ -164,7 +174,15 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [movementsEnabled, currencyId, customerId, tenantId, translate]);
+  }, [
+    movementsEnabled,
+    currencyId,
+    customerId,
+    movementsPage,
+    movementsPageSize,
+    tenantId,
+    translate,
+  ]);
 
   const openMovementShow = useCallback(
     (row: MovementRow) => {
@@ -226,7 +244,10 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
             loading={accountsLoading}
             options={accountOptions}
             value={currencyId}
-            onChange={setCurrencyId}
+            onChange={(next) => {
+              setMovementsPage(1);
+              setCurrencyId(next);
+            }}
             placeholder={translate('pages.customers.currentAccountCurrencyPlaceholder')}
             aria-label={translate('pages.customers.currentAccountCurrency')}
             notFoundContent={
@@ -251,7 +272,17 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
         loading={movementsLoading}
         rowKey="id"
         dataSource={movementsEnabled ? movements : []}
-        pagination={{ pageSize: 25, showSizeChanger: true }}
+        pagination={{
+          current: movementsPage,
+          pageSize: movementsPageSize,
+          total: movementsTotal,
+          showSizeChanger: true,
+          pageSizeOptions: [10, 25, 50, 100],
+          onChange: (page, pageSize) => {
+            setMovementsPage(page);
+            setMovementsPageSize(pageSize);
+          },
+        }}
         locale={{ emptyText: translate('list.emptyData') }}
         scroll={{ x: 'max-content' }}
         onRow={(row) => ({

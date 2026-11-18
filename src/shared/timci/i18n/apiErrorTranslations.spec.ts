@@ -16,7 +16,7 @@ describe('translateTimciApiErrorMessage', () => {
       translateTimciApiErrorMessage('VALIDATION', 'Discount percent must be between 0 and 100'),
     ).toBe('El descuento tiene que estar entre 0 y 100');
     expect(translateTimciApiErrorMessage('VALIDATION', 'Email does not have a valid format')).toBe(
-      'El email no tiene un formato válido',
+      'El correo no tiene un formato válido',
     );
   });
 
@@ -25,8 +25,20 @@ describe('translateTimciApiErrorMessage', () => {
       'El nombre es obligatorio',
     );
     expect(translateTimciApiErrorMessage('VALIDATION', 'Contact email is required')).toBe(
-      'El email de contacto es obligatorio',
+      'El correo de contacto es obligatorio',
     );
+    expect(translateTimciApiErrorMessage('VALIDATION', 'Sellable item is required')).toBe(
+      'El producto o servicio es obligatorio',
+    );
+    expect(translateTimciApiErrorMessage('VALIDATION', 'Warehouse is required')).toBe(
+      'Este campo es obligatorio',
+    );
+    expect(
+      translateTimciApiErrorMessage(
+        'VALIDATION',
+        'Cannot remove a currency that is used by a ledger',
+      ),
+    ).toBe('No se puede quitar una moneda que tiene registros relacionados (otro registro)');
     expect(translateTimciApiErrorMessage('VALIDATION', 'Name must not exceed 100 characters')).toBe(
       'El nombre no puede superar 100 caracteres',
     );

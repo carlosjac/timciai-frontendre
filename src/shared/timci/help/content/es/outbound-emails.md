@@ -1,4 +1,4 @@
-# Emails salientes
+# Correos salientes
 
 Cada correo que una entidad intenta enviar queda aquí: a quién, con qué asunto y si salió. No se crean a mano desde esta lista.
 
@@ -19,7 +19,7 @@ El Tipo de la ficha es el código:
 - `entity_signup_ready`: el acceso de una alta quedó listo.
 - `ops_alert_…`: aviso interno de una alerta. El asunto empieza por «[Timci]». Va a quien recibe las alertas de esa audiencia. Un fallo de este aviso no abre otra alerta, para no entrar en bucle. Reintentarlo reenvía el aviso interno, no la factura del cliente.
 
-Si el fallo es de transporte, la alerta de la entidad es «Fallo de envío SMTP». Si la dirección es inválida, es «Email rechazado por el destinatario». El rebote que llega después está en Rebotes de email.
+Si el fallo es de transporte, la alerta de la entidad es «Fallo de envío». Si la dirección es inválida, es «Correo rechazado por el destinatario». El rebote que llega después está en Rebotes de correo.
 
 ## Lista
 
@@ -50,7 +50,7 @@ Reintentar deja el mensaje otra vez pendiente y el conteo empieza de cero. No co
 
 ## En la operación
 
-El cuadro Emails enviados está en la venta, el débito, el crédito o el cobro registrado. Ver abre esta ficha. Reintentar cubre Fallido y Cancelado. Reenviar notificación genera un correo nuevo a los contactos de ese tipo.
+El cuadro Correos enviados está en la venta, el débito, el crédito o el cobro registrado. Ver abre esta ficha. Reintentar cubre Fallido y Cancelado. Reenviar notificación genera un correo nuevo a los contactos de ese tipo.
 
 ## Qué puede salir mal
 

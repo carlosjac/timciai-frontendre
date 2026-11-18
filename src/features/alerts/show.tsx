@@ -68,7 +68,7 @@ export function AlertShow() {
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label={translate('table.alerts.kind')}>
-            {record.kind}
+            {translate(`pages.alerts.kinds.${record.kind}`, record.kind)}
           </Descriptions.Item>
           <Descriptions.Item label={translate('table.alerts.summary')}>
             <Typography.Text>{record.summary}</Typography.Text>

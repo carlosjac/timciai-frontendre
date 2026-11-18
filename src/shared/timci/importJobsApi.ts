@@ -1,4 +1,5 @@
 import { getV1Base } from '../../config.js';
+import { translateEs } from '../../i18n/createI18nProvider.js';
 import { requireTimciPathSegment } from './pathSegment.js';
 import { timciFetch, toHttpError } from './http.js';
 import { buildTimciHttpErrorUserMessage } from './i18n/apiErrorTranslations.js';
@@ -119,7 +120,13 @@ export async function downloadCustomerImportTemplate(tenantId: string): Promise<
     } catch {
       json = null;
     }
-    throw toHttpError(res.status, buildTimciHttpErrorUserMessage(json, `HTTP ${res.status}`));
+    throw toHttpError(
+      res.status,
+      buildTimciHttpErrorUserMessage(
+        json,
+        translateEs('form.serverError.httpStatus').replaceAll('{{status}}', String(res.status)),
+      ),
+    );
   }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);

@@ -1,5 +1,5 @@
-import { Create, useForm, useSelect } from '@refinedev/antd';
-import { useList, useOne, useTranslate, type BaseRecord } from '@refinedev/core';
+import { Create, useForm } from '@refinedev/antd';
+import { useOne, useTranslate, type BaseRecord } from '@refinedev/core';
 import { useMemo, useEffect, useState } from 'react';
 import {
   Alert,
@@ -15,10 +15,11 @@ import {
   type FormProps,
 } from 'antd';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
+import { useBoundedCatalog } from '../../shared/timci/useBoundedCatalog.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import { useTimciNameSelect } from '../../shared/timci/useTimciNameSelect.js';
 import {
   fetchOverduePolicyCatalog,
-  fetchPriceListsForEntity,
   type OverduePolicyItem,
   type PriceListRow,
 } from '../../shared/timci/auxiliaryApi.js';
@@ -70,7 +71,6 @@ export function CustomerCreate() {
   /** Misma convención que alta de entidad: id de entidad = organización actual del header. */
   const entityId = tenantId;
   const [policies, setPolicies] = useState<OverduePolicyItem[]>([]);
-  const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
   const [monetaryPolicies, setMonetaryPolicies] = useState<MonetaryPolicyListItem[]>([]);
   const [activeTab, setActiveTab] = useState('data');
   const [termsOpen, setTermsOpen] = useState(false);
@@ -89,24 +89,29 @@ export function CustomerCreate() {
     errorNotification: false,
   });
 
-  const { selectProps: countrySelect } = useSelect({
-    resource: 'countries',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
+  const { rows: countries } = useBoundedCatalog<BaseRecord & { id?: string; name?: string }>(
+    'countries',
+    !!tenantId,
+  );
+  const countrySelect = useMemo(
+    () => ({
+      options: countries.map((row) => ({ value: String(row.id), label: String(row.name ?? row.id) })),
+      showSearch: true,
+      optionFilterProp: 'label' as const,
+    }),
+    [countries],
+  );
+  const { rows: documentTypeRows } = useBoundedCatalog<DocTypeRow>('document_types', !!tenantId);
+  const docTypes = documentTypeRows.filter((dt) => dt.isActive !== false);
 
   const { selectProps: currencySelect, labelById: currencyLabelById } =
     useEntitySupportedCurrencySelect(tenantId);
-
-  const { result: docTypeResult } = useList<DocTypeRow>({
-    resource: 'document_types',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-
-  const docTypes = (docTypeResult.data ?? []).filter((dt) => dt.isActive !== false);
+  const priceListId = Form.useWatch('priceListId', form) as string | undefined;
+  const { selectProps: priceListSelect, query: priceListQuery } = useTimciNameSelect(
+    'price_lists',
+    Boolean(tenantId && entityId),
+    priceListId,
+  );
 
   useEffect(() => {
     if (!tenantId || !entityId) return;
@@ -125,24 +130,12 @@ export function CustomerCreate() {
   }, [tenantId, entityId]);
 
   useEffect(() => {
-    if (!tenantId || !entityId) return;
-    let cancelled = false;
-    void fetchPriceListsForEntity(tenantId, entityId).then((rows) => {
-      if (cancelled) return;
-      setPriceLists(rows);
-      const current = form?.getFieldValue('priceListId') as string | undefined;
-      if (current && !rows.some((r) => r.id === current)) {
-        form?.setFieldValue('priceListId', rows.length === 1 ? rows[0].id : undefined);
-        return;
-      }
-      if (isUnsetCustomerDefault(current) && rows.length === 1) {
-        form?.setFieldValue('priceListId', rows[0].id);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [tenantId, entityId, form]);
+    const total = priceListQuery.data?.total;
+    const rows = (priceListQuery.data?.data ?? []) as PriceListRow[];
+    if (total !== 1 || rows.length !== 1 || !rows[0]) return;
+    const current = form?.getFieldValue('priceListId') as string | undefined;
+    if (isUnsetCustomerDefault(current)) form?.setFieldValue('priceListId', rows[0].id);
+  }, [form, priceListQuery.data]);
 
   useEffect(() => {
     if (!form || !entityRecord) return;
@@ -347,13 +340,7 @@ export function CustomerCreate() {
                     name="priceListId"
                     rules={[{ required: true, message: translate('form.validation.requiredField') }]}
                   >
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      disabled={priceLists.length === 0}
-                      options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
-                      placeholder={priceLists.length === 0 ? '…' : undefined}
-                    />
+                    <Select {...priceListSelect} />
                   </Form.Item>
                   {watchedCurrencyId && watchedPolicy && watchedTerm != null && !termsOpen ? (
                     <div

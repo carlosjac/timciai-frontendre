@@ -20,7 +20,7 @@ export async function fetchPriceListsForEntity(
 ): Promise<PriceListRow[]> {
   const qs = new URLSearchParams({
     sort: JSON.stringify(['name', 'ASC']),
-    range: JSON.stringify([0, 499]),
+    range: JSON.stringify([0, 99]),
     filter: JSON.stringify({}),
   });
   const { json } = await timciFetch(

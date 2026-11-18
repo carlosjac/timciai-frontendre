@@ -84,7 +84,7 @@ describe('createTimciDataProvider', () => {
     } catch (e) {
       const err = e as HttpError;
       expect(err.statusCode).toBe(400);
-      expect(String(err.message)).toMatch(/Invalid resource id/i);
+      expect(String(err.message)).toMatch(/Identificador no válido/i);
     }
   });
 

@@ -127,8 +127,10 @@ export function getCustomerCurrentAccountMovementsUrl(
   tenantId: string,
   customerId: string,
   currencyId: string,
+  range: [number, number],
 ): string {
-  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/movements`;
+  const qs = new URLSearchParams({ range: JSON.stringify(range) });
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/movements?${qs}`;
 }
 
 export function getCustomerCurrentAccountSettlementUrl(

@@ -108,7 +108,10 @@ export function OutboundEmailShow() {
               <Tag>{translate(`pages.outboundEmails.statuses.${record.status}`, record.status)}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label={translate('table.outboundEmails.kind')}>
-              {record.messageKind}
+              {translate(
+                `pages.outboundEmails.kinds.${record.messageKind}`,
+                record.messageKind,
+              )}
             </Descriptions.Item>
             <Descriptions.Item label={translate('table.outboundEmails.subject')}>
               {record.subject}

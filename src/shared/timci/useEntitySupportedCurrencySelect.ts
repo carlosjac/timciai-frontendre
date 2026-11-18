@@ -1,6 +1,7 @@
-import { useList, useOne } from '@refinedev/core';
+import { useOne } from '@refinedev/core';
 import type { SelectProps } from 'antd';
 import { useMemo } from 'react';
+import { useBoundedCatalog } from './useBoundedCatalog.js';
 
 export type TimciCurrencyOption = { value: string; label: string };
 
@@ -11,6 +12,8 @@ function currencyOptionLabel(code: string, name: string, fallback: string): stri
 
 /**
  * Select of currencies the current tenant entity accepts (accepted ∩ active).
+ * Labels come from the full currency catalog: a single page of 100 misses names
+ * that sort later, and the account selector then falls back to the id.
  * Use everywhere except the global currencies catalog and the root multi-select
  * of supported currencies on entity create/edit.
  */
@@ -24,34 +27,40 @@ export function useEntitySupportedCurrencySelect(tenantId: string | null) {
     errorNotification: false,
   });
 
-  const { result: currenciesResult, query: currenciesQuery } = useList<{
+  const { rows: currencies, loading: currenciesLoading } = useBoundedCatalog<{
     id?: string;
     code?: string;
     name?: string;
     isActive?: boolean;
-  }>({
-    resource: 'currencies',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: Boolean(tenantId) },
-  });
+  }>('currencies', Boolean(tenantId));
+
+  const catalog = useMemo((): Array<TimciCurrencyOption & { isActive: boolean }> => {
+    return currencies
+      .filter((c) => c.id)
+      .map((c) => {
+        const id = String(c.id);
+        const code = typeof c.code === 'string' ? c.code.trim() : '';
+        const name = typeof c.name === 'string' ? c.name.trim() : '';
+        return {
+          value: id,
+          label: currencyOptionLabel(code, name, id),
+          isActive: c.isActive !== false,
+        };
+      });
+  }, [currencies]);
 
   const options = useMemo((): TimciCurrencyOption[] => {
     const accepted = new Set((entityResult?.supportedCurrencyIds ?? []).map(String));
-    return (currenciesResult?.data ?? [])
-      .filter((c) => c.isActive !== false && accepted.has(String(c.id ?? '')))
-      .map((c) => {
-        const id = String(c.id ?? '');
-        const code = typeof c.code === 'string' ? c.code.trim() : '';
-        const name = typeof c.name === 'string' ? c.name.trim() : '';
-        return { value: id, label: currencyOptionLabel(code, name, id) };
-      });
-  }, [currenciesResult?.data, entityResult?.supportedCurrencyIds]);
+    return catalog
+      .filter((c) => c.isActive && accepted.has(c.value))
+      .map(({ value, label }) => ({ value, label }));
+  }, [catalog, entityResult?.supportedCurrencyIds]);
 
   const labelById = useMemo(() => {
     const map = new Map<string, string>();
-    for (const option of options) map.set(option.value, option.label);
+    for (const option of catalog) map.set(option.value, option.label);
     return map;
-  }, [options]);
+  }, [catalog]);
 
   const selectProps: SelectProps = {
     options,
@@ -68,7 +77,7 @@ export function useEntitySupportedCurrencySelect(tenantId: string | null) {
     selectProps,
     options,
     labelById,
-    isLoading: Boolean(entityQuery.isLoading || currenciesQuery.isLoading),
+    isLoading: Boolean(entityQuery.isLoading || currenciesLoading),
   };
 }
 

@@ -1,6 +1,7 @@
 import { MinusCircleOutlined } from '@ant-design/icons';
 import { useTranslate } from '@refinedev/core';
 import { Button, Card, Checkbox, DatePicker, Form, Input, InputNumber, Select, Typography, theme } from 'antd';
+import type { SelectProps } from 'antd';
 import type { FormInstance } from 'antd';
 import type { FormListFieldData } from 'antd/es/form';
 import dayjs from 'dayjs';
@@ -15,12 +16,10 @@ import {
   subscriptionAnchorInMonth,
 } from './subscriptionLineSchedule.js';
 
-type SellableRow = { id: string; name: string };
-
 type Props = {
   field: FormListFieldData;
   form: FormInstance;
-  sellableItems: SellableRow[];
+  sellableSelect: SelectProps;
   pickerDateFormat: string;
   canRemove: boolean;
   onRemove: () => void;
@@ -36,7 +35,7 @@ function yesNo(
 export function SubscriptionLineFields({
   field,
   form,
-  sellableItems,
+  sellableSelect,
   pickerDateFormat,
   canRemove,
   onRemove,
@@ -163,11 +162,9 @@ export function SubscriptionLineFields({
           style={{ flex: '1 1 auto', minWidth: 0, marginBottom: 0 }}
         >
           <Select
-            showSearch
-            optionFilterProp="label"
+            {...sellableSelect}
             style={{ width: '100%' }}
             aria-label={translate('table.subscriptions.product')}
-            options={sellableItems.map((item) => ({ value: item.id, label: item.name }))}
           />
         </Form.Item>
       </div>

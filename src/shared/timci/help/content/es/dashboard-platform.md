@@ -12,7 +12,7 @@ El período (últimos 7, 30 o 90 días) recorta la actividad. La salud no depend
 
 Personalizar elige qué recuadros se ven y guarda esa elección en este navegador. Restablecer vuelve a los indicadores de la plataforma. Si un indicador tiene «Ver detalle», abre la lista o el informe correspondiente.
 
-## Tenants activos
+## Inquilinos activos
 
 Organizaciones activas. El texto de abajo cuenta las inactivas. No incluye la organización interna de la plataforma. En el menú, estas organizaciones son los inquilinos. Sirve para ver el tamaño de la plataforma.
 
@@ -34,8 +34,8 @@ Qué le falta a cada entidad para operar: cómo emite comprobantes, si tiene los
 
 ## Actividad
 
-Ventas y cobros registrados en el período, en todas las entidades. Suscripciones con error: abonos cuya última facturación falló. Tenants en silencio: organizaciones activas sin ningún comprobante registrado en los últimos 30 días. El período recorta las ventas y los cobros. Sirve para ver si la plataforma se está usando.
+Ventas y cobros registrados en el período, en todas las entidades. Suscripciones con error: abonos cuya última facturación falló. Inquilinos en silencio: organizaciones activas sin ningún comprobante registrado en los últimos 30 días. El período recorta las ventas y los cobros. Sirve para ver si la plataforma se está usando.
 
 ## Salud
 
-Antigüedad de la última cotización de monedas. Alertas abiertas de emisión de comprobantes y de envío de mail. Comprobantes emitidos, pendientes y fallidos. Estos números no se recortan por el período. Sirve para ver si la cotización, la emisión y el correo están al día. La cotización se consulta en Cotizaciones. Las alertas, en Alertas.
+Antigüedad de la última cotización de monedas. Alertas abiertas de emisión de comprobantes y de envío de correo. Comprobantes emitidos, pendientes y fallidos. Estos números no se recortan por el período. Sirve para ver si la cotización, la emisión y el correo están al día. La cotización se consulta en Cotizaciones. Las alertas, en Alertas.

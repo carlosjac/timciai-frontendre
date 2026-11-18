@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSelect } from '@refinedev/antd';
 import { useList, useOne, useTranslate, type BaseRecord } from '@refinedev/core';
 import {
   Alert,
@@ -19,16 +18,12 @@ import {
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
-import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
+import { useTimciNameSelect } from '../../shared/timci/useTimciNameSelect.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 import {
   fetchActiveMonetaryPolicies,
   type MonetaryPolicyListItem,
 } from '../../shared/timci/monetaryPoliciesApi.js';
-import {
-  fetchPriceListsForEntity,
-  type PriceListRow,
-} from '../../shared/timci/auxiliaryApi.js';
 import { MonetaryPolicyDefaultSelect } from '../monetary-policies/MonetaryPolicyDefaultSelect.js';
 import {
   fetchFxQuote,
@@ -362,7 +357,8 @@ export function CommercialTransactionFormFields({
     | Record<string, string>
     | undefined;
   const itemsWatch = Form.useWatch('items', form);
-  const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
+  const [sellableSearch, setSellableSearch] = useState('');
+  const [debouncedSellableSearch, setDebouncedSellableSearch] = useState('');
   const [monetaryPolicies, setMonetaryPolicies] = useState<MonetaryPolicyListItem[]>([]);
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const [taxResult, setTaxResult] = useState<CalculateTaxesResult | null>(null);
@@ -379,14 +375,8 @@ export function CommercialTransactionFormFields({
   const entityTax = useEntityTaxContext(tenantId, tenantId);
   const taxesOn = entityTax.taxManagementEnabled && !isCollection;
 
-  const { selectProps: customerSelectRaw } = useSelect({
-    resource: 'customers',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-  const customerSelect = stripSelectServerSearch(customerSelectRaw);
+  const { selectProps: customerSelect } = useTimciNameSelect('customers', !!tenantId, customerId);
+  const { selectProps: priceListSelect } = useTimciNameSelect('price_lists', isSale && !!tenantId);
 
   const canCheckEmailBlockers = mayNotifyCustomer && Boolean(tenantId && customerId);
   if (!canCheckEmailBlockers && emailDeliveryBlockers !== 0) {
@@ -447,34 +437,19 @@ export function CommercialTransactionFormFields({
     errorNotification: false,
   });
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSellableSearch(sellableSearch.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [sellableSearch]);
+
   const { result: sellableResult } = useList<SellableRow>({
     resource: 'sellable_items',
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 20 },
+    filters: debouncedSellableSearch
+      ? [{ field: 'name', operator: 'contains', value: debouncedSellableSearch }]
+      : [],
     queryOptions: { enabled: isSale && !!tenantId },
   });
-
-  const { result: salesResult, query: salesQuery } = useList({
-    resource: 'sales',
-    pagination: { currentPage: 1, pageSize: 200 },
-    queryOptions: { enabled: needsAllocations && !!tenantId && !!customerId },
-  });
-  const { result: debitsResult, query: debitsQuery } = useList({
-    resource: 'debits',
-    pagination: { currentPage: 1, pageSize: 200 },
-    queryOptions: { enabled: needsAllocations && !!tenantId && !!customerId },
-  });
-  const allocationsCandidatesLoading =
-    (salesQuery?.isFetching ?? false) || (debitsQuery?.isFetching ?? false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void fetchPriceListsForEntity(tenantId, tenantId).then((rows) => {
-      if (!cancelled) setPriceLists(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [tenantId]);
 
   useEffect(() => {
     if (!customerRecord || lockCustomer) return;
@@ -745,18 +720,20 @@ export function CommercialTransactionFormFields({
       .map((p) => ({ value: String(p.id), label: p.name?.trim() || String(p.id) }));
   }, [currencyId, entityRecord?.paymentOptions]);
 
-  const [settlementByTargetId, setSettlementByTargetId] = useState<
-    Map<string, CurrentAccountSettlementLine>
-  >(() => new Map());
+  const [settlementLines, setSettlementLines] = useState<CurrentAccountSettlementLine[]>([]);
   const [settlementLoading, setSettlementLoading] = useState(false);
 
   const settlementQueryEnabled = Boolean(
-    (isCollection || isCredit) && tenantId && customerId && currencyId,
+    needsAllocations && tenantId && customerId && currencyId,
   );
 
-  /** Settlement as-of date (discounts/surcharges) for allocation candidates (cobro/crédito). */
+  /** Open documents of this customer and currency, including policy adjustments. */
   useEffect(() => {
-    if (!settlementQueryEnabled || !tenantId || !customerId || !currencyId) return;
+    if (!settlementQueryEnabled || !tenantId || !customerId || !currencyId) {
+      setSettlementLines([]);
+      setSettlementLoading(false);
+      return;
+    }
     const asOf =
       transactionDate != null && String(transactionDate).trim() !== ''
         ? String(transactionDate).slice(0, 10)
@@ -770,13 +747,9 @@ export function CommercialTransactionFormFields({
         );
         if (cancelled) return;
         const lines = (json as { lines?: CurrentAccountSettlementLine[] })?.lines ?? [];
-        const map = new Map<string, CurrentAccountSettlementLine>();
-        for (const line of lines) {
-          if (line?.id) map.set(String(line.id), line);
-        }
-        setSettlementByTargetId(map);
+        setSettlementLines(lines.filter((line) => line?.id));
       } catch {
-        if (!cancelled) setSettlementByTargetId(new Map());
+        if (!cancelled) setSettlementLines([]);
       } finally {
         if (!cancelled) setSettlementLoading(false);
       }
@@ -784,47 +757,38 @@ export function CommercialTransactionFormFields({
     return () => {
       cancelled = true;
     };
-  }, [settlementQueryEnabled, currencyId, customerId, isCollection, isCredit, tenantId, transactionDate]);
+  }, [settlementQueryEnabled, currencyId, customerId, tenantId, transactionDate]);
 
-  /** Registered sales/debits of the customer with open balance (same currency when set). */
+  /** Settlement lines already belong to the customer and currency, with open balance. */
   const allocationCandidates = useMemo((): AllocationCandidateRow[] => {
-    if (!customerId) return [];
-    const rows = [...(salesResult.data ?? []), ...(debitsResult.data ?? [])].filter((r) => {
-      if (String(r.customerId ?? '') !== String(customerId)) return false;
-      if (r.status !== 'registered') return false;
-      if (currencyId && String(r.currencyId ?? '') !== String(currencyId)) return false;
-      const open = r.openAmount != null ? Number(r.openAmount) : Number(r.amount);
-      return Number.isFinite(open) ? open > 0 : true;
+    if (!customerId || !currencyId) return [];
+    const rows = settlementLines.filter((line) => {
+      const open = Number(line.openAmount);
+      return Number.isFinite(open) && open > 0;
     });
     rows.sort((a, b) =>
       compareAllocationRowsByDateThenTxnNumber(
         {
-          transactionDate: a.transactionDate != null ? String(a.transactionDate) : null,
-          entityTxnNumber: a.entityTxnNumber != null ? Number(a.entityTxnNumber) : null,
+          transactionDate: a.transactionDate,
+          entityTxnNumber: a.entityTxnNumber,
         },
         {
-          transactionDate: b.transactionDate != null ? String(b.transactionDate) : null,
-          entityTxnNumber: b.entityTxnNumber != null ? Number(b.entityTxnNumber) : null,
+          transactionDate: b.transactionDate,
+          entityTxnNumber: b.entityTxnNumber,
         },
       ),
     );
-    return rows.map((r) => {
-      const id = String(r.id);
-      const settlement = settlementByTargetId.get(id);
-      return {
-        id,
-        entityTxnNumber:
-          r.entityTxnNumber != null ? Number(r.entityTxnNumber) : undefined,
-        type: String(r.type ?? 'sale'),
-        transactionDate: r.transactionDate != null ? String(r.transactionDate) : undefined,
-        amount: r.amount != null ? String(r.amount) : undefined,
-        openAmount: r.openAmount != null ? String(r.openAmount) : undefined,
-        concept: typeof r.concept === 'string' ? r.concept : null,
-        adjustmentAmount: settlement?.adjustmentAmount,
-        settlementAmount: settlement?.settlementAmount,
-      };
-    });
-  }, [currencyId, customerId, debitsResult.data, salesResult.data, settlementByTargetId]);
+    return rows.map((line) => ({
+      id: String(line.id),
+      entityTxnNumber: line.entityTxnNumber,
+      type: line.type,
+      transactionDate: line.transactionDate,
+      openAmount: line.openAmount,
+      concept: line.concept,
+      adjustmentAmount: line.adjustmentAmount,
+      settlementAmount: line.settlementAmount,
+    }));
+  }, [currencyId, customerId, settlementLines]);
 
   const allocationsWatch = Form.useWatch('allocations', form) as
     | Array<{ targetTransactionId?: string; amount?: string }>
@@ -977,9 +941,7 @@ export function CommercialTransactionFormFields({
           rules={[{ required: true, message: translate('form.validation.requiredField') }]}
         >
           <Select
-            showSearch
-            optionFilterProp="label"
-            options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
+            {...priceListSelect}
             placeholder={translate('pages.commercialTransactions.fields.priceListPlaceholder')}
             onChange={(value) => {
               if (!currencyId || !value) return;
@@ -1111,14 +1073,11 @@ export function CommercialTransactionFormFields({
                       <AutoComplete
                         allowClear
                         options={sellableAutoOptions}
+                        onSearch={setSellableSearch}
                         placeholder={translate(
                           'pages.commercialTransactions.fields.sellableItemPlaceholder',
                         )}
-                        filterOption={(input, option) =>
-                          String(option?.value ?? '')
-                            .toLowerCase()
-                            .includes(input.trim().toLowerCase())
-                        }
+                        filterOption={false}
                         onSelect={(value) => {
                           onSellableLineSelect(name, String(value ?? ''));
                         }}
@@ -1357,9 +1316,7 @@ export function CommercialTransactionFormFields({
             <CollectionAllocationsTable
               candidates={allocationCandidates}
               disabled={!customerId || !currencyId}
-              loading={
-                Boolean(customerId) && (allocationsCandidatesLoading || settlementLoading)
-              }
+              loading={Boolean(customerId && currencyId) && settlementLoading}
               emptyHint={allocationsEmptyHint}
             />
           </Form.Item>

@@ -212,7 +212,7 @@ export function EntityCreate() {
                 children: (
                   <>
                     <Form.Item
-                      label="Id (UUID)"
+                      label={translate('audit.idUuid')}
                       name="id"
                       rules={[
                         {

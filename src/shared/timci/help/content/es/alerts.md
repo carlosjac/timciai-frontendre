@@ -10,7 +10,7 @@ Si va a notificar a un cliente y tiene un rebote o un rechazo sin atender, la ve
 
 ## Cuándo usarla
 
-Cuando aparece el aviso de arriba, o cuando un cliente no recibe mails, o cuando un abono figura con error de facturación.
+Cuando aparece el aviso de arriba, o cuando un cliente no recibe correos, o cuando un abono figura con error de facturación.
 
 ## Lista
 
@@ -24,15 +24,15 @@ Hace falta la entidad elegida en la cabecera. La lista trae las alertas de esa e
 
 No hay botón Crear. Abra la fila para ver la ficha.
 
-## Rebote duro de email
+## Rebote duro de correo
 
-Tipo `email_bounce_hard`. Título «Rebote duro de email». El servidor del destinatario rechazó la dirección de forma permanente y no va a aceptarla.
+Tipo `email_bounce_hard`. Título «Rebote duro de correo». El servidor del destinatario rechazó la dirección de forma permanente y no va a aceptarla.
 
-El resumen nombra la dirección. El enlace abre el cliente para corregir el correo, o el rebote si no hay cliente. Atender el rebote en Rebotes de email cierra también esta alerta. Corrija el contacto antes de volver a registrar una operación que avise.
+El resumen nombra la dirección. El enlace abre el cliente para corregir el correo, o el rebote si no hay cliente. Atender el rebote en Rebotes de correo cierra también esta alerta. Corrija el contacto antes de volver a registrar una operación que avise.
 
-## Email rechazado por el destinatario
+## Correo rechazado por el destinatario
 
-Tipo `recipient_rejected`. Título «Email rechazado por el destinatario». El envío falló porque la dirección no es válida para ese servidor. Es un rechazo permanente, no un atraso del correo.
+Tipo `recipient_rejected`. Título «Correo rechazado por el destinatario». El envío falló porque la dirección no es válida para ese servidor. Es un rechazo permanente, no un atraso del correo.
 
 El enlace abre el cliente, o el correo enviado si no hay cliente. Cambie la dirección y atienda la alerta cuando ya no deba aparecer en el aviso de pendientes.
 
@@ -50,7 +50,7 @@ El resumen nombra al cliente y la fecha. El enlace abre el abono. Cuando esa fec
 Ve la severidad, el tipo, el resumen, cuándo se creó y si está pendiente o atendida. Atender, arriba, la marca como atendida y la saca del aviso de pendientes. No corrige el correo ni el precio: eso se hace en el enlace.
 
 - Abrir elemento relacionado: el abono, el cliente o el rebote, según el fallo.
-- Editar email del cliente: cuando la alerta está ligada a un cliente.
+- Editar el correo del cliente: cuando la alerta está ligada a un cliente.
 
 Una alerta ya atendida muestra la fecha en Atendida y ya no ofrece Atender.
 

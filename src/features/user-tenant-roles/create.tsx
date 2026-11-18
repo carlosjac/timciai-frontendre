@@ -35,7 +35,7 @@ export function UserTenantRoleCreate() {
     optionLabel: 'name',
     optionValue: 'id',
     filters: [{ field: 'isActive', operator: 'eq', value: true }],
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 100 },
   });
   const tenantSelect = stripSelectServerSearch(tenantSelectRaw);
 
@@ -43,7 +43,7 @@ export function UserTenantRoleCreate() {
     resource: 'roles',
     optionLabel: 'name',
     optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 100 },
   });
   const roleSelect = stripSelectServerSearch(roleSelectRaw);
 

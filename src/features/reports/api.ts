@@ -1,4 +1,5 @@
 import { getV1Base } from '../../config.js';
+import { translateEs } from '../../i18n/createI18nProvider.js';
 import { timciFetch } from '../../shared/timci/http.js';
 
 export const REPORT_KEYS = [
@@ -12,6 +13,7 @@ export const REPORT_KEYS = [
   'adjustments',
   'portfolio',
   'management',
+  'drafts',
 ] as const;
 
 export type ReportKey = (typeof REPORT_KEYS)[number];
@@ -42,6 +44,8 @@ export interface EntityReport {
   rows: Record<string, unknown>[];
   sections: Record<string, Record<string, unknown>[]>;
   totals: ReportTotal[];
+  total?: number;
+  sectionTotals?: Record<string, number>;
 }
 
 export interface ReportQuery {
@@ -51,12 +55,14 @@ export interface ReportQuery {
   to: string;
   currencyId?: string;
   bucket?: string;
+  range?: [number, number];
 }
 
 function reportPath(query: ReportQuery, extra?: Record<string, string>): string {
   const params = new URLSearchParams({ from: query.from, to: query.to });
   if (query.currencyId) params.set('currencyId', query.currencyId);
   if (query.bucket) params.set('bucket', query.bucket);
+  if (query.range) params.set('range', JSON.stringify(query.range));
   if (extra) {
     for (const [key, value] of Object.entries(extra)) params.set(key, value);
   }
@@ -78,14 +84,19 @@ export async function downloadEntityReport(query: ReportQuery, dateFormat: strin
     headers,
   });
   if (!response.ok) {
-    let message = `HTTP ${response.status}`;
+    let code = '';
     try {
-      const body = (await response.json()) as { message?: string };
-      if (body.message) message = body.message;
+      const body = (await response.json()) as { errors?: { code?: string }[] };
+      code = body.errors?.[0]?.code ?? '';
     } catch {
       // The body is not JSON when the gateway returns an empty error.
     }
-    throw new Error(message);
+    const error = new Error(
+      code ||
+        translateEs('form.serverError.httpStatus').replaceAll('{{status}}', String(response.status)),
+    );
+    if (code) error.name = code;
+    throw error;
   }
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);

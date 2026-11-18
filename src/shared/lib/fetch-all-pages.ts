@@ -7,7 +7,7 @@ export async function fetchAllListPages<T>(options: {
   fetchPage: (page: number, pageSize: number) => Promise<{ data: T[]; total: number }>;
   pageSize?: number;
 }): Promise<T[]> {
-  const pageSize = options.pageSize ?? 300;
+  const pageSize = options.pageSize ?? 100;
   const acc: T[] = [];
   let page = 1;
   let total = Number.POSITIVE_INFINITY;

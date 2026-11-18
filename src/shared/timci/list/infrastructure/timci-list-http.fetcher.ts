@@ -1,10 +1,9 @@
 import type { BaseRecord, CrudFilter, CrudSort } from '@refinedev/core';
+import { translateEs } from '../../../../i18n/createI18nProvider.js';
 import { getResourceApiBase, getStoredTenantId } from '../../apiUrl.js';
 import {
   buildSortRangeParams,
   buildTimciFilter,
-  isLogicalFilter,
-  logicalFilterToTimciCriterion,
   parseContentRangeTotal,
 } from '../../listQuery.js';
 import { timciFetch, toHttpError } from '../../http.js';
@@ -57,78 +56,6 @@ function normalizeSessionRow(row: Record<string, unknown>): Record<string, unkno
     userName: typeof row.userName === 'string' ? row.userName : undefined,
     isOwn: row.isOwn === true,
   };
-}
-
-function sessionSortValue(row: Record<string, unknown>, field: string): string | number | boolean {
-  switch (field) {
-    case 'startedAt':
-    case 'expiresAt':
-      return typeof row[field] === 'number' ? (row[field] as number) : 0;
-    case 'current':
-      return Boolean(row.current);
-    case 'isOwn':
-      return Boolean(row.isOwn);
-    case 'userName':
-      return String(row.userName ?? '').toLowerCase();
-    case 'id':
-      return String(row.id ?? '');
-    default:
-      return String(row[field] ?? '');
-  }
-}
-
-function compareSessionRows(
-  a: Record<string, unknown>,
-  b: Record<string, unknown>,
-  field: string,
-  asc: boolean,
-): number {
-  const va = sessionSortValue(a, field);
-  const vb = sessionSortValue(b, field);
-  let cmp = 0;
-  if (va < vb) cmp = -1;
-  else if (va > vb) cmp = 1;
-  return asc ? cmp : -cmp;
-}
-
-function sessionRowMatchesUserNameCriterion(
-  row: Record<string, unknown>,
-  operator: string,
-  rawValue: string,
-): boolean {
-  const haystack = String(row.userName ?? '').toLowerCase();
-  const needle = rawValue.trim().toLowerCase();
-  if (needle === '') return true;
-  switch (operator) {
-    case 'eq':
-      return haystack === needle;
-    case 'contains':
-      return haystack.includes(needle);
-    case 'startsWith':
-      return haystack.startsWith(needle);
-    case 'endsWith':
-      return haystack.endsWith(needle);
-    default:
-      return true;
-  }
-}
-
-/** Sesiones: lista completa en una respuesta; filtros Refine se aplican en cliente. */
-function applySessionListFilters(
-  rows: Record<string, unknown>[],
-  filters: CrudFilter[] | undefined,
-): Record<string, unknown>[] {
-  if (!filters?.length) return rows;
-  let out = rows;
-  for (const f of filters) {
-    if (!isLogicalFilter(f) || f.field !== 'userName') continue;
-    const crit = logicalFilterToTimciCriterion(f);
-    if (!crit) continue;
-    const op = String(crit.operator);
-    const val = String(crit.value ?? '');
-    out = out.filter((row) => sessionRowMatchesUserNameCriterion(row, op, val));
-  }
-  return out;
 }
 
 export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
@@ -228,34 +155,26 @@ export async function fetchTimciListPage<TData extends BaseRecord = BaseRecord>(
 
   const base = getResourceApiBase(input.resource);
   if (!base) {
-    throw toHttpError(
-      400,
-      'Select a tenant in the header for tenant-scoped resources.',
-    );
+    throw toHttpError(400, translateEs('tenant.selectForScoped'));
   }
 
   if (input.resource === 'sessions') {
-    const { json } = await timciFetch(base);
+    const filterObj = buildTimciFilter(input.filters);
+    const sorters = input.sorters?.length
+      ? input.sorters
+      : [{ field: 'startedAt', order: 'desc' as const }];
+    const qs = buildSortRangeParams({
+      sorters,
+      page: input.page,
+      pageSize: input.pageSize,
+      filterObj,
+    });
+    const { json, headers } = await timciFetch(`${base}?${qs.toString()}`);
     const raw = Array.isArray((json as { sessions?: unknown }).sessions)
       ? (json as { sessions: Record<string, unknown>[] }).sessions
       : [];
-    const normalized = raw.map((r) => normalizeSessionRow(r)) as TData[];
-    const filtered = applySessionListFilters(
-      normalized as Record<string, unknown>[],
-      input.filters,
-    ) as TData[];
-    const sortField =
-      input.sorters?.[0]?.field != null ? String(input.sorters[0].field) : 'startedAt';
-    const asc =
-      input.sorters?.[0]?.order != null
-        ? String(input.sorters[0].order).toLowerCase() === 'asc'
-        : false;
-    filtered.sort((a, b) =>
-      compareSessionRows(a as Record<string, unknown>, b as Record<string, unknown>, sortField, asc),
-    );
-    const total = filtered.length;
-    const start = (input.page - 1) * input.pageSize;
-    const data = filtered.slice(start, start + input.pageSize);
+    const data = raw.map((r) => normalizeSessionRow(r)) as TData[];
+    const total = parseContentRangeTotal(headers) ?? data.length;
     return { data, total };
   }
 

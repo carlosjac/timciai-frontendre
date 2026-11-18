@@ -1,10 +1,10 @@
-# Emails salientes
+# Correos salientes
 
 Cada correo que su entidad intenta enviar queda aquí: a quién, con qué asunto y si salió. No se crean a mano desde esta lista.
 
 ## Para qué sirve
 
-Sirve para comprobar que el cliente recibió el aviso, para leer por qué no salió y para volver a encolar un envío fallido. El rechazo permanente de una dirección también queda en Rebotes de email.
+Sirve para comprobar que el cliente recibió el aviso, para leer por qué no salió y para volver a encolar un envío fallido. El rechazo permanente de una dirección también queda en Rebotes de correo.
 
 ## Cuándo sale un correo
 
@@ -16,7 +16,7 @@ Un borrador no avisa. El correo se encola al registrar la operación, si el clie
 - Notif. cobranzas, al registrar un cobro.
 - Notif. pagos vencidos, en el recordatorio de mora, según la política de mora del cliente.
 
-En la ficha de una operación ya registrada, Emails enviados lista los de esa operación. Reenviar notificación crea un correo nuevo para los contactos de ese tipo. El envío anterior no se modifica.
+En la ficha de una operación ya registrada, Correos enviados lista los de esa operación. Reenviar notificación crea un correo nuevo para los contactos de ese tipo. El envío anterior no se modifica.
 
 Si la entidad está en modo prueba, los correos salen solo al buzón de prueba.
 
@@ -45,7 +45,7 @@ Puede marcar varios Fallidos y usar Reintentar seleccionados. El lote toma hasta
 - Pendiente de envío (`pending_send`): está en la cola. Todavía no salió.
 - Esperando comprobante (`pending_attachment`): el correo espera el PDF. Cuando el comprobante se emite, pasa a pendiente de envío. Si la emisión no se concreta, puede quedar cancelado.
 - Enviando (`sending`): el envío está en curso.
-- Enviado (`sent`): salió. La ficha muestra la fecha en Enviado. Un rebote puede llegar después: el estado sigue en Enviado y el rechazo se ve en Rebotes de email.
+- Enviado (`sent`): salió. La ficha muestra la fecha en Enviado. Un rebote puede llegar después: el estado sigue en Enviado y el rechazo se ve en Rebotes de correo.
 - Fallido (`failed`): no salió. Si hay próximo intento, es un fallo temporal y el sistema vuelve a probar solo, con esperas de 1, 5, 15, 60 y 360 minutos, hasta agotar el máximo. Si no hay próximo intento, es un rechazo permanente o se acabaron los intentos: no se reintenta solo.
 - Cancelado (`cancelled`): no se va a enviar. En esta lista no hay Reintentar. En la ficha de la operación, Reintentar también aparece si está cancelado.
 
@@ -63,7 +63,7 @@ Reintentar, arriba, solo si está Fallido. Vuelve a dejarlo pendiente de envío 
 
 ## En la operación
 
-En la venta, el débito, el crédito o el cobro registrado, el cuadro Emails enviados muestra el estado y el asunto. Ver abre esta ficha. Reintentar aparece en Fallido y también en Cancelado. Reenviar notificación pide confirmación y genera un correo nuevo. Si la operación sigue en borrador y no hay correos, el cuadro no se muestra.
+En la venta, el débito, el crédito o el cobro registrado, el cuadro Correos enviados muestra el estado y el asunto. Ver abre esta ficha. Reintentar aparece en Fallido y también en Cancelado. Reenviar notificación pide confirmación y genera un correo nuevo. Si la operación sigue en borrador y no hay correos, el cuadro no se muestra.
 
 ## Qué puede salir mal
 
@@ -71,4 +71,4 @@ Sin la entidad en la cabecera, la lista no carga. Reintentar un Fallido permanen
 
 ## Paso siguiente
 
-Si el error dice que la dirección fue rechazada, corrija el contacto del cliente y revise Rebotes de email. Si el comprobante no se emitió, ábralo desde Comprobantes y reintente la emisión antes de reenviar el aviso.
+Si el error dice que la dirección fue rechazada, corrija el contacto del cliente y revise Rebotes de correo. Si el comprobante no se emitió, ábralo desde Comprobantes y reintente la emisión antes de reenviar el aviso.

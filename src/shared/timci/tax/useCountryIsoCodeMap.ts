@@ -1,5 +1,5 @@
-import { useList } from '@refinedev/core';
 import { useMemo } from 'react';
+import { useBoundedCatalog } from '../useBoundedCatalog.js';
 
 type CountryRow = {
   id?: string;
@@ -7,24 +7,20 @@ type CountryRow = {
 };
 
 /**
- * Maps country UUID → ISO 3166-1 alpha-2 (uppercase), from the countries list resource.
+ * Maps country UUID → ISO 3166-1 alpha-2 (uppercase), from the full countries catalog.
  */
 export function useCountryIsoCodeMap(tenantId: string | null | undefined) {
-  const { result, query } = useList<CountryRow>({
-    resource: 'countries',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: Boolean(tenantId) },
-  });
+  const { rows, loading } = useBoundedCatalog<CountryRow>('countries', Boolean(tenantId));
 
   const isoByCountryId = useMemo(() => {
     const map = new Map<string, string>();
-    for (const row of result.data ?? []) {
+    for (const row of rows) {
       const id = row.id != null ? String(row.id) : '';
       const iso = row.isoCode != null ? String(row.isoCode).trim().toUpperCase() : '';
       if (id && iso.length === 2) map.set(id, iso);
     }
     return map;
-  }, [result.data]);
+  }, [rows]);
 
   const resolveIsoCode = (countryId: string | null | undefined): string | null => {
     if (!countryId) return null;
@@ -34,6 +30,6 @@ export function useCountryIsoCodeMap(tenantId: string | null | undefined) {
   return {
     isoByCountryId,
     resolveIsoCode,
-    isLoading: query?.isLoading ?? false,
+    isLoading: loading,
   };
 }

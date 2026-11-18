@@ -315,19 +315,36 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
   const handleExport = useCallback(async () => {
     setExporting(true);
     try {
-      const rows = await fetchAllListPages({
-        fetchPage: async (page, pageSize) =>
-          fetchTimciListPage<T>({
-            resource: props.resource,
-            page,
-            pageSize,
-            sorters,
-            filters,
-            meta: listQueryMeta,
-            includeInactive: props.includeInactive,
-          }),
-        pageSize: 250,
+      const pageSize = 100;
+      const first = await fetchTimciListPage<T>({
+        resource: props.resource,
+        page: 1,
+        pageSize,
+        sorters,
+        filters,
+        meta: listQueryMeta,
+        includeInactive: props.includeInactive,
       });
+      if (first.total > 5000) {
+        notify.error(translate('list.export.tooMany'));
+        return;
+      }
+      const rows =
+        first.total <= first.data.length
+          ? first.data
+          : await fetchAllListPages({
+              fetchPage: async (page, size) =>
+                fetchTimciListPage<T>({
+                  resource: props.resource,
+                  page,
+                  pageSize: size,
+                  sorters,
+                  filters,
+                  meta: listQueryMeta,
+                  includeInactive: props.includeInactive,
+                }),
+              pageSize,
+            });
 
       const visibleDefs = orderVisibleListColumnDefs(props.columnDefs, visibleKeys);
       const csvCols = visibleDefs.map((d) => ({
@@ -502,6 +519,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
     const rcEs = esES.Pagination ?? RC_PAGINATION_ES_FALLBACK;
     return {
       ...tablePagination,
+      pageSizeOptions: [10, 20, 50, 100],
       locale: { ...prevLocale, ...rcEs },
     };
   }, [tablePagination]);

@@ -1,9 +1,9 @@
-import { Edit, SaveButton, useForm, useSelect } from '@refinedev/antd';
+import { Edit, SaveButton, useForm } from '@refinedev/antd';
 import { useTranslate, type BaseRecord } from '@refinedev/core';
 import { Alert, Form, Input, Select } from 'antd';
 import { useCallback, useEffect, useMemo } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
-import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
+import { useBoundedCatalog } from '../../shared/timci/useBoundedCatalog.js';
 import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCollapse.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
@@ -44,21 +44,22 @@ export function DocumentTypeEdit() {
     formFieldNames: DOCUMENT_TYPE_EDIT_FIELDS,
   });
 
-  const { selectProps: countrySelectRaw, query: countriesQuery } = useSelect({
-    resource: 'countries',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-  const countrySelect = stripSelectServerSearch(countrySelectRaw);
+  const { rows: countries, loading: countriesLoading } = useBoundedCatalog<CountryRow>(
+    'countries',
+    !!tenantId,
+  );
+  const countrySelect = useMemo(
+    () => ({
+      options: countries.map((row) => ({ value: row.id, label: row.name ?? row.id })),
+      showSearch: true,
+      optionFilterProp: 'label' as const,
+      loading: countriesLoading,
+    }),
+    [countries, countriesLoading],
+  );
 
   const record = query?.data?.data as DocumentTypeRecord | undefined;
   const countryId = Form.useWatch('countryId', form);
-  const countries = useMemo(
-    () => (countriesQuery.data?.data ?? []) as CountryRow[],
-    [countriesQuery.data],
-  );
   const selectedCountryIso = useMemo(() => {
     const row = countries.find((c) => c.id === countryId);
     return row?.isoCode;

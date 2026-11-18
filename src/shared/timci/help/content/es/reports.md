@@ -4,7 +4,7 @@ El detalle detrás de los indicadores del tablero. Cada informe responde una pre
 
 ## Para qué sirve
 
-Sirve para bajar del número del tablero a los clientes, comprobantes e ítems que lo componen, y para llevarse ese detalle a Excel. Un borrador no entra. Una venta, un débito, un crédito o un cobro anulados dejan de contar en los informes de operación; la anulación se ve en Ajustes y anulaciones.
+Sirve para bajar del número del tablero a los clientes, comprobantes e ítems que lo componen, y para llevarse ese detalle a Excel. Un borrador no entra en los informes de lo ya registrado: se lista en Borradores. Una venta, un débito, un crédito o un cobro anulados dejan de contar en los informes de operación; la anulación se ve en Ajustes y anulaciones.
 
 ## Lista
 
@@ -18,7 +18,7 @@ La barra muestra solo los filtros que cambian ese informe.
 - Moneda: todas, o una. Aparece en todos. Recorta las filas y los totales. En Gestión de cobranza no recorta los rebotes.
 - Tramo de atraso: solo en Antigüedad de saldos. Todos los tramos, o uno: Al día, 1–30, 31–60, 61–90 o +90.
 
-Antigüedad de saldos, Remanentes sin imputar y Cartera por cliente son el estado de hoy. En esos tres la pantalla oculta el período, oculta el rango de fechas y avisa que es el saldo a hoy. Quedan la moneda y, en Antigüedad de saldos, el tramo de atraso.
+Antigüedad de saldos, Remanentes sin imputar, Cartera por cliente y Borradores son el estado de hoy. En esos cuatro la pantalla oculta el período y el rango de fechas. Quedan la moneda y, en Antigüedad de saldos, el tramo de atraso.
 
 ## Antigüedad de saldos
 
@@ -93,7 +93,7 @@ Es el saldo a hoy. La pantalla no muestra el período. La moneda sí lo recorta.
 
 - Fecha, cliente, comprobante, tipo (cobro o crédito) y moneda.
 - Importe: el total del documento. Imputado: lo ya aplicado. Remanente: lo que falta aplicar.
-- Fuera de FIFO: Sí cuando ese documento se guardó con «No auto-imputar». Ese resto no se aplica solo a la próxima venta; hay que imputarlo a mano desde el cobro o el crédito. No: la próxima venta registrada puede tomarlo sola.
+- Fuera de imputación automática: Sí cuando ese documento se guardó con «No auto-imputar». Ese resto no se aplica solo a la próxima venta; hay que imputarlo a mano desde el cobro o el crédito. No: la próxima venta registrada puede tomarlo sola.
 
 Sirve para no dejar un cobro olvidado y para saber cuáles exigen una imputación manual. Un documento ya aplicado por completo no aparece.
 
@@ -121,9 +121,17 @@ Sirve para la gestión del día: a quién ya se le avisó la deuda, qué correos
 
 Recordatorios enviados. Cada aviso de deuda vencida que salió en el período, con la fecha de evaluación, el cliente y la moneda. El período y la moneda sí lo filtran. Sirve para no volver a reclamar el mismo día a quien ya recibió el aviso, y para ver a quién no se le avisó.
 
-Rebotes duros. Mails que el servidor del destinatario rechazó de forma permanente en el período: email, subtipo y diagnóstico, y el cliente cuando el rebote está ligado a uno. El período los filtra. La moneda no: se listan todos los del rango. Sirve para corregir el contacto antes de volver a notificar. Atender el rebote se hace en Rebotes de email; este informe los deja juntos para el rango.
+Rebotes duros. Correos que el servidor del destinatario rechazó de forma permanente en el período: correo, subtipo y diagnóstico, y el cliente cuando el rebote está ligado a uno. El período los filtra. La moneda no: se listan todos los del rango. Sirve para corregir el contacto antes de volver a notificar. Atender el rebote se hace en Rebotes de correo; este informe los deja juntos para el rango.
 
 Suscripciones. Todos los abonos, no solo los del período. El período no los cambia; por eso en este informe los botones de período siguen visibles: los usan los recordatorios y los rebotes. Inicio, fin, próximo cobro y cada cuántos meses factura. Con próximo cobro: tiene fecha para la próxima factura. En 7 días: esa fecha cae de hoy a siete días. Detenida: la última facturación falló; la columna Error trae el motivo. Arriba del cuadro, los mismos tres conteos por moneda. La moneda del selector recorta los abonos. Sirve para preparar la facturación de la semana y para retomar un abono detenido por falta de precio o de cotización.
+
+## Borradores
+
+Sirve para ver, juntas, las operaciones que todavía no se registraron: ventas, débitos, créditos, cobros y abonos en borrador. Es el estado de hoy. El período no lo cambia. La moneda recorta la lista.
+
+Cada fila tiene un enlace a la ficha de esa transacción o de ese abono. Desde ahí se registra o se sigue editando. El total Importe suma solo las transacciones; un abono todavía no tiene importe.
+
+Hasta que se registran, no entran en la cuenta corriente ni en los demás informes.
 
 ## Qué puede salir mal
 

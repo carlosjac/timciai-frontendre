@@ -72,6 +72,10 @@ export function AlertList() {
       dataIndex: 'kind',
       titleKey: 'table.alerts.kind',
       filter: { kind: 'text' },
+      render: (value) =>
+        translate(`pages.alerts.kinds.${String(value ?? '')}`, String(value ?? '')),
+      exportValue: (record) =>
+        translate(`pages.alerts.kinds.${String(record.kind ?? '')}`, String(record.kind ?? '')),
     },
     {
       key: 'severity',

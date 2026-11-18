@@ -444,7 +444,7 @@ export function EntityEdit() {
         <TimciFormInactiveRecordBanner isActive={record?.isActive} />
         {record?.id && (
           <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
-            Id: {record.id}
+            {translate('audit.idWithValue', { id: record.id })}
           </Typography.Paragraph>
         )}
         <Form

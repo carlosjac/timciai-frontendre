@@ -1,15 +1,13 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { useSelect } from '@refinedev/antd';
-import { useList, useOne, useTranslate } from '@refinedev/core';
+import { useOne, useTranslate } from '@refinedev/core';
 import { Button, Card, Col, DatePicker, Form, InputNumber, Row, Select, theme } from 'antd';
 import type { FormInstance } from 'antd';
 import dayjs from 'dayjs';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
-import { fetchPriceListsForEntity, type PriceListRow } from '../../shared/timci/auxiliaryApi.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import { useTimciNameSelect } from '../../shared/timci/useTimciNameSelect.js';
 import { MonetaryPolicyDefaultSelect } from '../monetary-policies/MonetaryPolicyDefaultSelect.js';
-import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import { SubscriptionLineFields } from './SubscriptionLineFields.js';
 import { emptySubscriptionLine } from './subscriptionLineSchedule.js';
 
@@ -19,8 +17,6 @@ const PERIOD_MODES = [
   'advance_single_month',
   'arrears_single_month',
 ] as const;
-
-type SellableRow = { id: string; name: string };
 
 type Props = {
   form: FormInstance;
@@ -33,14 +29,14 @@ export function SubscriptionFormFields({ form, tenantId, pickerDateFormat, lockI
   const translate = useTranslate();
   const { token } = theme.useToken();
   const customerId = Form.useWatch('customerId', form) as string | undefined;
-  const { selectProps: customerSelectRaw } = useSelect({
-    resource: 'customers',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-  const customerSelect = stripSelectServerSearch(customerSelectRaw);
+  const priceListId = Form.useWatch('priceListId', form) as string | undefined;
+  const { selectProps: customerSelect } = useTimciNameSelect('customers', !!tenantId, customerId);
+  const { selectProps: priceListSelect, query: priceListQuery } = useTimciNameSelect(
+    'price_lists',
+    !!tenantId,
+    priceListId,
+  );
+  const { selectProps: sellableSelect } = useTimciNameSelect('sellable_items', !!tenantId);
   const { result: customerRecord } = useOne<{ defaultCurrencyId?: string }>({
     resource: 'customers',
     id: customerId ?? '',
@@ -50,28 +46,14 @@ export function SubscriptionFormFields({ form, tenantId, pickerDateFormat, lockI
   const { selectProps: currencySelect, options: currencyOptions } =
     useEntitySupportedCurrencySelect(tenantId);
   const proposedCurrency = useRef<string | null>(null);
-  const { result: sellableResult } = useList<SellableRow>({
-    resource: 'sellable_items',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-  const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
-
   useEffect(() => {
-    let cancelled = false;
-    void fetchPriceListsForEntity(tenantId, tenantId).then((rows) => {
-      if (cancelled) return;
-      setPriceLists(rows);
-      const current = form.getFieldValue('priceListId');
-      const unset = current == null || String(current).trim() === '';
-      if (unset && rows.length === 1) {
-        form.setFieldValue('priceListId', rows[0]?.id);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [form, tenantId]);
+    const total = priceListQuery.data?.total;
+    const rows = priceListQuery.data?.data ?? [];
+    if (total !== 1 || rows.length !== 1) return;
+    const current = form.getFieldValue('priceListId');
+    const unset = current == null || String(current).trim() === '';
+    if (unset) form.setFieldValue('priceListId', rows[0]?.id);
+  }, [form, priceListQuery.data]);
 
   useEffect(() => {
     if (lockIdentity) return;
@@ -206,7 +188,7 @@ export function SubscriptionFormFields({ form, tenantId, pickerDateFormat, lockI
                 showSearch
                 optionFilterProp="label"
                 aria-label={translate('table.subscriptions.priceList')}
-                options={priceLists.map((row) => ({ value: row.id, label: row.name }))}
+                {...priceListSelect}
               />
             </Form.Item>
           </Col>
@@ -239,7 +221,7 @@ export function SubscriptionFormFields({ form, tenantId, pickerDateFormat, lockI
                   key={field.key}
                   field={field}
                   form={form}
-                  sellableItems={sellableResult?.data ?? []}
+                  sellableSelect={sellableSelect}
                   pickerDateFormat={pickerDateFormat}
                   canRemove={fields.length > 1}
                   onRemove={() => remove(field.name)}

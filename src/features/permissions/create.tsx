@@ -36,7 +36,7 @@ export function PermissionCreate() {
     resource: 'roles',
     optionLabel: 'name',
     optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 100 },
     sorters: [{ field: 'name', order: 'asc' }],
   });
   const roleSelect = stripSelectServerSearch(roleSelectRaw);
@@ -46,7 +46,7 @@ export function PermissionCreate() {
     optionLabel: 'name',
     optionValue: 'id',
     filters: [{ field: 'isActive', operator: 'eq', value: true }],
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 100 },
     sorters: [{ field: 'name', order: 'asc' }],
   });
   const tenantSelect = stripSelectServerSearch(tenantSelectRaw);
@@ -59,7 +59,7 @@ export function PermissionCreate() {
       return code !== '' ? `${code} — ${name}` : name;
     },
     optionValue: (a) => String(a.id ?? ''),
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 100 },
     sorters: [{ field: 'name', order: 'asc' }],
   });
   const actionSelect = stripSelectServerSearch(actionSelectRaw);

@@ -1,5 +1,5 @@
 import { usePermissions, useTranslate } from '@refinedev/core';
-import { Alert, Button, Space } from 'antd';
+import { Alert, Button } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
@@ -117,18 +117,13 @@ export function DraftNotice({ placement }: Props) {
       message={draftNoticeMessage(present)}
       description={placement === 'panel' ? translate('header.drafts.description') : undefined}
       action={
-        <Space wrap size="small">
-          {present.map((item) => (
-            <Button
-              key={item.resource}
-              size={placement === 'banner' ? 'small' : 'middle'}
-              type="primary"
-              onClick={() => navigate(item.path)}
-            >
-              {translate(`header.drafts.open.${item.resource}`)}
-            </Button>
-          ))}
-        </Space>
+        <Button
+          size={placement === 'banner' ? 'small' : 'middle'}
+          type="primary"
+          onClick={() => navigate('/reports/drafts')}
+        >
+          {translate('header.drafts.openReport')}
+        </Button>
       }
     />
   );

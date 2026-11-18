@@ -7,55 +7,33 @@ import { fetchTimciListPage } from './timci-list-http.fetcher.js';
 
 const API = 'http://127.0.0.1/v1';
 
-describe('fetchTimciListPage — sessions (client filter/sort/page)', () => {
+describe('fetchTimciListPage — sessions (server range and filter)', () => {
   afterEach(() => {
     mswServer.resetHandlers();
   });
 
-  it('filters by userName, sorts, and paginates on the client', async () => {
+  it('sends range, sort and userName, and reads Content-Range', async () => {
+    let requestUrl = '';
     mswServer.use(
-      http.get(`${API}/auth/sessions`, () =>
-        HttpResponse.json({
-          sessions: [
-            {
-              id: 's1',
-              startedAt: '2024-01-01T10:00:00.000Z',
-              expiresAt: '2024-01-02T10:00:00.000Z',
-              current: false,
-              userName: 'Ada',
-              isOwn: true,
-            },
-            {
-              id: 's2',
-              startedAt: '2024-01-03T10:00:00.000Z',
-              expiresAt: '2024-01-04T10:00:00.000Z',
-              current: true,
-              userName: 'Bob',
-              isOwn: false,
-            },
-            {
-              id: 's3',
-              startedAt: '2024-01-02T10:00:00.000Z',
-              expiresAt: '2024-01-05T10:00:00.000Z',
-              current: false,
-              userName: 'Ada Lovelace',
-              isOwn: false,
-            },
-          ],
-        }),
-      ),
+      http.get(`${API}/auth/sessions`, ({ request }) => {
+        requestUrl = request.url;
+        return HttpResponse.json(
+          {
+            sessions: [
+              {
+                id: 's3',
+                startedAt: '2024-01-02T10:00:00.000Z',
+                expiresAt: '2024-01-05T10:00:00.000Z',
+                current: false,
+                userName: 'Ada Lovelace',
+                isOwn: false,
+              },
+            ],
+          },
+          { headers: { 'Content-Range': 'sessions 1-1/2' } },
+        );
+      }),
     );
-
-    const filtered = await fetchTimciListPage({
-      resource: 'sessions',
-      page: 1,
-      pageSize: 10,
-      filters: [{ field: 'userName', operator: 'contains', value: 'ada' }],
-      sorters: [{ field: 'startedAt', order: 'asc' }],
-    });
-
-    expect(filtered.total).toBe(2);
-    expect(filtered.data.map((r) => r.id)).toEqual(['s1', 's3']);
 
     const page = await fetchTimciListPage({
       resource: 'sessions',
@@ -65,21 +43,29 @@ describe('fetchTimciListPage — sessions (client filter/sort/page)', () => {
       sorters: [{ field: 'startedAt', order: 'asc' }],
     });
 
+    const url = new URL(requestUrl);
+    expect(JSON.parse(url.searchParams.get('range') ?? '')).toEqual([1, 1]);
+    expect(JSON.parse(url.searchParams.get('sort') ?? '')).toEqual(['startedAt', 'ASC']);
+    expect(JSON.parse(url.searchParams.get('filter') ?? '')).toEqual({
+      userName: { operator: 'contains', value: 'ada' },
+    });
     expect(page.total).toBe(2);
     expect(page.data).toHaveLength(1);
     expect(page.data[0]?.id).toBe('s3');
   });
 
   it('defaults sort to startedAt desc', async () => {
+    let requestUrl = '';
     mswServer.use(
-      http.get(`${API}/auth/sessions`, () =>
-        HttpResponse.json({
-          sessions: [
-            { id: 'old', startedAt: 1000, expiresAt: 2000, current: false },
-            { id: 'new', startedAt: 3000, expiresAt: 4000, current: true },
-          ],
-        }),
-      ),
+      http.get(`${API}/auth/sessions`, ({ request }) => {
+        requestUrl = request.url;
+        return HttpResponse.json(
+          {
+            sessions: [{ id: 'new', startedAt: 3000, expiresAt: 4000, current: true }],
+          },
+          { headers: { 'Content-Range': 'sessions 0-9/1' } },
+        );
+      }),
     );
 
     const result = await fetchTimciListPage({
@@ -87,7 +73,10 @@ describe('fetchTimciListPage — sessions (client filter/sort/page)', () => {
       page: 1,
       pageSize: 10,
     });
-    expect(result.data.map((r) => r.id)).toEqual(['new', 'old']);
+    const url = new URL(requestUrl);
+    expect(JSON.parse(url.searchParams.get('sort') ?? '')).toEqual(['startedAt', 'DESC']);
+    expect(result.data.map((r) => r.id)).toEqual(['new']);
+    expect(result.total).toBe(1);
   });
 });
 

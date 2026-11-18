@@ -170,6 +170,7 @@ export const REPORT_HELP_SECTIONS = {
   adjustments: 'ajustes-y-anulaciones',
   portfolio: 'cartera-por-cliente',
   management: 'gestion-de-cobranza',
+  drafts: 'borradores',
 } as const satisfies Record<string, string>;
 
 /**

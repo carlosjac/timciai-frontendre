@@ -1,4 +1,5 @@
 import { getV1Base } from '../../config.js';
+import { translateEs } from '../../i18n/createI18nProvider.js';
 import { getStoredTenantId } from './apiUrl.js';
 import { asPdfBlob } from './pdfBytes.js';
 import { encodeTimciPathSegment } from './pathSegment.js';
@@ -74,7 +75,7 @@ export async function fetchDocumentLogoObjectUrl(entityId: string): Promise<stri
 
 export async function uploadDocumentLogo(entityId: string, file: File): Promise<void> {
   const tenantId = getStoredTenantId();
-  if (!tenantId) throw new Error('Tenant required');
+  if (!tenantId) throw new Error(translateEs('form.serverError.tenantRequired'));
   const body = new FormData();
   body.append('file', file);
   await timciFetch(documentBrandingLogoUrl(tenantId, entityId), {
@@ -85,7 +86,7 @@ export async function uploadDocumentLogo(entityId: string, file: File): Promise<
 
 export async function clearDocumentLogo(entityId: string): Promise<void> {
   const tenantId = getStoredTenantId();
-  if (!tenantId) throw new Error('Tenant required');
+  if (!tenantId) throw new Error(translateEs('form.serverError.tenantRequired'));
   await timciFetch(documentBrandingLogoUrl(tenantId, entityId), { method: 'DELETE' });
 }
 

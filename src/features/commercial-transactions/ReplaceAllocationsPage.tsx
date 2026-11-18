@@ -64,12 +64,12 @@ export function ReplaceAllocationsPage({ resource }: Props) {
 
   const { result: salesResult, query: salesQuery } = useList<BaseRecord>({
     resource: 'sales',
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 100 },
     queryOptions: { enabled: Boolean(customerId) && canEditAllocations },
   });
   const { result: debitsResult, query: debitsQuery } = useList<BaseRecord>({
     resource: 'debits',
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 100 },
     queryOptions: { enabled: Boolean(customerId) && canEditAllocations },
   });
 

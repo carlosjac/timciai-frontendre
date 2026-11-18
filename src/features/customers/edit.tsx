@@ -1,14 +1,14 @@
-import { Edit, SaveButton, useForm, useSelect } from '@refinedev/antd';
-import { useList, useTranslate, type BaseRecord } from '@refinedev/core';
+import { Edit, SaveButton, useForm } from '@refinedev/antd';
+import { useTranslate, type BaseRecord } from '@refinedev/core';
 import { Alert, Button, Form, Input, InputNumber, Select, Space, Tabs, Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
+import { useBoundedCatalog } from '../../shared/timci/useBoundedCatalog.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
+import { useTimciNameSelect } from '../../shared/timci/useTimciNameSelect.js';
 import {
   fetchOverduePolicyCatalog,
-  fetchPriceListsForEntity,
   type OverduePolicyItem,
-  type PriceListRow,
 } from '../../shared/timci/auxiliaryApi.js';
 import { TimciFormAuditCollapse } from '../../shared/timci/form/TimciFormAuditCollapse.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
@@ -64,7 +64,6 @@ export function CustomerEdit() {
   const entityId = tenantId;
   const { taxManagementEnabled } = useEntityTaxContext(tenantId, entityId);
   const [policies, setPolicies] = useState<OverduePolicyItem[]>([]);
-  const [priceLists, setPriceLists] = useState<PriceListRow[]>([]);
   const [activeTab, setActiveTab] = useState('data');
   const [termsOpen, setTermsOpen] = useState(false);
 
@@ -94,45 +93,42 @@ export function CustomerEdit() {
     warningMessageKey: 'pages.customers.inactiveCannotEdit',
   });
 
-  const { selectProps: countrySelect } = useSelect({
-    resource: 'countries',
-    optionLabel: 'name',
-    optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
+  const { rows: countries } = useBoundedCatalog<BaseRecord & { id?: string; name?: string }>(
+    'countries',
+    !!tenantId,
+  );
+  const countrySelect = useMemo(
+    () => ({
+      options: countries.map((row) => ({ value: String(row.id), label: String(row.name ?? row.id) })),
+      showSearch: true,
+      optionFilterProp: 'label' as const,
+    }),
+    [countries],
+  );
 
   const { selectProps: currencySelect } = useEntitySupportedCurrencySelect(tenantId);
+  const priceListId = Form.useWatch('priceListId', form) as string | undefined;
+  const { selectProps: priceListSelect } = useTimciNameSelect(
+    'price_lists',
+    Boolean(tenantId && entityId),
+    priceListId,
+  );
 
-  const { result: docTypeResult } = useList<DocTypeRow>({
-    resource: 'document_types',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
+  const { rows: documentTypeRows } = useBoundedCatalog<DocTypeRow>('document_types', !!tenantId);
 
   const documentTypeLabel = useMemo(() => {
     if (record?.documentTypeName?.trim()) return record.documentTypeName.trim();
     const id = record?.documentTypeId;
     if (!id) return '—';
-    const dt = (docTypeResult.data ?? []).find((d) => String(d.id) === String(id));
+    const dt = documentTypeRows.find((d) => String(d.id) === String(id));
     return dt?.name ?? id;
-  }, [docTypeResult.data, record]);
+  }, [documentTypeRows, record]);
 
   useEffect(() => {
     if (!tenantId || !entityId) return;
     void fetchOverduePolicyCatalog(tenantId).then(setPolicies);
   }, [tenantId, entityId]);
 
-  useEffect(() => {
-    if (!tenantId || !entityId) return;
-    let cancelled = false;
-    void fetchPriceListsForEntity(tenantId, entityId).then((rows) => {
-      if (!cancelled) setPriceLists(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [tenantId, entityId]);
 
   const policyOptions = useMemo(
     () =>
@@ -260,8 +256,7 @@ export function CustomerEdit() {
                     <Select
                       showSearch
                       optionFilterProp="label"
-                      disabled={priceLists.length === 0}
-                      options={priceLists.map((p) => ({ value: p.id, label: p.name }))}
+                      {...priceListSelect}
                     />
                   </Form.Item>
                   {watchedCurrencyId && watchedPolicy && watchedTerm != null && !termsOpen ? (

@@ -122,7 +122,8 @@ export function EntityDocumentLogoFields({ entityId, readOnly = false }: Props) 
         const reader = new FileReader();
         reader.onload = () =>
           resolve(typeof reader.result === 'string' ? reader.result : null);
-        reader.onerror = () => reject(reader.error ?? new Error('read failed'));
+        reader.onerror = () =>
+          reject(new Error(translate('form.serverError.readFileFailed')));
         reader.readAsDataURL(file);
       });
       if (localPreview) {

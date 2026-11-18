@@ -1,6 +1,6 @@
 # Inquilinos
 
-Un inquilino es la organización a la que se asignan usuarios y roles. En el tablero, los inquilinos activos aparecen como Tenants activos.
+Un inquilino es la organización a la que se asignan usuarios y roles. En el tablero, los inquilinos activos aparecen como Inquilinos activos.
 
 ## Para qué sirve
 

@@ -1,9 +1,10 @@
 import { Show } from '@refinedev/antd';
-import { useList, usePermissions, useShow, useTranslate } from '@refinedev/core';
+import { usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, Descriptions, Table, Tabs, Tag } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
+import { useBoundedCatalog } from '../../shared/timci/useBoundedCatalog.js';
 import {
   canFullyEditEntity,
   type TimciPermissionsData,
@@ -94,17 +95,15 @@ export function EntityShow() {
     toggleEnabled: !!tenantId,
   });
 
-  const { result: countryResult } = useList({
-    resource: 'countries',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
-
-  const { result: currencyResult } = useList({
-    resource: 'currencies',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
+  const { rows: countries } = useBoundedCatalog<{ id?: string; name?: string }>(
+    'countries',
+    !!tenantId,
+  );
+  const { rows: currencies } = useBoundedCatalog<{
+    id?: string;
+    code?: string;
+    name?: string;
+  }>('currencies', !!tenantId);
 
   const { resolveIsoCode } = useCountryIsoCodeMap(tenantId);
   const countryCode = resolveIsoCode(record?.countryId);
@@ -121,15 +120,15 @@ export function EntityShow() {
 
   const countryNameById = useMemo(() => {
     const map = new Map<string, string>();
-    for (const row of countryResult.data ?? []) {
+    for (const row of countries) {
       if (row.id != null) map.set(String(row.id), String(row.name ?? row.id));
     }
     return map;
-  }, [countryResult.data]);
+  }, [countries]);
 
   const currencyLabelById = useMemo(() => {
     const map = new Map<string, string>();
-    for (const row of currencyResult.data ?? []) {
+    for (const row of currencies) {
       const id = row.id != null ? String(row.id) : '';
       if (!id) continue;
       const code = (row as { code?: string }).code;
@@ -137,7 +136,7 @@ export function EntityShow() {
       map.set(id, code != null && code !== '' ? `${code} — ${name ?? ''}` : (name ?? id));
     }
     return map;
-  }, [currencyResult.data]);
+  }, [currencies]);
 
   const policyLabelByKey = useMemo(() => {
     const map = new Map<string, string>();
@@ -178,7 +177,7 @@ export function EntityShow() {
             label: translate('pages.entities.tabs.identity'),
             children: (
               <Descriptions bordered column={1} size="middle" styles={descriptionStyles}>
-                <Descriptions.Item label="Id">{record?.id ?? '—'}</Descriptions.Item>
+                <Descriptions.Item label={translate('audit.id')}>{record?.id ?? '—'}</Descriptions.Item>
                 <Descriptions.Item label={translate('table.entities.name')}>
                   {record?.name ?? '—'}
                 </Descriptions.Item>
@@ -218,7 +217,7 @@ export function EntityShow() {
       children: (
         <Descriptions bordered column={1} size="middle" styles={descriptionStyles}>
           {!canFullEditEntity ? (
-            <Descriptions.Item label="Id">{record?.id ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label={translate('audit.id')}>{record?.id ?? '—'}</Descriptions.Item>
           ) : null}
           <Descriptions.Item label={translate('table.entities.address')}>
             {record?.address ?? '—'}

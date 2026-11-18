@@ -38,7 +38,10 @@ export function EmailBounceShow() {
           </Descriptions.Item>
           <Descriptions.Item label={translate('table.emailBounces.bounceType')}>
             <Tag color={record.bounceType === 'soft' ? 'warning' : 'error'}>
-              {record.bounceType}
+              {translate(
+                `pages.emailBounces.types.${record.bounceType}`,
+                record.bounceType,
+              )}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label={translate('table.emailBounces.subtype')}>

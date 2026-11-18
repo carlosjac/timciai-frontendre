@@ -26,7 +26,7 @@ Cómo se le vende propone los valores de las operaciones con este cliente. Si la
 
 Si la entidad gestiona impuestos, al final aparece el perfil impositivo. Los datos dependen del país de la entidad y se usan al emitir.
 
-Si quiere avisos por correo, guarde al menos un contacto con email y marque qué avisos recibe.
+Si quiere avisos por correo, guarde al menos un contacto con correo y marque qué avisos recibe.
 
 ## Ficha
 

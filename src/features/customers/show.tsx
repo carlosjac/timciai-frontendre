@@ -1,9 +1,10 @@
 import { Show } from '@refinedev/antd';
-import { useList, usePermissions, useShow, useTranslate } from '@refinedev/core';
+import { usePermissions, useShow, useTranslate } from '@refinedev/core';
 import { Alert, Collapse, Descriptions, Tabs, Tag } from 'antd';
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
+import { useBoundedCatalog } from '../../shared/timci/useBoundedCatalog.js';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import {
   getCustomerActivateUrl,
@@ -86,22 +87,22 @@ export function CustomerShow() {
     [setSearchParams],
   );
 
-  const { result: currenciesResult } = useList({
-    resource: 'currencies',
-    pagination: { currentPage: 1, pageSize: 500 },
-    queryOptions: { enabled: !!tenantId },
-  });
+  const { rows: currencies } = useBoundedCatalog<{
+    id?: string;
+    code?: string;
+    name?: string;
+  }>('currencies', !!tenantId);
 
   const currencyLabel = useMemo(() => {
     const id = record?.defaultCurrencyId;
     if (!id) return '—';
-    const row = (currenciesResult.data ?? []).find((c) => String(c.id) === String(id));
+    const row = currencies.find((c) => String(c.id) === String(id));
     if (!row) return id;
     const name = typeof row.name === 'string' ? row.name.trim() : '';
     const code = typeof row.code === 'string' ? row.code.trim() : '';
     if (name && code) return `${name} (${code})`;
     return name || code || id;
-  }, [currenciesResult.data, record?.defaultCurrencyId]);
+  }, [currencies, record?.defaultCurrencyId]);
 
   const resolveToggleUrls = useCallback(
     (id: string) => ({

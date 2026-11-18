@@ -10,6 +10,7 @@ import type {
   UpdateParams,
 } from '@refinedev/core';
 import { getV1Base } from '../config.js';
+import { translateEs } from '../i18n/createI18nProvider.js';
 import { getResourceApiBase, getStoredTenantId } from '../shared/timci/apiUrl.js';
 import { timciFetch, toHttpError } from '../shared/timci/http.js';
 import { requireTimciPathSegment } from '../shared/timci/pathSegment.js';
@@ -112,7 +113,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'customers') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const { json } = await timciFetch(getCustomerByIdUrl(tenantId, String(id)));
         return { data: normalizeGetOnePayload(json as TData) };
@@ -120,7 +121,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'sellable_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const { json } = await timciFetch(getSellableItemByIdUrl(tenantId, String(id)));
         return { data: normalizeGetOnePayload(json as TData) };
@@ -128,7 +129,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'price_lists') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const { json } = await timciFetch(getPriceListByIdUrl(tenantId, String(id)));
         return { data: normalizeGetOnePayload(json as TData) };
@@ -136,7 +137,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'monetary_policies') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const entityId = tenantId;
         const { json } = await timciFetch(
@@ -147,7 +148,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'price_list_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const { json } = await timciFetch(getPriceListItemByIdUrl(tenantId, String(id)));
         return { data: normalizeGetOnePayload(json as TData) };
@@ -155,7 +156,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'document_types') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const { json } = await timciFetch(getDocumentTypeByIdUrl(tenantId, String(id)));
         return { data: normalizeGetOnePayload(json as TData) };
@@ -163,7 +164,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'countries') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const { json } = await timciFetch(getCountryByIdUrl(tenantId, String(id)));
         return { data: normalizeGetOnePayload(json as TData) };
@@ -171,7 +172,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'currencies') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const { json } = await timciFetch(getCurrencyByIdUrl(tenantId, String(id)));
         return { data: normalizeGetOnePayload(json as TData) };
@@ -191,20 +192,20 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'entities') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const { json } = await timciFetch(getEntityByIdUrl(tenantId, String(id)));
         return { data: normalizeGetOnePayload(json as TData) };
       }
       const base = getResourceApiBase(resource);
       if (!base) {
-        throw toHttpError(400, 'Select a tenant in the header for this resource.');
+        throw toHttpError(400, translateEs('tenant.selectForResource'));
       }
       let idSegment: string;
       try {
         idSegment = requireTimciPathSegment(String(id));
       } catch {
-        throw toHttpError(400, 'Invalid resource id.');
+        throw toHttpError(400, translateEs('form.serverError.invalidResourceId'));
       }
       const { json } = await timciFetch(`${base}/${idSegment}`);
       return { data: normalizeGetOnePayload(json as TData) };
@@ -217,12 +218,12 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'sellable_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for tenant-scoped resources.');
+          throw toHttpError(400, translateEs('tenant.selectForScoped'));
         }
         const vars = variables as Record<string, unknown>;
         const entityId = String(vars.entityId ?? '');
         if (!entityId) {
-          throw toHttpError(400, 'entityId is required to create a sellable item.');
+          throw toHttpError(400, translateEs('form.serverError.entityRequiredSellable'));
         }
         const url = getSellableItemsEntityListUrl(tenantId, entityId);
         const body = buildSellableItemCreateBody(vars);
@@ -235,12 +236,12 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'price_lists') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for tenant-scoped resources.');
+          throw toHttpError(400, translateEs('tenant.selectForScoped'));
         }
         const vars = variables as Record<string, unknown>;
         const entityId = String(vars.entityId ?? '');
         if (!entityId) {
-          throw toHttpError(400, 'entityId is required to create a price list.');
+          throw toHttpError(400, translateEs('form.serverError.entityRequiredPriceList'));
         }
         const url = getPriceListsEntityListUrl(tenantId, entityId);
         const body = buildPriceListCreateBody(vars);
@@ -254,7 +255,7 @@ export function createTimciDataProvider(): DataProvider {
         const vars = variables as Record<string, unknown>;
         const entityId = String(vars.entityId ?? '').trim();
         if (!entityId) {
-          throw toHttpError(400, 'entityId is required to create a monetary policy.');
+          throw toHttpError(400, translateEs('form.serverError.entityRequiredMonetaryPolicy'));
         }
         // Entity id === tenant id (1:1); use the target org, not only the header tenant.
         const url = getMonetaryPoliciesEntityListUrl(entityId, entityId);
@@ -268,12 +269,12 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'price_list_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for tenant-scoped resources.');
+          throw toHttpError(400, translateEs('tenant.selectForScoped'));
         }
         const vars = variables as Record<string, unknown>;
         const priceListId = String(vars.priceListId ?? '').trim();
         if (!priceListId) {
-          throw toHttpError(400, 'priceListId is required to create a price list item.');
+          throw toHttpError(400, translateEs('form.serverError.priceListRequiredItem'));
         }
         const url = getPriceListItemsListUrl(tenantId, priceListId);
         const body = buildPriceListItemCreateBody(vars);
@@ -287,7 +288,7 @@ export function createTimciDataProvider(): DataProvider {
       if (!base) {
         throw toHttpError(
           400,
-          'Select a tenant in the header for tenant-scoped resources.',
+          translateEs('tenant.selectForScoped'),
         );
       }
       const body = isCommercialTransactionResource(resource)
@@ -310,7 +311,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'customers') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const body = buildCustomerUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getCustomerByIdUrl(tenantId, String(id)), {
@@ -322,7 +323,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'sellable_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const body = buildSellableItemUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getSellableItemByIdUrl(tenantId, String(id)), {
@@ -334,7 +335,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'price_lists') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const body = buildPriceListUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getPriceListByIdUrl(tenantId, String(id)), {
@@ -346,7 +347,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'monetary_policies') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const entityId = tenantId;
         const body = buildMonetaryPolicyUpdateBody(variables as Record<string, unknown>);
@@ -362,7 +363,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'price_list_items') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const body = buildPriceListItemUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getPriceListItemByIdUrl(tenantId, String(id)), {
@@ -374,7 +375,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'document_types') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const body = buildDocumentTypeUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getDocumentTypeByIdUrl(tenantId, String(id)), {
@@ -386,7 +387,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'countries') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const body = buildCountryUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getCountryByIdUrl(tenantId, String(id)), {
@@ -398,7 +399,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'currencies') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const body = buildCurrencyUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getCurrencyByIdUrl(tenantId, String(id)), {
@@ -434,7 +435,7 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'entities') {
         const tenantId = getStoredTenantId();
         if (!tenantId) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         const body = buildEntityUpdateBody(variables as Record<string, unknown>);
         const { json } = await timciFetch(getEntityByIdUrl(tenantId, String(id)), {
@@ -446,13 +447,13 @@ export function createTimciDataProvider(): DataProvider {
       if (resource === 'subscriptions') {
         const base = getResourceApiBase(resource);
         if (!base) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         let idSegment: string;
         try {
           idSegment = requireTimciPathSegment(String(id));
         } catch {
-          throw toHttpError(400, 'Invalid resource id.');
+          throw toHttpError(400, translateEs('form.serverError.invalidResourceId'));
         }
         const { json } = await timciFetch(`${base}/${idSegment}`, {
           method: 'PATCH',
@@ -463,13 +464,13 @@ export function createTimciDataProvider(): DataProvider {
       if (isCommercialTransactionResource(resource)) {
         const base = getResourceApiBase(resource);
         if (!base) {
-          throw toHttpError(400, 'Select a tenant in the header for this resource.');
+          throw toHttpError(400, translateEs('tenant.selectForResource'));
         }
         let idSegment: string;
         try {
           idSegment = requireTimciPathSegment(String(id));
         } catch {
-          throw toHttpError(400, 'Invalid resource id.');
+          throw toHttpError(400, translateEs('form.serverError.invalidResourceId'));
         }
         const body = buildCommercialTransactionWriteBody(variables as Record<string, unknown>);
         await timciFetch(`${base}/${idSegment}`, {
@@ -478,7 +479,7 @@ export function createTimciDataProvider(): DataProvider {
         });
         return { data: { ...body, id } as TData };
       }
-      throw toHttpError(501, 'Update is not wired for this resource.');
+      throw toHttpError(501, translateEs('form.serverError.updateNotAvailable'));
     },
 
     deleteOne: async <TData extends BaseRecord = BaseRecord, TVariables = Record<string, unknown>>(
@@ -492,23 +493,23 @@ export function createTimciDataProvider(): DataProvider {
       ) {
         const base = getResourceApiBase(resource);
         if (!base) {
-          throw toHttpError(400, 'Invalid resource for delete.');
+          throw toHttpError(400, translateEs('form.serverError.deleteNotAvailable'));
         }
         let idSegment: string;
         try {
           idSegment = requireTimciPathSegment(String(id));
         } catch {
-          throw toHttpError(400, 'Invalid resource id.');
+          throw toHttpError(400, translateEs('form.serverError.invalidResourceId'));
         }
         await timciFetch(`${base}/${idSegment}`, { method: 'DELETE' });
         return { data: { id } as TData };
       }
       if (resource !== 'userTenantRoles' && resource !== 'permissions') {
-        throw toHttpError(501, 'Delete is not wired for this resource.');
+        throw toHttpError(501, translateEs('form.serverError.deleteNotAvailable'));
       }
       const base = getResourceApiBase(resource);
       if (!base) {
-        throw toHttpError(400, 'Invalid resource for delete.');
+        throw toHttpError(400, translateEs('form.serverError.deleteNotAvailable'));
       }
       const qs = new URLSearchParams({ id: String(id) });
       await timciFetch(`${base}?${qs}`, { method: 'DELETE' });

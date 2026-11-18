@@ -10,6 +10,10 @@ export const esMessages = {
     edit: 'Editar',
     delete: 'Eliminar',
     list: 'Lista',
+    refresh: 'Actualizar',
+    show: 'Ver',
+    confirm: '¿Confirmar?',
+    notAccessTitle: 'No tienes permiso para esta acción',
   },
   tabs: {
     group: 'Secciones',
@@ -84,6 +88,53 @@ export const esMessages = {
   price_list_items: {
     price_list_items: 'el ítem de lista de precios',
   },
+  currencies: {
+    currencies: 'la moneda',
+  },
+  subscriptions: {
+    subscriptions: 'el abono',
+  },
+  alerts: {
+    alerts: 'la alerta',
+  },
+  outboundEmails: {
+    outboundEmails: 'el correo saliente',
+  },
+  sessions: {
+    sessions: 'la sesión',
+  },
+  tenants: {
+    tenants: 'el inquilino',
+  },
+  roles: {
+    roles: 'el rol',
+  },
+  /** Migas de Refine (`actions.show`) y nombre del recurso (`actions.actions`). */
+  actions: {
+    actions: 'la acción',
+    show: 'Ver',
+    edit: 'Editar',
+    create: 'Crear',
+    list: 'Lista',
+  },
+  sellable_items: {
+    sellable_items: 'el producto o servicio',
+  },
+  price_lists: {
+    price_lists: 'la lista de precios',
+  },
+  monetary_policies: {
+    monetary_policies: 'la política monetaria',
+  },
+  rateSnapshots: {
+    rateSnapshots: 'la cotización',
+  },
+  entitySignups: {
+    entitySignups: 'la solicitud de alta',
+  },
+  entity_settings: {
+    entity_settings: 'la configuración de entidad',
+  },
   import: {
     job: {
       back: 'Volver',
@@ -113,6 +164,16 @@ export const esMessages = {
     serverError: {
       title: 'No se pudo guardar',
       generic: 'Ha ocurrido un error',
+      invalidResourceId: 'Identificador no válido.',
+      updateNotAvailable: 'Este recurso no se puede actualizar.',
+      deleteNotAvailable: 'Este recurso no se puede eliminar.',
+      entityRequiredSellable: 'Falta la entidad para crear el producto o servicio.',
+      entityRequiredPriceList: 'Falta la entidad para crear la lista de precios.',
+      entityRequiredMonetaryPolicy: 'Falta la entidad para crear la política monetaria.',
+      priceListRequiredItem: 'Falta la lista de precios para crear el precio.',
+      httpStatus: 'Error del servidor (código {{status}}).',
+      readFileFailed: 'No se pudo leer el archivo.',
+      tenantRequired: 'Hay que elegir una entidad.',
     },
     validation: {
       requiredField: 'Este campo es de ingreso obligatorio',
@@ -147,6 +208,9 @@ export const esMessages = {
     createdBy: 'Creado por',
     updatedBy: 'Actualizado por',
     inactiveRecordBanner: 'Registro inactivo',
+    id: 'Identificador',
+    idUuid: 'Identificador (UUID)',
+    idWithValue: 'Identificador: {{id}}',
     /** Cuando el API solo devuelve el id de usuario y no hay nombre resuelto. */
     userNameUnavailable: 'Sin nombre de usuario',
   },
@@ -178,7 +242,7 @@ export const esMessages = {
     customers: 'Clientes',
     documentTypes: 'Tipos de documento',
     currencies: 'Monedas',
-    rateSnapshots: 'Cotizaciones FX',
+    rateSnapshots: 'Cotizaciones',
     sellableItems: 'Productos y servicios',
     priceLists: 'Listas de precios',
     monetaryPolicies: 'Políticas monetarias',
@@ -189,8 +253,8 @@ export const esMessages = {
     collections: 'Cobros',
     documents: 'Comprobantes',
     alerts: 'Alertas',
-    outboundEmails: 'Emails salientes',
-    emailBounces: 'Rebotes de email',
+    outboundEmails: 'Correos salientes',
+    emailBounces: 'Rebotes de correo',
     dashboard: 'Tablero',
     reports: 'Informes',
     preferences: 'Preferencias',
@@ -202,6 +266,7 @@ export const esMessages = {
     groupAccess: 'Acceso',
   },
   dashboard: {
+    dashboard: 'el tablero',
     entityTitle: 'Tablero',
     firstSteps: {
       title: 'Primeros pasos',
@@ -344,11 +409,11 @@ export const esMessages = {
       sales: 'Ventas',
       collections: 'Cobranzas',
       subscriptionErrors: 'Suscripciones con error',
-      silent: 'Tenants en silencio',
+      silent: 'Inquilinos en silencio',
       fxAge: 'Última cotización',
       minutes: 'hace {{count}} min',
       docFailed: 'Emisión fallida',
-      smtpFailed: 'SMTP fallido',
+      smtpFailed: 'Fallo de envío',
       documents: 'Comprobantes emitidos {{issued}} · pendientes {{pending}} · fallidos {{failed}}',
     },
     widgets: {
@@ -365,8 +430,8 @@ export const esMessages = {
       collectionQueue: 'Cola de cobranza',
       topDebtors: 'Mayores deudores',
       oldestDebtors: 'Deudas más antiguas',
-      bouncedEmails: 'Mails rebotados',
-      tenants: 'Tenants activos',
+      bouncedEmails: 'Correos rebotados',
+      tenants: 'Inquilinos activos',
       users: 'Usuarios',
       sessions: 'Sesiones abiertas',
       entitiesInTest: 'En modo prueba',
@@ -404,7 +469,7 @@ export const esMessages = {
       oldestDebtors:
         'Clientes con deuda vencida, empezando por el vencimiento más antiguo.',
       bouncedEmails:
-        'Mails que el servidor del destinatario rechazó de forma permanente y que todavía nadie marcó como revisados. No dependen del período.',
+        'Correos que el servidor del destinatario rechazó de forma permanente y que todavía nadie marcó como revisados. No dependen del período.',
       tenants:
         'Organizaciones activas. El texto de abajo cuenta las inactivas. No incluye la organización interna de la plataforma.',
       users:
@@ -414,16 +479,18 @@ export const esMessages = {
       readiness:
         'Qué le falta a cada entidad para operar: cómo emite comprobantes, si tiene los datos de IVA cuando la gestión de impuestos está activa, un medio de pago activo y un logo.',
       activity:
-        'Ventas y cobros registrados en el período, en todas las entidades. Suscripciones con error: abonos cuya última facturación falló. Tenants en silencio: organizaciones activas sin ningún comprobante registrado en los últimos 30 días.',
+        'Ventas y cobros registrados en el período, en todas las entidades. Suscripciones con error: abonos cuya última facturación falló. Inquilinos en silencio: organizaciones activas sin ningún comprobante registrado en los últimos 30 días.',
       health:
-        'Antigüedad de la última cotización de monedas. Alertas abiertas de emisión de comprobantes y de envío de mail. Comprobantes emitidos, pendientes y fallidos. Estos números no se recortan por el período.',
+        'Antigüedad de la última cotización de monedas. Alertas abiertas de emisión de comprobantes y de envío de correo. Comprobantes emitidos, pendientes y fallidos. Estos números no se recortan por el período.',
     },
   },
   reports: {
+    reports: 'el informe',
     title: 'Informes',
     report: 'Informe',
     export: 'Exportar Excel',
     exportError: 'No se pudo exportar el informe.',
+    exportTooLarge: 'El informe supera las 20.000 filas. Acotá el período o la moneda.',
     loading: 'Cargando informe…',
     loadError: 'No se pudo cargar el informe.',
     empty: 'Sin datos',
@@ -435,6 +502,8 @@ export const esMessages = {
     periodDays: 'Últimos {{count}} días',
     activeRange: '{{from}} – {{to}}',
     asOfNote: 'Saldo a hoy. Este informe no usa período.',
+    draftsNote: 'Operaciones que todavía no se registraron. Este informe no usa período.',
+    view: 'Ver',
     yes: 'Sí',
     no: 'No',
     kind: {
@@ -448,6 +517,7 @@ export const esMessages = {
       adjustments: 'Ajustes y anulaciones',
       portfolio: 'Cartera por cliente',
       management: 'Gestión de cobranza',
+      drafts: 'Borradores',
     },
     help: {
       aging:
@@ -463,13 +533,15 @@ export const esMessages = {
       allocations:
         'Qué cobro o nota de crédito se aplicó a qué venta o débito. Aplicado es lo que se descontó de esa deuda. Ajuste es el descuento o recargo que se generó al cancelarla. Parcial: el documento de destino sigue con saldo. Cierre: quedó en cero.',
       unallocated:
-        'Cobros y notas de crédito que todavía tienen un resto sin aplicar a ninguna deuda. Es el saldo a hoy: la moneda lo recorta. Fuera de FIFO: ese resto no se aplica solo a la próxima venta; hay que imputarlo a mano. El total es el saldo a favor del tablero.',
+        'Cobros y notas de crédito que todavía tienen un resto sin aplicar a ninguna deuda. Es el saldo a hoy: la moneda lo recorta. Fuera de imputación automática: ese resto no se aplica solo a la próxima venta; hay que imputarlo a mano. El total es el saldo a favor del tablero.',
       adjustments:
         'Descuentos y recargos creados al cobrar, con el cobro que los originó. Con signo: el crédito resta y el débito suma, igual que el ajuste del tablero. Anulaciones: documentos anulados en el período y el comprobante que los revirtió.',
       portfolio:
         'Saldo de la cuenta corriente de cada cliente y moneda. Positivo: el cliente debe. Negativo: tiene saldo a favor. Es el saldo de hoy: la moneda lo recorta. No es el detalle de cada comprobante.',
       management:
         'Recordatorios enviados en el período, también por moneda. Rebotes duros del mismo período: la moneda no los recorta. Suscripciones: todos los abonos, recortados por moneda; el período no los cambia. Muestra la próxima facturación, si vence en 7 días y si la última falló.',
+      drafts:
+        'Ventas, débitos, créditos, cobros y abonos que siguen en borrador. Cada fila abre la ficha de esa operación. El período no lo cambia. La moneda recorta la lista. El total es la suma de los importes de las transacciones; los abonos no tienen importe todavía.',
     },
     totals: {
       open: 'Abierto',
@@ -481,6 +553,7 @@ export const esMessages = {
       unallocated: 'Remanente',
       applied: 'Aplicado',
       balance: 'Saldo',
+      amount: 'Importe',
     },
     sections: {
       byCustomer: 'Por cliente',
@@ -496,12 +569,14 @@ export const esMessages = {
       debit: 'Débito',
       credit: 'Crédito',
       collection: 'Cobro',
+      subscription: 'Abono',
     },
     application: {
       partial: 'Parcial',
       closed: 'Cierre',
     },
     columns: {
+      view: 'Ver',
       customer: 'Cliente',
       document: 'Comprobante',
       type: 'Tipo',
@@ -531,12 +606,12 @@ export const esMessages = {
       application: 'Estado',
       allocated: 'Imputado',
       unallocated: 'Remanente',
-      hold: 'Fuera de FIFO',
+      hold: 'Fuera de imputación automática',
       signed: 'Con signo',
       triggeredBy: 'Disparado por',
       reverse: 'Reverso',
       balance: 'Saldo',
-      email: 'Email',
+      email: 'Correo',
       subtype: 'Subtipo',
       diagnostic: 'Diagnóstico',
       starts: 'Inicio',
@@ -554,6 +629,8 @@ export const esMessages = {
     placeholder: 'Seleccionar entidad',
     selectFirst: 'Selecciona una entidad en la cabecera para cargar este listado.',
     required: 'Selecciona una entidad en la cabecera.',
+    selectForResource: 'Selecciona una entidad en la cabecera para este recurso.',
+    selectForScoped: 'Selecciona una entidad en la cabecera para los recursos de la entidad.',
   },
   sider: {
     installedRevision: 'API {{api}} · Admin {{admin}}',
@@ -574,7 +651,7 @@ export const esMessages = {
       stop: 'Dejar de impersonar',
     },
     emailAlerts: {
-      banner: 'Hay direcciones de email con rebote: {{emails}}',
+      banner: 'Hay direcciones de correo con rebote: {{emails}}',
       open: 'Ver rebotes',
     },
     alerts: {
@@ -598,6 +675,7 @@ export const esMessages = {
         collections: 'Ver cobros',
         subscriptions: 'Ver abonos',
       },
+      openReport: 'Ver borradores',
     },
     testMode: {
       banner:
@@ -631,6 +709,7 @@ export const esMessages = {
       success: 'Exportación completada',
       error: 'No se pudo exportar',
       exporting: 'Exportando…',
+      tooMany: 'Hay más de 5.000 filas. Acotá el listado con filtros antes de exportar.',
     },
     filter: {
       search: 'Filtrar',
@@ -837,8 +916,8 @@ export const esMessages = {
     },
     actions: { title: 'Acciones', create: 'Crear acción' },
     rateSnapshots: {
-      title: 'Cotizaciones FX',
-      showTitle: 'Snapshot de cotizaciones',
+      title: 'Cotizaciones',
+      showTitle: 'Detalle de cotizaciones',
     },
     documents: {
       title: 'Comprobantes',
@@ -851,9 +930,9 @@ export const esMessages = {
       acknowledgeError: 'No se pudo atender la alerta',
       unresolved: 'Pendiente',
       openRelated: 'Abrir elemento relacionado',
-      openCustomer: 'Editar email del cliente',
+      openCustomer: 'Editar el correo del cliente',
       emailDeliveryWarning:
-        'Este cliente tiene alertas de email sin resolver (rebote o rechazo). Podés continuar, pero conviene corregir el email antes de notificar.',
+        'Este cliente tiene alertas de correo sin resolver (rebote o rechazo). Podés continuar, pero conviene corregir el correo antes de notificar.',
       emailDeliveryWarningLink: 'Ver alertas del cliente',
       severities: {
         info: 'Información',
@@ -861,26 +940,33 @@ export const esMessages = {
         error: 'Error',
         critical: 'Crítica',
       },
+      kinds: {
+        email_bounce_hard: 'Rebote duro de correo',
+        document_issue_failed: 'Fallo de emisión',
+        smtp_transport_failed: 'Fallo de envío',
+        recipient_rejected: 'Correo rechazado',
+        subscription_billing_blocked: 'Abono sin facturar',
+      },
     },
     outboundEmails: {
-      title: 'Emails salientes',
-      showTitle: 'Email saliente',
-      panelTitle: 'Emails enviados',
-      empty: 'Sin emails para esta transacción',
+      title: 'Correos salientes',
+      showTitle: 'Correo saliente',
+      panelTitle: 'Correos enviados',
+      empty: 'Sin correos para esta transacción',
       view: 'Ver',
       retrySelected: 'Reintentar seleccionados ({{count}})',
       retrySuccess: 'Reintento encolado',
-      retryError: 'No se pudo reintentar el email',
+      retryError: 'No se pudo reintentar el correo',
       resend: 'Reenviar notificación',
       resendConfirmTitle: '¿Reenviar la notificación al cliente?',
       resendConfirmBody:
-        'Se enviará un nuevo email a los contactos configurados para este tipo de operación. El envío anterior no se modifica.',
+        'Se enviará un nuevo correo a los contactos configurados para este tipo de operación. El envío anterior no se modifica.',
       resendSuccess: 'Notificación reenviada',
       resendError: 'No se pudo reenviar la notificación',
       attemptsTitle: 'Intentos de envío',
       attemptsError: 'No se pudieron cargar los intentos',
       noAttempts: 'Sin intentos registrados',
-      loadError: 'No se pudieron cargar los emails',
+      loadError: 'No se pudieron cargar los correos',
       statuses: {
         pending: 'Pendiente',
         retrying: 'Reintentando',
@@ -896,10 +982,26 @@ export const esMessages = {
         transient_failure: 'Fallo temporal',
         permanent_failure: 'Fallo permanente',
       },
+      kinds: {
+        commercial_transaction_registered: 'Operación registrada',
+        commercial_transaction: 'Operación comercial',
+        entity_signup_ready: 'Alta de entidad lista',
+        overdue_balance_reminder: 'Aviso de saldo vencido',
+        ops_alert_email_bounce_hard: 'Aviso: rebote duro de correo',
+        ops_alert_document_issue_failed: 'Aviso: fallo de emisión',
+        ops_alert_smtp_transport_failed: 'Aviso: fallo de envío',
+        ops_alert_recipient_rejected: 'Aviso: correo rechazado',
+        ops_alert_subscription_billing_blocked: 'Aviso: abono sin facturar',
+      },
     },
     emailBounces: {
-      title: 'Rebotes de email',
-      showTitle: 'Rebote de email',
+      title: 'Rebotes de correo',
+      showTitle: 'Rebote de correo',
+      types: {
+        hard: 'Duro',
+        soft: 'Blando',
+        complaint: 'Queja',
+      },
       acknowledged: 'Rebote marcado como atendido',
       acknowledgeError: 'No se pudo marcar el rebote',
       fixCustomer: 'Corregir contacto del cliente',
@@ -1076,7 +1178,7 @@ export const esMessages = {
         openingDateHelp:
           'Fecha que se registra en los saldos iniciales de cada cliente. Por defecto es hoy.',
         saldoColumnsHint:
-          'Una vez qwue hayas llenado la plantilal en Excel, elegí el archivo y hacé click en «Importar».',
+          'Una vez que hayas llenado la plantilla en Excel, elegí el archivo y hacé clic en «Importar».',
         chooseFile: 'Elegir archivo Excel',
         submit: 'Importar',
         cancel: 'Cancelar',
@@ -1173,10 +1275,10 @@ export const esMessages = {
       deactivated: 'Política monetaria desactivada',
       toggleError: 'No se pudo cambiar el estado',
       confirmActivateTitle: '¿Activar política monetaria?',
-      confirmActivateBody: 'Quedará activa y podrá asignarse como default a la entidad o clientes.',
+      confirmActivateBody: 'Quedará activa y podrá asignarse por defecto a la entidad o clientes.',
       confirmDeactivateTitle: '¿Desactivar política monetaria?',
       confirmDeactivateBody:
-        'Quedará inactiva y no podrá asignarse como default hasta que se reactive.',
+        'Quedará inactiva y no podrá asignarse por defecto hasta que se reactive.',
       inactiveCannotEdit:
         'No se puede editar una política monetaria inactiva. Actívala desde la vista del registro.',
       noneKindHint:
@@ -1731,7 +1833,7 @@ export const esMessages = {
     emailBounces: {
       actions: 'Acciones',
       acknowledge: 'Atender',
-      email: 'Email',
+      email: 'Correo',
       bounceType: 'Tipo',
       subtype: 'Subtipo',
       diagnostic: 'Diagnóstico',
@@ -2044,6 +2146,7 @@ export const esMessages = {
     emailBounces: 'el rebote',
   },
   documents: {
+    documents: 'el comprobante',
     sectionTitle: 'Comprobantes',
     panelTitle: 'Comprobantes emitidos',
     empty: 'Sin comprobantes para esta transacción',

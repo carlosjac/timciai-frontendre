@@ -289,8 +289,9 @@ export function orderedResourceNames(codes: string[]): string[] {
   return [...layout.loose, ...layout.groups.flatMap((group) => group.names), ...rest];
 }
 
-/** Primera lista a la que el usuario tiene acceso; si ninguna, preferencias (siempre en cabecera). */
+/** Tras el login: el tablero si hay `menu.bi`; si no, la primera lista permitida; si ninguna, preferencias. */
 export function getFirstAccessibleListPath(actionCodes: string[]): string {
+  if (canSeeResourceMenuItem('dashboard', actionCodes)) return '/bi';
   for (const name of orderedResourceNames(actionCodes)) {
     const row = TIMCI_RESOURCE_LIST_ORDER.find((item) => item.name === name);
     if (row && canSeeResourceMenuItem(name, actionCodes)) return row.path;

@@ -1,4 +1,5 @@
 import type { HttpError } from '@refinedev/core';
+import { translateEs } from '../../i18n/createI18nProvider.js';
 import { buildTimciHttpErrorUserMessage } from './i18n/apiErrorTranslations.js';
 
 function parseApiMessage(json: unknown, fallback: string): string {
@@ -39,7 +40,10 @@ export async function timciFetch(url: string, init: RequestInit = {}): Promise<T
   }
 
   if (!res.ok) {
-    const fallback = res.status === 400 ? 'Validation error' : `HTTP ${res.status}`;
+    const fallback =
+      res.status === 400
+        ? 'Validation error'
+        : translateEs('form.serverError.httpStatus').replaceAll('{{status}}', String(res.status));
     const message = parseApiMessage(json, fallback);
     const err = new Error(message);
     const httpErr = err as unknown as HttpError;

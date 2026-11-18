@@ -1,5 +1,5 @@
 import { TimciEditLink } from '../../shared/timci/TimciResourceLink.js';
-import { useList, usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
+import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Tag } from 'antd';
 import { useMemo } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
@@ -22,6 +22,7 @@ type TxRow = BaseRecord & {
   entityTxnNumber?: number | null;
   transactionDate?: string;
   customerId?: string;
+  customerName?: string | null;
   currencyId?: string;
   amount?: string;
   openAmount?: string | null;
@@ -46,19 +47,7 @@ export function CommercialTransactionList({ resource }: Props) {
   const canUpdate = codes.includes(`${resource}.update`);
 
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
-  const { result: customersResult } = useList({
-    resource: 'customers',
-    pagination: { currentPage: 1, pageSize: 500 },
-  });
   const { labelById: currencyLabelById } = useEntitySupportedCurrencySelect(tenantId);
-
-  const customerNameById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const c of customersResult.data ?? []) {
-      map.set(String(c.id), typeof c.name === 'string' ? c.name : String(c.id));
-    }
-    return map;
-  }, [customersResult.data]);
 
   const getRowShowPath = useMemo(
     () =>
@@ -118,14 +107,11 @@ export function CommercialTransactionList({ resource }: Props) {
         titleKey: 'table.commercialTransactions.customer',
         sorter: true,
         filter: { kind: 'text' },
-        render: (v: unknown) => {
-          const id = v != null ? String(v) : '';
-          return id ? (customerNameById.get(id) ?? id) : '—';
+        render: (_v: unknown, record: TxRow) => {
+          const name = record.customerName?.trim();
+          return name || '—';
         },
-        exportValue: (r) => {
-          const id = r.customerId ? String(r.customerId) : '';
-          return id ? (customerNameById.get(id) ?? id) : '';
-        },
+        exportValue: (r) => r.customerName?.trim() ?? '',
       },
       {
         key: 'currencyId',
@@ -232,7 +218,6 @@ export function CommercialTransactionList({ resource }: Props) {
     return canUpdate ? [editColumn, ...cols] : cols;
   }, [
     canUpdate,
-    customerNameById,
     currencyLabelById,
     dateFormat,
     resource,

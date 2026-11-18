@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useTranslate } from '@refinedev/core';
 import { Alert, Button, Select, Space, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
+import {
+  commercialResourceFromType,
+  commercialTransactionShowPath,
+} from '../../shared/timci/commercialTransactionsApi.js';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
 import { TimciHelpButton } from '../../shared/timci/help/TimciHelpButton.js';
@@ -43,6 +47,8 @@ export function ReportsPage(): ReactElement {
   const [tenantId, setTenantId] = useState(() => getStoredTenantId());
   const [loaded, setLoaded] = useState<{ key: string; data: EntityReport | null; error: string | null } | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const from = search.get('from') ?? '';
   const to = search.get('to') ?? '';
@@ -75,14 +81,15 @@ export function ReportsPage(): ReactElement {
     };
   }, []);
 
-  const requestKey = `${tenantId}|${reportKey}|${from}|${to}|${currencyId}|${bucket}`;
+  const requestKey = `${tenantId}|${reportKey}|${from}|${to}|${currencyId}|${bucket}|${page}|${pageSize}`;
   const data = loaded?.key === requestKey ? loaded.data : null;
   const error = loaded?.key === requestKey ? loaded.error : null;
   const loading = Boolean(tenantId && from && to && isReportKey(params.reportKey) && loaded?.key !== requestKey);
 
   useEffect(() => {
     if (!tenantId || !from || !to || !isReportKey(params.reportKey)) return;
-    const key = `${tenantId}|${reportKey}|${from}|${to}|${currencyId}|${bucket}`;
+    const key = `${tenantId}|${reportKey}|${from}|${to}|${currencyId}|${bucket}|${page}|${pageSize}`;
+    const start = (page - 1) * pageSize;
     let cancelled = false;
     void fetchEntityReport({
       tenantId,
@@ -91,6 +98,7 @@ export function ReportsPage(): ReactElement {
       to,
       currencyId: currencyId || undefined,
       bucket: reportKey === 'aging' && bucket ? bucket : undefined,
+      range: [start, start + pageSize - 1],
     })
       .then((value) => {
         if (!cancelled) setLoaded({ key, data: value, error: null });
@@ -108,7 +116,7 @@ export function ReportsPage(): ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [bucket, currencyId, from, reportKey, tenantId, to, translate, params.reportKey]);
+  }, [bucket, currencyId, from, page, pageSize, reportKey, tenantId, to, translate, params.reportKey]);
 
   const patchSearch = useCallback(
     (changes: Record<string, string | null>) => {
@@ -117,6 +125,7 @@ export function ReportsPage(): ReactElement {
         if (value) next.set(key, value);
         else next.delete(key);
       }
+      setPage(1);
       setSearch(next);
     },
     [search, setSearch],
@@ -150,7 +159,10 @@ export function ReportsPage(): ReactElement {
         setLoaded({
           key: requestKey,
           data,
-          error: err instanceof Error ? err.message : translate('reports.exportError'),
+          error:
+            err instanceof Error && err.name === 'REPORT_EXPORT_TOO_LARGE'
+              ? translate('reports.exportTooLarge')
+              : translate('reports.exportError'),
         });
       })
       .finally(() => setExporting(false));
@@ -182,6 +194,7 @@ export function ReportsPage(): ReactElement {
           aria-label={translate('reports.report')}
           value={reportKey}
           style={{ minWidth: 240 }}
+          listHeight={REPORT_KEYS.length * 32}
           options={REPORT_KEYS.map((key) => ({ value: key, label: translate(`reports.kind.${key}`) }))}
           onChange={(value: ReportKey) => navigate(`/reports/${value}?${search.toString()}`)}
         />
@@ -246,7 +259,9 @@ export function ReportsPage(): ReactElement {
         </Button>
       </Space>
       {PERIOD_REPORTS.has(reportKey) ? null : (
-        <Typography.Paragraph type="secondary">{translate('reports.asOfNote')}</Typography.Paragraph>
+        <Typography.Paragraph type="secondary">
+          {translate(reportKey === 'drafts' ? 'reports.draftsNote' : 'reports.asOfNote')}
+        </Typography.Paragraph>
       )}
       {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} /> : null}
       {data && data.totals.length > 0 ? (
@@ -264,9 +279,25 @@ export function ReportsPage(): ReactElement {
         loading={loading}
         columnsFor={columnSet(translate, dateOf, moneyOf, typeOf)}
         emptyText={translate('reports.empty')}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={(nextPage, nextSize) => {
+          setPage(nextSize === pageSize ? nextPage : 1);
+          setPageSize(nextSize);
+        }}
       />
     </div>
   );
+}
+
+function draftShowPath(row: Row): string | null {
+  const id = typeof row.id === 'string' ? row.id : '';
+  if (!id || typeof row.type !== 'string') return null;
+  if (row.type === 'subscription') return `/subscriptions/show/${encodeURIComponent(id)}`;
+  const resource = commercialResourceFromType(row.type);
+  if (!resource) return null;
+
+  return commercialTransactionShowPath(resource, id);
 }
 
 function totalLabel(report: ReportKey, key: string, translate: (key: string, options?: { count?: number }) => string): string {
@@ -429,6 +460,36 @@ function columnSet(
       text('reports.columns.subtype', 'subtype'),
       text('reports.columns.diagnostic', 'diagnostic'),
     ],
+    drafts: [
+      {
+        title: translate('reports.columns.view'),
+        dataIndex: 'id',
+        render: (_value: unknown, row: Row) => {
+          const path = draftShowPath(row);
+          if (!path) return '—';
+          const type =
+            typeof row.type === 'string' ? translate(`reports.types.${row.type}`) : '';
+          const number =
+            row.documentNumber != null && String(row.documentNumber) !== ''
+              ? ` ${String(row.documentNumber)}`
+              : '';
+          const customer = typeof row.customerName === 'string' ? row.customerName : '';
+          const label = `${type}${number}`.trim() || translate('reports.view');
+
+          return (
+            <Link to={path} aria-label={`${label}${customer ? `, ${customer}` : ''}`}>
+              {label}
+            </Link>
+          );
+        },
+      },
+      text('reports.columns.customer', 'customerName'),
+      kind('reports.columns.type', 'type'),
+      text('reports.columns.currency', 'currencyCode'),
+      money('reports.columns.amount', 'amount'),
+      date('reports.columns.date', 'recordDate'),
+      text('reports.columns.concept', 'concept'),
+    ],
     subscriptions: [
       text('reports.columns.customer', 'customerName'),
       text('reports.columns.currency', 'currencyCode'),
@@ -462,16 +523,26 @@ function ReportTables(props: {
   loading: boolean;
   columnsFor: Record<string, ColumnsType<Row>>;
   emptyText: string;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number, pageSize: number) => void;
 }): ReactElement {
   const translate = useTranslate();
-  const table = (key: string, rows: Row[] | undefined) => (
+  const table = (key: string, rows: Row[] | undefined, total?: number) => (
     <Table<Row>
       size="small"
       rowKey={(_row, index) => `${key}-${index ?? 0}`}
       loading={props.loading}
       columns={props.columnsFor[key] ?? []}
       dataSource={rows ?? []}
-      pagination={{ pageSize: 20, showSizeChanger: false }}
+      pagination={{
+        current: props.page,
+        pageSize: props.pageSize,
+        total: total ?? rows?.length ?? 0,
+        showSizeChanger: true,
+        pageSizeOptions: [10, 20, 50, 100],
+        onChange: props.onPageChange,
+      }}
       locale={{ emptyText: props.emptyText }}
       scroll={{ x: true }}
     />
@@ -491,7 +562,7 @@ function ReportTables(props: {
     return table(placeholder, []);
   }
   if (report.report !== 'period' && report.report !== 'adjustments' && report.report !== 'management') {
-    return table(report.report, report.rows);
+    return table(report.report, report.rows, report.total);
   }
 
   if (report.report === 'period') {
@@ -499,11 +570,11 @@ function ReportTables(props: {
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <section>
           <Typography.Title level={4}>{translate('reports.sections.byCustomer')}</Typography.Title>
-          {table('byCustomer', report.sections.byCustomer)}
+          {table('byCustomer', report.sections.byCustomer, report.sectionTotals?.byCustomer)}
         </section>
         <section>
           <Typography.Title level={4}>{translate('reports.sections.byItem')}</Typography.Title>
-          {table('byItem', report.sections.byItem)}
+          {table('byItem', report.sections.byItem, report.sectionTotals?.byItem)}
         </section>
       </Space>
     );
@@ -513,11 +584,11 @@ function ReportTables(props: {
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <section>
           <Typography.Title level={4}>{translate('reports.sections.policy')}</Typography.Title>
-          {table('policy', report.sections.policy)}
+          {table('policy', report.sections.policy, report.sectionTotals?.policy)}
         </section>
         <section>
           <Typography.Title level={4}>{translate('reports.sections.voids')}</Typography.Title>
-          {table('voids', report.sections.voids)}
+          {table('voids', report.sections.voids, report.sectionTotals?.voids)}
         </section>
       </Space>
     );
@@ -529,11 +600,11 @@ function ReportTables(props: {
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <section>
           <Typography.Title level={4}>{translate('reports.sections.reminders')}</Typography.Title>
-          {table('reminders', report.sections.reminders)}
+          {table('reminders', report.sections.reminders, report.sectionTotals?.reminders)}
         </section>
         <section>
           <Typography.Title level={4}>{translate('reports.sections.bounces')}</Typography.Title>
-          {table('bounces', report.sections.bounces)}
+          {table('bounces', report.sections.bounces, report.sectionTotals?.bounces)}
         </section>
         <section>
           <Typography.Title level={4}>{translate('reports.sections.subscriptions')}</Typography.Title>
@@ -546,11 +617,11 @@ function ReportTables(props: {
               {translate('dashboard.subscriptions.stopped')} {String(row.stopped)}
             </Typography.Paragraph>
           ))}
-          {table('subscriptions', report.sections.subscriptions)}
+          {table('subscriptions', report.sections.subscriptions, report.sectionTotals?.subscriptions)}
         </section>
       </Space>
     );
   }
 
-  return table(report.report, report.rows);
+  return table(report.report, report.rows, report.total);
 }

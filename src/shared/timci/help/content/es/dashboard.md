@@ -14,7 +14,7 @@ Personalizar agrega o quita indicadores, cambia el tamaño, la moneda y, en las 
 
 Si un indicador tiene «Ver detalle», abre el informe del mismo período y la misma moneda.
 
-Los importes salen de operaciones registradas. Una venta, un débito, un crédito o un cobro en borrador no entra en estos recuadros ni en la cuenta corriente: hace falta Registrar en la ficha de esa operación. Si quedó alguna operación o un abono en borrador, el tablero lo avisa y enlaza a esa lista.
+Los importes salen de operaciones registradas. Una venta, un débito, un crédito o un cobro en borrador no entra en estos recuadros ni en la cuenta corriente: hace falta Registrar en la ficha de esa operación. Si quedó alguna operación o un abono en borrador, el tablero lo avisa y enlaza al informe Borradores.
 
 ## Hoy
 
@@ -72,6 +72,6 @@ Clientes que más deben en esta moneda. Suma todo el saldo abierto, vencido y po
 
 Clientes con deuda vencida, empezando por el vencimiento más antiguo. La cantidad se elige en Personalizar. Sirve para empezar por lo más viejo.
 
-## Mails rebotados
+## Correos rebotados
 
-Mails que el servidor del destinatario rechazó de forma permanente y que todavía nadie marcó como revisados. No dependen del período. Sirve para corregir el contacto antes de volver a avisar.
+Correos que el servidor del destinatario rechazó de forma permanente y que todavía nadie marcó como revisados. No dependen del período. Sirve para corregir el contacto antes de volver a avisar.

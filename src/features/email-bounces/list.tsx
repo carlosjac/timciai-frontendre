@@ -83,8 +83,15 @@ export function EmailBounceList() {
         render: (v: unknown) => {
           const t = String(v ?? '');
           const color = t === 'hard' || t === 'complaint' ? 'error' : 'warning';
+          const label = t
+            ? translate(`pages.emailBounces.types.${t}`, t)
+            : '—';
 
-          return <Tag color={color}>{t || '—'}</Tag>;
+          return <Tag color={color}>{label}</Tag>;
+        },
+        exportValue: (record) => {
+          const t = String(record.bounceType ?? '');
+          return t ? translate(`pages.emailBounces.types.${t}`, t) : '';
         },
       },
       {

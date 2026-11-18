@@ -48,7 +48,7 @@ export function SellableItemPricesTab({
   const { query: listsQuery, result: listsResult } = useList<PriceListRow>({
     resource: 'price_lists',
     meta: { entityId },
-    pagination: { currentPage: 1, pageSize: 500 },
+    pagination: { currentPage: 1, pageSize: 100 },
     sorters: [{ field: 'name', order: 'asc' }],
     queryOptions: { enabled: Boolean(entityId) },
   });
