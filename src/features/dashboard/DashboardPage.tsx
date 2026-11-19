@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import GridLayout, { useContainerWidth, type Layout, type LayoutItem } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
-import { useGetIdentity, useTranslate } from '@refinedev/core';
+import { useGetIdentity, usePermissions, useTranslate } from '@refinedev/core';
 import { Alert, Button, Card, Grid, Modal, Select, Space, Statistic, Typography } from 'antd';
 import { Link } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
-import { fetchTimciActionCodes } from '../../shared/timci/actionCodes.js';
+import { type TimciPermissionsData } from '../../shared/timci/actionCodes.js';
+import { freshTimciPermissionQueryOptions } from '../../shared/timci/permissionQueryOptions.js';
 import { TimciHelpButton } from '../../shared/timci/help/TimciHelpButton.js';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import {
@@ -96,26 +97,24 @@ export function DashboardPage(): ReactElement {
   const translate = useTranslate();
   const identity = useGetIdentity<{ id: string }>();
   const userId = identity.data?.id ?? 'anonymous';
-  const [profile, setProfile] = useState<DashboardProfile | null | undefined>(undefined);
-  const [canOpenReports, setCanOpenReports] = useState(false);
-  const [isRoot, setIsRoot] = useState(false);
+  const { data: permissions, isLoading, isFetching, refetch } = usePermissions<TimciPermissionsData>({
+    options: freshTimciPermissionQueryOptions,
+  });
+  const [emptyRetryDone, setEmptyRetryDone] = useState(false);
+  const emptyRetryStarted = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
-    void fetchTimciActionCodes().then((codes) => {
-      if (!cancelled) {
-        setProfile(dashboardProfile(codes));
-        setCanOpenReports(codes.includes('menu.reports'));
-        setIsRoot(codes.includes('menu.allEntities'));
-      }
-    });
+    if (isLoading || isFetching || emptyRetryStarted.current) return;
+    if ((permissions?.actionCodes.length ?? 0) > 0) return;
+    emptyRetryStarted.current = true;
+    void refetch().finally(() => setEmptyRetryDone(true));
+  }, [isFetching, isLoading, permissions?.actionCodes.length, refetch]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const codes = permissions?.actionCodes;
+  const profile = codes == null ? undefined : dashboardProfile(codes);
+  const pendingEmpty = (codes?.length ?? 0) === 0 && !emptyRetryDone;
 
-  if (profile === undefined) {
+  if (codes == null || isLoading || (profile == null && (isFetching || pendingEmpty))) {
     return <Typography.Text type="secondary">{translate('dashboard.loading')}</Typography.Text>;
   }
   if (!profile) {
@@ -124,8 +123,12 @@ export function DashboardPage(): ReactElement {
 
   return (
     <>
-      {isRoot ? <PendingSignupAlert /> : null}
-      <DashboardLoaded userId={userId} profile={profile} canOpenReports={canOpenReports} />
+      {codes.includes('menu.allEntities') ? <PendingSignupAlert /> : null}
+      <DashboardLoaded
+        userId={userId}
+        profile={profile}
+        canOpenReports={codes.includes('menu.reports')}
+      />
     </>
   );
 }

@@ -6,14 +6,18 @@ import {
   getFirstAccessibleListPath,
   type TimciPermissionsData,
 } from '../shared/timci/actionCodes.js';
+import { freshTimciPermissionQueryOptions } from '../shared/timci/permissionQueryOptions.js';
 
 /**
  * Inicio (`/`) y el logo: el tablero si el usuario tiene `menu.bi`; si no, el primer listado permitido.
  */
 export function NavigateToFirstAccessibleList() {
-  const { data, isLoading, isFetching } = usePermissions<TimciPermissionsData>({});
+  const { data, isLoading, isFetching } = usePermissions<TimciPermissionsData>({
+    options: freshTimciPermissionQueryOptions,
+  });
 
-  const waiting = isLoading || (isFetching && data == null);
+  const codes = data?.actionCodes;
+  const waiting = isLoading || codes == null || (codes.length === 0 && isFetching);
   if (waiting) {
     return (
       <div
@@ -26,7 +30,6 @@ export function NavigateToFirstAccessibleList() {
     );
   }
 
-  const codes = data?.actionCodes ?? [];
-  const to = getFirstAccessibleListPath(codes);
+  const to = getFirstAccessibleListPath(codes ?? []);
   return <Navigate to={to} replace />;
 }

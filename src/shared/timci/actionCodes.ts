@@ -8,8 +8,11 @@ const ACTION_CODES_TTL_MS = 60_000;
 let cached: string[] | null = null;
 let cachedAt = 0;
 let inflight: Promise<string[]> | null = null;
+/** Bumps on invalidate so a request started before login cannot overwrite the next one. */
+let cacheGeneration = 0;
 
 export function invalidateTimciActionCodes(): void {
+  cacheGeneration += 1;
   cached = null;
   cachedAt = 0;
   inflight = null;
@@ -23,28 +26,46 @@ export function peekTimciActionCodes(): string[] | null {
 
 /**
  * GET /authorization/me/action-codes — mismo origen que el menú de timci-admin (react-admin).
- * Respuestas fallidas no se cachean para permitir reintento. Cache TTL 60s.
+ * A failed response and an empty list are not cached, so a lookup from before the session
+ * cookie exists can be retried. A non-empty list is cached for 60s.
+ * A response that started before the latest invalidate is discarded.
  */
-export async function fetchTimciActionCodes(): Promise<string[]> {
+export function fetchTimciActionCodes(): Promise<string[]> {
+  return loadActionCodes(true);
+}
+
+async function loadActionCodes(allowStaleRetry: boolean): Promise<string[]> {
   if (cached !== null && Date.now() - cachedAt < ACTION_CODES_TTL_MS) return cached;
   if (inflight) return inflight;
 
-  inflight = (async () => {
+  const generation = cacheGeneration;
+  const slot: { request: Promise<string[]> | null } = { request: null };
+  slot.request = (async () => {
     try {
       const { json } = await timciFetch(`${getV1Base()}/authorization/me/action-codes`);
       const data = json as { actionCodes?: string[] };
       const codes = Array.isArray(data?.actionCodes) ? data.actionCodes : [];
+      if (generation !== cacheGeneration) {
+        if (inflight === slot.request) inflight = null;
+        return allowStaleRetry ? loadActionCodes(false) : [];
+      }
+      if (codes.length === 0) return codes;
       cached = codes;
       cachedAt = Date.now();
       return codes;
     } catch {
+      if (generation !== cacheGeneration && allowStaleRetry) {
+        if (inflight === slot.request) inflight = null;
+        return loadActionCodes(false);
+      }
       return [];
     } finally {
-      inflight = null;
+      if (inflight === slot.request) inflight = null;
     }
   })();
 
-  return inflight;
+  inflight = slot.request;
+  return slot.request;
 }
 
 /** Root users (menu.allEntities) can edit all entity fields; others with entities.update get a limited set. */

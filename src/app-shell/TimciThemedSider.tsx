@@ -9,6 +9,7 @@ import {
   menuLayoutForCodes,
   type TimciPermissionsData,
 } from '../shared/timci/actionCodes.js';
+import { freshTimciPermissionQueryOptions } from '../shared/timci/permissionQueryOptions.js';
 import { SiderInstalledRevision } from './SiderInstalledRevision.js';
 
 /** Ancho del menú lateral expandido (desktop y drawer móvil). */
@@ -112,7 +113,9 @@ export function TimciThemedSider({
   const navigate = useNavigate();
   const translate = useTranslate();
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta });
-  const { data: permData, isLoading, isFetching } = usePermissions<TimciPermissionsData>({});
+  const { data: permData, isLoading, isFetching } = usePermissions<TimciPermissionsData>({
+    options: freshTimciPermissionQueryOptions,
+  });
   const breakpoint = Grid.useBreakpoint();
 
   const isMobile = typeof breakpoint.lg === 'undefined' ? false : !breakpoint.lg;

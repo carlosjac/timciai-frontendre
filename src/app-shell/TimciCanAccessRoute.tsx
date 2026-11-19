@@ -1,6 +1,6 @@
 import { useCan } from '@refinedev/core';
 import { Spin } from 'antd';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { TimciAccessDeniedPage } from './TimciAccessDeniedPage.js';
 import { esMessages } from '../i18n/locale.es.js';
 
@@ -14,9 +14,25 @@ type TimciCanAccessRouteProps = {
  * Route guard: shows an access-denied page when accessControlProvider denies.
  */
 export function TimciCanAccessRoute({ resource, action, children }: TimciCanAccessRouteProps) {
-  const { data: canData, isLoading, isFetching } = useCan({ resource, action });
+  const { data: canData, isLoading, isFetching, refetch } = useCan({
+    resource,
+    action,
+    queryOptions: { staleTime: 0 },
+  });
+  const [settledDenial, setSettledDenial] = useState(false);
+  const denialRetryStarted = useRef(false);
 
-  const waiting = isLoading || (isFetching && canData == null);
+  useEffect(() => {
+    if (isLoading || isFetching || canData?.can !== false || denialRetryStarted.current) return;
+    denialRetryStarted.current = true;
+    void refetch().finally(() => setSettledDenial(true));
+  }, [canData?.can, isFetching, isLoading, refetch]);
+
+  const waiting =
+    isLoading ||
+    canData == null ||
+    (isFetching && !canData.can) ||
+    (canData.can === false && !settledDenial);
   if (waiting) {
     return (
       <div

@@ -1,4 +1,4 @@
-import { Authenticated, Refine } from '@refinedev/core';
+import { Refine } from '@refinedev/core';
 import { ThemedLayout } from '@refinedev/antd';
 import refineRouterProvider from '@refinedev/react-router';
 import {
@@ -41,6 +41,7 @@ import { useTimciNotificationProvider } from './shared/timci/notificationProvide
 import { lazyPage } from './app-shell/lazyPage.js';
 import { TimciPageChunkFallback } from './app-shell/TimciPageChunkFallback.js';
 import { TimciDocumentTitle } from './app-shell/TimciDocumentTitle.js';
+import { TimciAuthenticated } from './app-shell/TimciAuthenticated.js';
 import { TimciLoginPage } from './app-shell/TimciLoginPage.js';
 import { EntitySignupPage } from './features/entity-signups/signup.js';
 import { NavigateToFirstAccessibleList } from './app-shell/NavigateToFirstAccessibleList.js';
@@ -542,7 +543,7 @@ function TimciRefineTree() {
             <Route path="/signup" element={<EntitySignupPage />} />
             <Route
               element={
-                <Authenticated key="app" redirectOnFail="/login">
+                <TimciAuthenticated>
                   <TimciHelpProvider>
                     <a className="timci-skip-link" href="#timci-main">
                       {esMessages.header.skipToContent}
@@ -555,7 +556,7 @@ function TimciRefineTree() {
                       </main>
                     </ThemedLayout>
                   </TimciHelpProvider>
-                </Authenticated>
+                </TimciAuthenticated>
               }
             >
               <Route index element={<NavigateToFirstAccessibleList />} />
