@@ -142,6 +142,7 @@ function reportTitle(pathname: string): string | null {
 
 function pathTitle(pathname: string): string | null {
   if (pathname === '/login') return translateEs('pages.login.title');
+  if (pathname === '/signup/verify') return translateEs('pages.signup.verifyTitle');
   if (pathname === '/signup') return translateEs('pages.signup.title');
   if (pathname === '/preferences') return translateEs('pages.preferences.title');
   if (pathname === '/change-password') return translateEs('pages.changePassword.title');

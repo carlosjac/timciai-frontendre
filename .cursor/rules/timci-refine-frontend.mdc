@@ -1,12 +1,12 @@
 ---
-description: Timci Refine admin — UI (es), código (en), WCAG nivel A en código nuevo, capas shared/features, TimciDataList, menu.*, registros inactivos no editables (§7.2), fechas con preferencia del usuario (§10), go back con flecha PageHeader (§11).
+description: Timci Refine admin (timciai-frontendre) — UI en español, código en inglés, WCAG A, TimciDataList, menu.*, inactivos no editables, importes a 2 decimales, fechas del usuario, flecha de volver.
 globs: src/**/*.{ts,tsx}, timciai-frontendre/src/**/*.{ts,tsx}
 alwaysApply: false
 ---
 
 # Timci Admin (Refine) — Convenciones de frontend
 
-Regla para el proyecto **`frontendrefine/`**. Ampliar este archivo cuando acordéis nuevos estándares.
+Regla para el proyecto **`timciai-frontendre/`**. Ampliar este archivo cuando acordéis nuevos estándares.
 
 ## 1. Idioma: código en inglés, producto en español
 
@@ -30,6 +30,16 @@ Regla para el proyecto **`frontendrefine/`**. Ampliar este archivo cuando acord�
 - Incluye: visibilidad de columnas (popover + `localStorage` por recurso), filtros por columna (`filter: { kind: 'text' | 'number' | 'boolean' | 'date' }` → criterios JSON alineados con `buildTimciFilter` / `listQuery`), barra de filtros aplicados, **export CSV** de **todo** el conjunto filtrado/ordenado (paginación en cliente vía `fetchAllListPages` + misma query que el data provider), solo columnas visibles y cabeceras en español vía i18n (`titleKey`). Usar `exportValue` cuando la celda no sea un escalar directo.
 - **`requiresTenant`:** poner en `true` en listados cuya API sea bajo `tenants/:tenantId/...` para no disparar la query hasta que haya tenant en cabecera (`getStoredTenantId`).
 - Columnas: tipo **`TimciColumnDef`** en **`src/shared/timci/list/domain/timci-column-def.ts`**; **`titleKey`** apuntando a claves del locale (p. ej. `table.roles.name`).
+
+### 3.1. Columna Acciones (editar)
+
+- Todo listado **`TimciDataList`** cuyo recurso tenga ruta **`edit`** y permiso **`{resource}.update`** debe incluir columna **`actions`** como **primera columna** (si el usuario puede editar).
+- Celda: **`EditButton`** de Refine con `hideText`, `title` y `aria-label` vía i18n (`table.{recurso}.edit`); envolver en `<span data-timci-row-action onClick={(e) => e.stopPropagation()}>` cuando exista **`getRowShowPath`** (clic en fila → show).
+- i18n: `table.{recurso}.actions` («Acciones») y `table.{recurso}.edit` («Editar»).
+- `exportValue: () => ''` para excluir la columna del CSV.
+- **`TimciDataList`** fija la columna `actions` (siempre visible; no aparece en el selector de columnas).
+- Referencia backend: **`timciai-backend/.cursor/rules/timci-backend-lists.mdc`** §4.8.2. Referencia UI: `features/countries/list.tsx`, `features/currencies/list.tsx`.
+- En un registro inactivo, la columna sigue la regla de §7.2: el **`EditButton`** solo si **`record.isActive !== false`**.
 
 ## 4. Capas (hexagonal relajada)
 
@@ -95,7 +105,14 @@ En recursos con **soft delete** (`isActive`, `PATCH …/activate|deactivate`), u
 - **Stack:** Refine y Ant Design aportan parte del comportamiento; las piezas **custom** (`TimciDataList`, cabecera, filtros, etc.) son las que hay que revisar con más cuidado.
 - **Verificación:** antes de dar por cerrada una pantalla con interacción relevante, comprobar al menos **navegación solo teclado** y que iconos/botones sin texto tengan nombre para tecnologías de asistencia.
 
-## 10. Fechas (formato de preferencia del usuario)
+## 10. Importes monetarios (display)
+
+- **UI:** importes de dinero (importe, precio unitario, subtotal, total, descuento en monto, saldo, `amountInBase`, balance) se muestran con **exactamente 2 decimales** (redondeo half-up), aunque la API guarde más precisión.
+- Helper: **`src/shared/timci/formatMoney.ts`** (`formatTimciMoney` / `formatTimciMoneyOrEmpty`). No mostrar el valor crudo de la API en tablas/descripciones.
+- **Fuera de esta regla:** cotización FX (`fxRate`), cantidades, fechas. El % de descuento puede mostrarse con 2 decimales vía el mismo helper.
+- No truncar al persistir solo por UX; el redondeo de display es solo presentación.
+
+## 11. Fechas (formato de preferencia del usuario)
 
 - **API / persistencia:** las fechas viajan y se guardan en ISO (`YYYY-MM-DD` date-only, ISO-8601 para timestamps). El submit de un `DatePicker` sigue enviando `YYYY-MM-DD`.
 - **Prohibido `Date` de JavaScript** (`new Date()`, `Date.now()`, tipar como `Date`, `toISOString().slice(0, 10)`). En backend: `DateOnly` / `DateTime` (`shared/lib/datatype/`). En este admin: strings ISO + `dayjs` en pickers y `formatTimciUserDateOnly` / `formatTimciUserDateTime` en pantalla.
@@ -103,16 +120,17 @@ En recursos con **soft delete** (`isActive`, `PATCH …/activate|deactivate`), u
 - **DatePicker / RangePicker:** `format={dateFormat}` (o `pickerDateFormat={dateFormat}` en `TimciDataList`). Nunca `format="YYYY-MM-DD"` fijo.
 - **Celdas y textos:** `formatTimciUserDateOnly` / `formatTimciUserDateTime` (`src/shared/timci/formatUserDateTime.ts`). En columnas de `TimciDataList`, `render` + `exportValue` con esos helpers para que el CSV coincida con la tabla.
 - Referencia: `features/customers/CustomerSettlementTab.tsx`, `features/customers/CustomerImportActions.tsx`, listados con `pickerDateFormat={dateFormat}`.
+- Misma regla en backend para archivos generados (Excel, reportes): ver `timciai-backend/.cursor/rules/timci-backend-core.mdc` §16.
 
-## 11. Go back on custom screens (import, etc.)
+## 12. Volver en pantallas que no son Edit, Show o Create
 
-Screens that are not Refine `Edit`/`Show`/`Create` still use the **same back arrow** as those views (`PageHeader` + `ArrowLeftOutlined`, not a labelled «Volver» button).
+Las pantallas custom (importación y similares) usan la misma flecha de volver que `Edit`, `Show` y `Create` (`PageHeader` + `ArrowLeftOutlined`). No un botón con el texto «Volver».
 
-- Shared chrome: **`src/shared/timci/TimciPageBackHeader.tsx`**.
-- Pass `backPath` (the destination) and page `title`.
-- Icon-only control: accessible name via i18n (`import.job.back`).
-- Reference: customer **edit/show** header; import history and import result (`TimciImportJobList`, `TimciImportJobPanel`).
+- Chrome compartido: **`src/shared/timci/TimciPageBackHeader.tsx`**.
+- Pasar `backPath` (el destino) y el `title` de la página.
+- Control solo con icono: nombre accesible vía i18n (`import.job.back`).
+- Referencia: cabecera de edit/show de customer; historial y resultado de importación (`TimciImportJobList`, `TimciImportJobPanel`).
 
-## 12. Mantenimiento de esta regla
+## 13. Mantenimiento de esta regla
 
 - Nuevos estándares de UI o arquitectura: añadir subsección breve con título y viñetas.

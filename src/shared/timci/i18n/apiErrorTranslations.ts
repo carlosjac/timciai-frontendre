@@ -55,6 +55,7 @@ export const apiErrorMessagesEs: Record<string, string> = {
   SIGNUP_DOCUMENT_PENDING: 'Ya hay una solicitud pendiente con ese documento.',
   SIGNUP_EMAIL_TAKEN: 'Ya existe una cuenta con ese correo de acceso.',
   SIGNUP_EMAIL_PENDING: 'Ya hay una solicitud pendiente con ese correo de acceso.',
+  SIGNUP_VERIFICATION_INVALID: 'El enlace de confirmación no es válido o ya venció.',
   SIGNUP_NOT_PENDING: 'La solicitud ya no está pendiente.',
   CONFLICT_DOCUMENT: 'Ya existe un cliente con ese tipo y número de documento en esta entidad',
   IMPORT_FILE_UNREADABLE: 'No se pudo leer el archivo. Usá la plantilla Excel descargada.',

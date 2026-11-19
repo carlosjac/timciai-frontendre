@@ -815,9 +815,24 @@ export const esMessages = {
       },
       submit: 'Enviar solicitud',
       catalogError: 'No se pudieron cargar países, documentos y monedas. Recarga la página.',
-      sentTitle: 'Recibimos la solicitud',
-      sentBody: 'Cuando se apruebe, el correo de la entidad recibe el aviso con la dirección de ingreso.',
+      sentTitle: 'Revise el correo de acceso',
+      sentBody:
+        'Enviamos un enlace a ese correo. Ábralo para que la solicitud entre en revisión. Hasta entonces no aparece en la lista.',
       goLogin: 'Ir a ingresar',
+      verifyTitle: 'Confirmar el correo de acceso',
+      verifyLoading: 'Estamos confirmando el enlace.',
+      verifySuccessTitle: 'Correo confirmado',
+      verifySuccessBody:
+        'La solicitud ya está en revisión. Cuando se apruebe, el correo de la entidad recibe el aviso para ingresar.',
+      verifyInvalidTitle: 'El enlace no sirve',
+      verifyInvalidBody:
+        'El enlace venció o ya se usó. Envíe la solicitud otra vez para recibir uno nuevo.',
+      verifyErrorTitle: 'No se pudo confirmar',
+      verifyErrorBody:
+        'No pudimos completar la confirmación. Intente más tarde o envíe la solicitud otra vez.',
+      verifyMissingTitle: 'Falta el enlace',
+      verifyMissingBody: 'Abra el enlace que llegó al correo de acceso.',
+      verifyRetry: 'Volver a la solicitud',
     },
     entityRequests: {
       title: 'Solicitudes de alta',

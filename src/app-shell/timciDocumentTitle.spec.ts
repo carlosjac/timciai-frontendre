@@ -19,6 +19,7 @@ describe('timciDocumentTitle', () => {
   it('names screens that are not a resource action', () => {
     expect(timciDocumentTitle('/login')).toBe('Iniciar sesión en tu cuenta | Timci');
     expect(timciDocumentTitle('/signup')).toBe('Solicitar el alta | Timci');
+    expect(timciDocumentTitle('/signup/verify')).toBe('Confirmar el correo de acceso | Timci');
     expect(timciDocumentTitle('/preferences')).toBe('Preferencias de usuario | Timci');
     expect(timciDocumentTitle('/change-password')).toBe('Cambiar contraseña | Timci');
     expect(timciDocumentTitle('/customers/import-jobs', 'customers', 'list')).toBe(

@@ -8,7 +8,7 @@ Sirve para revisar pedidos pendientes, aprobarlos o rechazarlos.
 
 ## Lista
 
-La lista abre filtrada por pendientes, de la más nueva a la más vieja. Ve el nombre y el correo de la entidad, y el nombre y el correo de quien va a administrarla. Abra la fila para ver el pedido completo.
+La lista abre filtrada por pendientes, de la más nueva a la más vieja. Ve el nombre y el correo de la entidad, y el nombre y el correo de quien va a administrarla. Abra la fila para ver el pedido completo. La lista solo incluye altas cuyo correo de acceso ya se confirmó.
 
 ## Ficha
 

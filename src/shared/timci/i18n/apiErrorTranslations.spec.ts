@@ -52,6 +52,12 @@ describe('translateTimciApiErrorMessage', () => {
       'Ya existe una cuenta con ese correo de acceso.',
     );
     expect(
+      translateTimciApiErrorMessage(
+        'SIGNUP_VERIFICATION_INVALID',
+        'The verification link is invalid or has expired',
+      ),
+    ).toBe('El enlace de confirmación no es válido o ya venció.');
+    expect(
       translateTimciApiErrorMessage('SIGNUP_DOCUMENT_TAKEN', 'An entity with this document already exists'),
     ).toBe('Ya existe una entidad con ese tipo y número de documento.');
   });

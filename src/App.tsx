@@ -44,6 +44,7 @@ import { TimciDocumentTitle } from './app-shell/TimciDocumentTitle.js';
 import { TimciAuthenticated } from './app-shell/TimciAuthenticated.js';
 import { TimciLoginPage } from './app-shell/TimciLoginPage.js';
 import { EntitySignupPage } from './features/entity-signups/signup.js';
+import { SignupVerifyPage } from './features/entity-signups/signup-verify.js';
 import { NavigateToFirstAccessibleList } from './app-shell/NavigateToFirstAccessibleList.js';
 import { TimciNotFoundPage } from './app-shell/TimciNotFoundPage.js';
 import { timciGuarded } from './app-shell/timciGuarded.js';
@@ -541,6 +542,7 @@ function TimciRefineTree() {
           <Routes>
             <Route path="/login" element={<TimciLoginPage />} />
             <Route path="/signup" element={<EntitySignupPage />} />
+            <Route path="/signup/verify" element={<SignupVerifyPage />} />
             <Route
               element={
                 <TimciAuthenticated>
