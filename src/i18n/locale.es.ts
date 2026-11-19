@@ -632,12 +632,6 @@ export const esMessages = {
     selectForResource: 'Selecciona una entidad en la cabecera para este recurso.',
     selectForScoped: 'Selecciona una entidad en la cabecera para los recursos de la entidad.',
   },
-  sider: {
-    installedRevision: 'API {{api}} · Admin {{admin}}',
-    installedRevisionName: 'Versión instalada. API {{api}}. Admin {{admin}}.',
-    installedRevisionAdminOnly: 'Admin {{admin}}',
-    installedRevisionAdminOnlyName: 'Versión instalada. Admin {{admin}}.',
-  },
   header: {
     logout: 'Cerrar sesión',
     openNavigation: 'Abrir menú de navegación',

@@ -10,7 +10,6 @@ import {
   type TimciPermissionsData,
 } from '../shared/timci/actionCodes.js';
 import { freshTimciPermissionQueryOptions } from '../shared/timci/permissionQueryOptions.js';
-import { SiderInstalledRevision } from './SiderInstalledRevision.js';
 
 /** Ancho del menú lateral expandido (desktop y drawer móvil). */
 const SIDER_WIDTH = 280;
@@ -227,11 +226,7 @@ export function TimciThemedSider({
     return renderMenu();
   };
 
-  const renderNavigation = (
-    showRevision: boolean,
-    titleCollapsed: boolean,
-    fillAboveTrigger: boolean,
-  ) => (
+  const renderNavigation = (titleCollapsed: boolean, fillAboveTrigger: boolean) => (
     <div
       style={{
         display: 'flex',
@@ -257,7 +252,6 @@ export function TimciThemedSider({
         <RenderToTitle collapsed={titleCollapsed} />
       </div>
       <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'auto' }}>{renderMenuBody()}</div>
-      {showRevision ? <SiderInstalledRevision /> : null}
     </div>
   );
 
@@ -285,7 +279,7 @@ export function TimciThemedSider({
             borderRight: `1px solid ${token.colorBgElevated}`,
           }}
         >
-          {renderNavigation(true, false, false)}
+          {renderNavigation(false, false)}
         </Layout.Sider>
       </Layout>
     </Drawer>
@@ -352,7 +346,7 @@ export function TimciThemedSider({
           </Button>
         }
       >
-        {renderNavigation(!siderCollapsed, siderCollapsed, true)}
+        {renderNavigation(siderCollapsed, true)}
       </Layout.Sider>
     </>
   );
