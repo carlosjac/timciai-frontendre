@@ -26,6 +26,7 @@ import {
 type Props = {
   resource: CommercialTransactionResource;
   incomingAllocations?: IncomingAllocationRow[] | null;
+  incomingAllocationsTotal?: number;
   /** Target sale/debit id — used to resolve settlement ratio for credit sources. */
   targetTransactionId?: string | null;
   customerId?: string | null;
@@ -41,6 +42,7 @@ type Props = {
 export function CommercialTransactionIncomingAllocationsPanel({
   resource,
   incomingAllocations,
+  incomingAllocationsTotal,
   targetTransactionId,
   customerId,
   currencyId,
@@ -86,20 +88,26 @@ export function CommercialTransactionIncomingAllocationsPanel({
       if (cancelled) return;
     void (async () => {
       const next = new Map<string, CurrentAccountSettlementLine | null>();
-      await Promise.all(
-        creditAsOfDates.map(async (asOf) => {
-          try {
-            const { json } = await timciFetch(
-              getCustomerCurrentAccountSettlementUrl(tenantId, customerId, currencyId, asOf),
-            );
-            const lines = (json as { lines?: CurrentAccountSettlementLine[] })?.lines ?? [];
-            const line = lines.find((l) => String(l.id) === String(targetTransactionId)) ?? null;
-            next.set(asOf, line);
-          } catch {
-            next.set(asOf, null);
-          }
-        }),
-      );
+      try {
+        const { json } = await timciFetch(
+          getCustomerCurrentAccountSettlementUrl(
+            tenantId,
+            customerId,
+            currencyId,
+            creditAsOfDates[0] ?? '',
+            [String(targetTransactionId)],
+            creditAsOfDates.slice(0, 50),
+          ),
+        );
+        const evaluations =
+          (json as { evaluations?: { asOf: string; line: CurrentAccountSettlementLine | null }[] })
+            ?.evaluations ?? [];
+        for (const evaluation of evaluations) {
+          next.set(String(evaluation.asOf).slice(0, 10), evaluation.line ?? null);
+        }
+      } catch {
+        for (const asOf of creditAsOfDates) next.set(asOf, null);
+      }
       if (!cancelled) setSettlementByAsOf(next);
     })();
     });
@@ -153,9 +161,17 @@ export function CommercialTransactionIncomingAllocationsPanel({
       <Typography.Title level={5}>
         {translate('pages.commercialTransactions.fields.allocationsIncoming')}
       </Typography.Title>
+      {incomingAllocationsTotal != null && incomingAllocationsTotal > rows.length ? (
+        <Typography.Paragraph type="secondary">
+          {translate('pages.commercialTransactions.fields.incomingAllocationsPartial', {
+            shown: rows.length,
+            total: incomingAllocationsTotal,
+          })}
+        </Typography.Paragraph>
+      ) : null}
       <Table
         size="small"
-        pagination={false}
+        pagination={{ pageSize: 25, showSizeChanger: false }}
         scroll={{ x: true }}
         rowKey={(r) => `${r.sourceTransactionId}-${r.amount}`}
         dataSource={rows}

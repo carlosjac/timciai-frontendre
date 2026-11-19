@@ -111,6 +111,7 @@ export type CommercialTransactionRecord = {
     sourceEntityTxnNumber?: number | null;
     amount: string;
   }>;
+  incomingAllocationsTotal?: number;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: TimciAuditUserRef;

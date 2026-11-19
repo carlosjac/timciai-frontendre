@@ -1,13 +1,12 @@
-import { Create, useForm } from '@refinedev/antd';
+import { Create, useForm, useSelect } from '@refinedev/antd';
 import { usePermissions, useTranslate } from '@refinedev/core';
 import { Alert, Form, Select } from 'antd';
-import { useEffect, useState } from 'react';
 import {
   canManageAllEntities,
   type TimciPermissionsData,
 } from '../../shared/timci/actionCodes.js';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
-import { GLOBAL_TENANT_ID, fetchActiveTenantsForSelect } from '../../shared/timci/tenantsApi.js';
+import { GLOBAL_TENANT_ID } from '../../shared/timci/tenantsApi.js';
 import { TimciFormServerAlert } from '../../shared/timci/form/TimciFormServerAlert.js';
 import { useTimciFormServerErrors } from '../../shared/timci/form/useTimciFormServerErrors.js';
 import { MonetaryPolicyParamsFields } from './MonetaryPolicyParamsFields.js';
@@ -25,6 +24,7 @@ export function MonetaryPolicyCreate() {
   const { data: permData } = usePermissions<TimciPermissionsData>({});
   const codes = permData?.actionCodes ?? [];
   const canPickOrg = canManageAllEntities(codes);
+  const canListTenants = codes.includes('tenants.list');
   const headerTenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
   const defaultEntityId =
     headerTenantId && headerTenantId !== GLOBAL_TENANT_ID ? headerTenantId : undefined;
@@ -33,32 +33,23 @@ export function MonetaryPolicyCreate() {
     errorNotification: false,
     resource: 'monetary_policies',
   });
+  const { selectProps: orgSelect } = useSelect({
+    resource: 'tenants',
+    optionLabel: 'name',
+    optionValue: 'id',
+    filters: [{ field: 'isActive', operator: 'eq', value: true }],
+    pagination: { currentPage: 1, pageSize: 20 },
+    sorters: [{ field: 'name', order: 'asc' }],
+    onSearch: (value) => {
+      const term = value.trim();
+      if (!term) return [];
+      return [{ field: 'name', operator: 'contains' as const, value: term }];
+    },
+    queryOptions: { enabled: canPickOrg && canListTenants },
+  });
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
     formFieldNames: CREATE_FIELDS,
   });
-
-  const [orgOptions, setOrgOptions] = useState<{ value: string; label: string }[]>([]);
-  const [orgsLoading, setOrgsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!canPickOrg) return;
-    let cancelled = false;
-    void (async () => {
-      setOrgsLoading(true);
-      try {
-        const rows = await fetchActiveTenantsForSelect();
-        if (cancelled) return;
-        setOrgOptions(rows.map((t) => ({ value: t.id, label: t.name })));
-      } catch {
-        if (!cancelled) setOrgOptions([]);
-      } finally {
-        if (!cancelled) setOrgsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [canPickOrg]);
 
   if (!headerTenantId && !canPickOrg) {
     return (
@@ -140,7 +131,7 @@ export function MonetaryPolicyCreate() {
           }
         }}
       >
-        {canPickOrg ? (
+        {canPickOrg && canListTenants ? (
           <Form.Item
             name="entityId"
             label={translate('pages.monetaryPolicies.organization')}
@@ -152,10 +143,10 @@ export function MonetaryPolicyCreate() {
             ]}
           >
             <Select
-              showSearch
-              optionFilterProp="label"
-              loading={orgsLoading}
-              options={orgOptions}
+              {...orgSelect}
+              options={(orgSelect.options ?? []).filter(
+                (option) => option.value !== GLOBAL_TENANT_ID,
+              )}
               placeholder={translate('pages.monetaryPolicies.organizationPlaceholder')}
               aria-label={translate('pages.monetaryPolicies.organization')}
             />

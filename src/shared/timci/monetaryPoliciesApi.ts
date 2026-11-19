@@ -57,17 +57,20 @@ export async function fetchMonetaryPolicyKinds(
   return Array.isArray(json) ? (json as MonetaryPolicyKindItem[]) : [];
 }
 
-/** Active policies for selects (default assignment). */
+/** Active policies for selects. One page; pass a name to search. */
 export async function fetchActiveMonetaryPolicies(
   tenantId: string,
   entityId: string,
+  name?: string,
 ): Promise<MonetaryPolicyListItem[]> {
   const listBase = getMonetaryPoliciesEntityListUrl(tenantId, entityId);
-  const filter = encodeURIComponent(
-    JSON.stringify({ isActive: { operator: 'eq', value: true } }),
-  );
+  const filter: Record<string, unknown> = {
+    isActive: { operator: 'eq', value: true },
+  };
+  const term = name?.trim() ?? '';
+  if (term) filter.name = { operator: 'contains', value: term };
   const { json } = await timciFetch(
-    `${listBase}?filter=${filter}&range=${encodeURIComponent(JSON.stringify([0, 199]))}&sort=${encodeURIComponent(JSON.stringify(['name', 'ASC']))}`,
+    `${listBase}?filter=${encodeURIComponent(JSON.stringify(filter))}&range=${encodeURIComponent(JSON.stringify([0, 19]))}&sort=${encodeURIComponent(JSON.stringify(['name', 'ASC']))}`,
   );
   return Array.isArray(json) ? (json as MonetaryPolicyListItem[]) : [];
 }

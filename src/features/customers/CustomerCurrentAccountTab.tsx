@@ -21,7 +21,10 @@ import {
 } from '../commercial-transactions/statusLabel.js';
 import { SalePaymentSettlementTag } from '../commercial-transactions/SalePaymentSettlementTag.js';
 import { UnallocatedRemainderTag } from '../commercial-transactions/UnallocatedRemainderTag.js';
-import { useCustomerAccountCurrencyParam } from './useCustomerAccountCurrencyParam.js';
+import {
+  preferredAccountCurrency,
+  useCustomerAccountCurrencyParam,
+} from './useCustomerAccountCurrencyParam.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
@@ -60,6 +63,7 @@ function documentShowPath(id: string): string {
 
 type Props = {
   customerId: string;
+  defaultCurrencyId?: string | null;
 };
 
 /** Deudor (saldo > 0) rojo; acreedor (saldo ≤ 0) verde. */
@@ -87,7 +91,7 @@ function BalanceAmount({
 }
 
 /** Ledger nominal: saldo y movimientos de cuenta corriente. */
-export function CustomerCurrentAccountTab({ customerId }: Props) {
+export function CustomerCurrentAccountTab({ customerId, defaultCurrencyId }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
   const notify = useTimciNotify();
@@ -129,7 +133,8 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
         if (cancelled) return;
         const rows = Array.isArray(json) ? (json as CurrentAccountRow[]) : [];
         setAccounts(rows);
-        if (rows.length === 1 && !currencyId) setCurrencyId(rows[0].currencyId);
+        const nextCurrency = preferredAccountCurrency(rows, defaultCurrencyId, currencyId);
+        if (nextCurrency && nextCurrency !== currencyId) setCurrencyId(nextCurrency);
       } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.currentAccountLoadError'));
@@ -142,7 +147,15 @@ export function CustomerCurrentAccountTab({ customerId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [accountsEnabled, currencyId, customerId, setCurrencyId, tenantId, translate]);
+  }, [
+    accountsEnabled,
+    currencyId,
+    customerId,
+    defaultCurrencyId,
+    setCurrencyId,
+    tenantId,
+    translate,
+  ]);
 
   useEffect(() => {
     if (!movementsEnabled || !tenantId || !customerId || !currencyId) return;

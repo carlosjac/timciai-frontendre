@@ -524,6 +524,16 @@ function TimciRefineTree() {
             options={{
               syncWithLocation: true,
               title: { text: esMessages.app.title },
+              reactQuery: {
+                clientConfig: {
+                  defaultOptions: {
+                    queries: {
+                      staleTime: 20_000,
+                      refetchOnWindowFocus: false,
+                    },
+                  },
+                },
+              },
             }}
           >
           <TimciDocumentTitle />

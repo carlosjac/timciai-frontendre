@@ -14,7 +14,10 @@ import { timciFetch } from '../../shared/timci/http.js';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
-import { useCustomerAccountCurrencyParam } from './useCustomerAccountCurrencyParam.js';
+import {
+  preferredAccountCurrency,
+  useCustomerAccountCurrencyParam,
+} from './useCustomerAccountCurrencyParam.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
 type CurrentAccountRow = {
@@ -25,10 +28,11 @@ type CurrentAccountRow = {
 
 type Props = {
   customerId: string;
+  defaultCurrencyId?: string | null;
 };
 
 /** Tabla de enlaces de imputación origen → destino por moneda de CC (solo lectura). */
-export function CustomerAllocationsTab({ customerId }: Props) {
+export function CustomerAllocationsTab({ customerId, defaultCurrencyId }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
   const { dateFormat, timeZone } = useUserPreferences();
@@ -38,6 +42,9 @@ export function CustomerAllocationsTab({ customerId }: Props) {
   const [accountsLoading, setAccountsLoading] = useState(false);
   const [currencyId, setCurrencyId] = useCustomerAccountCurrencyParam();
   const [rows, setRows] = useState<CurrentAccountAllocationLinkDto[]>([]);
+  const [rowsTotal, setRowsTotal] = useState(0);
+  const [rowsPage, setRowsPage] = useState(1);
+  const [rowsPageSize, setRowsPageSize] = useState(25);
   const [rowsLoading, setRowsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -57,7 +64,8 @@ export function CustomerAllocationsTab({ customerId }: Props) {
         if (cancelled) return;
         const list = Array.isArray(json) ? (json as CurrentAccountRow[]) : [];
         setAccounts(list);
-        if (list.length === 1 && !currencyId) setCurrencyId(list[0].currencyId);
+        const nextCurrency = preferredAccountCurrency(list, defaultCurrencyId, currencyId);
+        if (nextCurrency && nextCurrency !== currencyId) setCurrencyId(nextCurrency);
       } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.currentAccountLoadError'));
@@ -70,7 +78,7 @@ export function CustomerAllocationsTab({ customerId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [accountsEnabled, currencyId, customerId, setCurrencyId, tenantId, translate]);
+  }, [accountsEnabled, currencyId, customerId, defaultCurrencyId, setCurrencyId, tenantId, translate]);
 
   useEffect(() => {
     if (!rowsEnabled || !tenantId || !customerId || !currencyId) return;
@@ -78,15 +86,22 @@ export function CustomerAllocationsTab({ customerId }: Props) {
     void (async () => {
       setRowsLoading(true);
       try {
+        const start = (rowsPage - 1) * rowsPageSize;
         const { json } = await timciFetch(
-          getCustomerCurrentAccountAllocationsUrl(tenantId, customerId, currencyId),
+          getCustomerCurrentAccountAllocationsUrl(tenantId, customerId, currencyId, [
+            start,
+            start + rowsPageSize - 1,
+          ]),
         );
         if (cancelled) return;
-        setRows(Array.isArray(json) ? (json as CurrentAccountAllocationLinkDto[]) : []);
+        const page = json as { data?: CurrentAccountAllocationLinkDto[]; total?: number };
+        setRows(Array.isArray(page.data) ? page.data : []);
+        setRowsTotal(typeof page.total === 'number' ? page.total : 0);
       } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.allocationsLoadError'));
           setRows([]);
+          setRowsTotal(0);
         }
       } finally {
         if (!cancelled) setRowsLoading(false);
@@ -95,7 +110,7 @@ export function CustomerAllocationsTab({ customerId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [rowsEnabled, currencyId, customerId, tenantId, translate]);
+  }, [rowsEnabled, currencyId, customerId, rowsPage, rowsPageSize, tenantId, translate]);
 
   const typeLabel = useCallback(
     (type: string) => {
@@ -140,7 +155,10 @@ export function CustomerAllocationsTab({ customerId }: Props) {
           loading={accountsLoading}
           options={accountOptions}
           value={currencyId}
-          onChange={setCurrencyId}
+          onChange={(value) => {
+            setCurrencyId(value);
+            setRowsPage(1);
+          }}
           placeholder={translate('pages.customers.currentAccountCurrencyPlaceholder')}
           aria-label={translate('pages.customers.currentAccountCurrency')}
           notFoundContent={
@@ -154,7 +172,17 @@ export function CustomerAllocationsTab({ customerId }: Props) {
         loading={rowsEnabled && rowsLoading}
         rowKey={(r) => `${r.source.id}-${r.target.id}-${r.amount}`}
         dataSource={rowsEnabled ? rows : []}
-        pagination={{ pageSize: 25, showSizeChanger: true }}
+        pagination={{
+          current: rowsPage,
+          pageSize: rowsPageSize,
+          total: rowsTotal,
+          showSizeChanger: true,
+          pageSizeOptions: [10, 25, 50, 100],
+          onChange: (page, pageSize) => {
+            setRowsPage(page);
+            setRowsPageSize(pageSize);
+          },
+        }}
         tableLayout="fixed"
         locale={{ emptyText: translate('pages.customers.allocationsEmpty') }}
         columns={[

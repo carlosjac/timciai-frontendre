@@ -33,6 +33,7 @@ import {
 } from '../../shared/timci/commercialTransactionsApi.js';
 import {
   fetchUnitPriceFromPriceList,
+  fetchUnitPricesForSaleLines,
 } from '../../shared/timci/priceListItemsApi.js';
 import { getV1Base } from '../../config.js';
 import { requireTimciPathSegment } from '../../shared/timci/pathSegment.js';
@@ -517,6 +518,36 @@ export function CommercialTransactionFormFields({
     [form],
   );
 
+  const applyListPrices = useCallback(
+    async (overrides?: { priceListId?: string; currencyId?: string }) => {
+      const listId = overrides?.priceListId ?? priceListId;
+      const curId = overrides?.currencyId ?? currencyId;
+      if (!tenantId || !listId || !curId) return;
+      const items = (form.getFieldValue('items') as Array<{ sellableItemId?: string }>) ?? [];
+      const sellableItemIds = items
+        .map((item) => (item?.sellableItemId ? String(item.sellableItemId) : ''))
+        .filter(Boolean);
+      if (sellableItemIds.length === 0) return;
+      try {
+        const prices = await fetchUnitPricesForSaleLines({
+          tenantId,
+          priceListId: listId,
+          sellableItemIds,
+          currencyId: curId,
+          validAt: transactionDate,
+        });
+        items.forEach((item, index) => {
+          const id = item?.sellableItemId ? String(item.sellableItemId) : '';
+          const unitPrice = id ? prices.get(id) : undefined;
+          if (unitPrice) setItemUnitPrice(index, unitPrice);
+        });
+      } catch {
+        /* sin precio en lista: el usuario completa a mano */
+      }
+    },
+    [currencyId, form, priceListId, setItemUnitPrice, tenantId, transactionDate],
+  );
+
   const applyListPriceToItem = useCallback(
     async (
       itemIndex: number,
@@ -945,15 +976,7 @@ export function CommercialTransactionFormFields({
             placeholder={translate('pages.commercialTransactions.fields.priceListPlaceholder')}
             onChange={(value) => {
               if (!currencyId || !value) return;
-              const items =
-                (form.getFieldValue('items') as Array<{ sellableItemId?: string }>) ?? [];
-              items.forEach((item, index) => {
-                if (item?.sellableItemId) {
-                  void applyListPriceToItem(index, String(item.sellableItemId), {
-                    priceListId: String(value),
-                  });
-                }
-              });
+              void applyListPrices({ priceListId: String(value) });
             }}
           />
         </Form.Item>
@@ -1238,15 +1261,7 @@ export function CommercialTransactionFormFields({
                   aria-label={translate('pages.commercialTransactions.fields.currency')}
                   onChange={(value) => {
                     if (!isSale || !priceListId || !value) return;
-                    const items =
-                      (form.getFieldValue('items') as Array<{ sellableItemId?: string }>) ?? [];
-                    items.forEach((item, index) => {
-                      if (item?.sellableItemId) {
-                        void applyListPriceToItem(index, String(item.sellableItemId), {
-                          currencyId: String(value),
-                        });
-                      }
-                    });
+                    void applyListPrices({ currencyId: String(value) });
                   }}
                 />
               </Form.Item>

@@ -1,5 +1,5 @@
 import { useTranslate } from '@refinedev/core';
-import { Button, Form, Input, Space, Switch } from 'antd';
+import { Button, Form, Input, Pagination, Space, Switch } from 'antd';
 import { useEffect, useState } from 'react';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
@@ -50,6 +50,7 @@ export function CustomerContactsEditor({
   const notify = useTimciNotify();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [contactPage, setContactPage] = useState(1);
   const { generalMessages, clearServerErrors, applyServerError } = useTimciFormServerErrors({
     formFieldNames: CONTACT_FIELDS,
   });
@@ -81,9 +82,10 @@ export function CustomerContactsEditor({
     }
     try {
       const values = await form.validateFields();
+      const stored = form.getFieldsValue(true) as { contacts?: unknown };
       clearServerErrors(form);
       setSaving(true);
-      const body = { contacts: mapContactsForReplace(values.contacts) };
+      const body = { contacts: mapContactsForReplace(stored.contacts ?? values.contacts) };
       await timciFetch(getCustomerReplaceContactsUrl(tenantId, customerId), {
         method: 'PATCH',
         body: JSON.stringify(body),
@@ -114,10 +116,16 @@ export function CustomerContactsEditor({
             },
           ]}
         >
-          {(fields, { add, remove, move }, { errors }) => (
+          {(fields, { add, remove, move }, { errors }) => {
+            const pageSize = 25;
+            const pageCount = Math.max(1, Math.ceil(fields.length / pageSize));
+            const page = Math.min(contactPage, pageCount);
+            const visible = fields.slice((page - 1) * pageSize, page * pageSize);
+            return (
             <>
-              {fields.map((field, index) => {
+              {visible.map((field) => {
                 const { key, name: rowName, ...restField } = field;
+                const index = Number(rowName);
                 return (
                   <div
                     key={key}
@@ -235,10 +243,23 @@ export function CustomerContactsEditor({
                   </div>
                 );
               })}
+              {fields.length > pageSize ? (
+                <Pagination
+                  current={page}
+                  pageSize={pageSize}
+                  total={fields.length}
+                  showSizeChanger={false}
+                  onChange={setContactPage}
+                  style={{ marginBottom: 8 }}
+                />
+              ) : null}
               <Button
                 type="dashed"
                 htmlType="button"
-                onClick={() => add(emptyContactRow())}
+                onClick={() => {
+                  add(emptyContactRow());
+                  setContactPage(Math.ceil((fields.length + 1) / pageSize));
+                }}
                 block
                 style={{ marginBottom: 8 }}
               >
@@ -246,7 +267,8 @@ export function CustomerContactsEditor({
               </Button>
               <Form.ErrorList errors={errors} />
             </>
-          )}
+            );
+          }}
         </Form.List>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
           <Button type="primary" loading={saving} onClick={() => void onSave()}>

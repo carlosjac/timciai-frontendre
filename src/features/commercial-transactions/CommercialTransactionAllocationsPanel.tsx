@@ -23,6 +23,10 @@ import {
   type AllocationRow,
 } from './commercialTransactionPanels.js';
 
+/** The settlement route rejects more than 100 target ids in one request. */
+const SETTLEMENT_IDS_PER_REQUEST = 100;
+const ALLOCATION_PAGE_SIZE = 25;
+
 type Props = {
   /** Only debits, credits and collections carry outgoing allocations. */
   resource: CommercialTransactionResource;
@@ -60,6 +64,27 @@ export function CommercialTransactionAllocationsPanel({
     (resource === 'collections' && status === 'draft') || resource === 'credits';
 
   const needsSettlementDisplay = convertNominalToCash && rows.length > 0;
+  const allocationPageKey = rows.map((row) => allocationRowKey(row)).join('\n');
+  const [page, setPage] = useState(1);
+  const [pageKey, setPageKey] = useState(allocationPageKey);
+  const pageForRows = pageKey === allocationPageKey ? page : 1;
+  if (pageKey !== allocationPageKey) {
+    setPageKey(allocationPageKey);
+    setPage(1);
+  }
+  const pageCount = Math.max(1, Math.ceil(rows.length / ALLOCATION_PAGE_SIZE));
+  const currentPage = Math.min(pageForRows, pageCount);
+  const settlementTargetIds = useMemo(() => {
+    const start = (currentPage - 1) * ALLOCATION_PAGE_SIZE;
+    return [
+      ...new Set(
+        rows
+          .slice(start, start + ALLOCATION_PAGE_SIZE)
+          .map((row) => (row.targetTransactionId != null ? String(row.targetTransactionId) : ''))
+          .filter(Boolean),
+      ),
+    ];
+  }, [rows, currentPage]);
 
   const [settlementByTargetId, setSettlementByTargetId] = useState<
     Map<string, CurrentAccountSettlementLine>
@@ -72,23 +97,43 @@ export function CommercialTransactionAllocationsPanel({
 
   useEffect(() => {
     if (!canLoadSettlement || !tenantId || !customerId || !currencyId) return;
+    if (settlementTargetIds.length === 0) {
+      setSettlementByTargetId(new Map());
+      return;
+    }
     const asOf =
       transactionDate != null && String(transactionDate).trim() !== ''
         ? String(transactionDate).slice(0, 10)
         : new Date().toISOString().slice(0, 10);
+    const chunks: string[][] = [];
+    for (let index = 0; index < settlementTargetIds.length; index += SETTLEMENT_IDS_PER_REQUEST) {
+      chunks.push(settlementTargetIds.slice(index, index + SETTLEMENT_IDS_PER_REQUEST));
+    }
     let cancelled = false;
     void Promise.resolve().then(() => {
       if (cancelled) return;
     void (async () => {
       try {
-        const { json } = await timciFetch(
-          getCustomerCurrentAccountSettlementUrl(tenantId, customerId, currencyId, asOf),
+        const responses = await Promise.all(
+          chunks.map((ids) =>
+            timciFetch(
+              getCustomerCurrentAccountSettlementUrl(
+                tenantId,
+                customerId,
+                currencyId,
+                asOf,
+                ids,
+              ),
+            ),
+          ),
         );
         if (cancelled) return;
-        const lines = (json as { lines?: CurrentAccountSettlementLine[] })?.lines ?? [];
         const map = new Map<string, CurrentAccountSettlementLine>();
-        for (const line of lines) {
-          if (line?.id) map.set(String(line.id), line);
+        for (const { json } of responses) {
+          const lines = (json as { lines?: CurrentAccountSettlementLine[] })?.lines ?? [];
+          for (const line of lines) {
+            if (line?.id) map.set(String(line.id), line);
+          }
         }
         setSettlementByTargetId(map);
       } catch {
@@ -99,7 +144,7 @@ export function CommercialTransactionAllocationsPanel({
     return () => {
       cancelled = true;
     };
-  }, [canLoadSettlement, tenantId, customerId, currencyId, transactionDate]);
+  }, [canLoadSettlement, tenantId, customerId, currencyId, transactionDate, settlementTargetIds]);
 
   const displayAmountByRowKey = useMemo(() => {
     const map = new Map<string, string>();
@@ -158,7 +203,12 @@ export function CommercialTransactionAllocationsPanel({
     <Table
       style={{ marginTop: 16 }}
       size="small"
-      pagination={false}
+      pagination={{
+        current: currentPage,
+        pageSize: ALLOCATION_PAGE_SIZE,
+        showSizeChanger: false,
+        onChange: (nextPage) => setPage(nextPage),
+      }}
       scroll={{ x: true }}
       rowKey={(r) => allocationRowKey(r)}
       dataSource={rows}

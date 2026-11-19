@@ -16,7 +16,10 @@ import { timciFetch } from '../../shared/timci/http.js';
 import { formatTimciMoney } from '../../shared/timci/formatMoney.js';
 import { formatTimciUserDateOnly } from '../../shared/timci/formatUserDateTime.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
-import { useCustomerAccountCurrencyParam } from './useCustomerAccountCurrencyParam.js';
+import {
+  preferredAccountCurrency,
+  useCustomerAccountCurrencyParam,
+} from './useCustomerAccountCurrencyParam.js';
 import { useEntitySupportedCurrencySelect } from '../../shared/timci/useEntitySupportedCurrencySelect.js';
 
 type CurrentAccountRow = {
@@ -27,6 +30,7 @@ type CurrentAccountRow = {
 
 type Props = {
   customerId: string;
+  defaultCurrencyId?: string | null;
 };
 
 /** Deudor (saldo > 0) rojo; acreedor (saldo ≤ 0) verde. */
@@ -56,7 +60,7 @@ function BalanceAmount({
 /**
  * Proyección «A pagar al [fecha]» (recargos/descuentos as-of). No muta el ledger.
  */
-export function CustomerSettlementTab({ customerId }: Props) {
+export function CustomerSettlementTab({ customerId, defaultCurrencyId }: Props) {
   const translate = useTranslate();
   const navigate = useNavigate();
   const { token } = theme.useToken();
@@ -94,7 +98,8 @@ export function CustomerSettlementTab({ customerId }: Props) {
         if (cancelled) return;
         const rows = Array.isArray(json) ? (json as CurrentAccountRow[]) : [];
         setAccounts(rows);
-        if (rows.length === 1 && !currencyId) setCurrencyId(rows[0].currencyId);
+        const nextCurrency = preferredAccountCurrency(rows, defaultCurrencyId, currencyId);
+        if (nextCurrency && nextCurrency !== currencyId) setCurrencyId(nextCurrency);
       } catch {
         if (!cancelled) {
           setLoadError(translate('pages.customers.currentAccountLoadError'));
@@ -107,7 +112,7 @@ export function CustomerSettlementTab({ customerId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [accountsEnabled, currencyId, customerId, setCurrencyId, tenantId, translate]);
+  }, [accountsEnabled, currencyId, customerId, defaultCurrencyId, setCurrencyId, tenantId, translate]);
 
   useEffect(() => {
     if (!settlementEnabled || !tenantId || !customerId || !currencyId || !settlementAsOf) return;
@@ -213,7 +218,7 @@ export function CustomerSettlementTab({ customerId }: Props) {
           loading={settlementLoading}
           rowKey="id"
           dataSource={settlement?.lines ?? []}
-          pagination={false}
+          pagination={{ pageSize: 25, showSizeChanger: true, pageSizeOptions: [10, 25, 50, 100] }}
           locale={{
             emptyText: !currencyId
               ? translate('pages.customers.currentAccountCurrencyPlaceholder')

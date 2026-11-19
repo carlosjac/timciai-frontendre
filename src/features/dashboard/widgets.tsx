@@ -290,7 +290,7 @@ export function WidgetBody(props: {
         <Table
           size="small"
           scroll={{ x: 'max-content' }}
-          pagination={false}
+          pagination={{ pageSize: 25, showSizeChanger: false }}
           rowKey="entityId"
           dataSource={platform.readiness}
           columns={[

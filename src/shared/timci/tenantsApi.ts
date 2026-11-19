@@ -32,7 +32,7 @@ export function buildTenantUpdateBody(variables: Record<string, unknown>): Recor
 /** Active business organizations for selects (excludes __global__). Requires tenants.list. */
 export async function fetchActiveTenantsForSelect(): Promise<TenantOption[]> {
   const qs = new URLSearchParams({
-    range: JSON.stringify([0, 199]),
+    range: JSON.stringify([0, 19]),
     sort: JSON.stringify(['name', 'ASC']),
   });
   const { json } = await timciFetch(`${getTenantsListUrl()}?${qs.toString()}`);

@@ -3,7 +3,7 @@ import { useTranslate } from '@refinedev/core';
 import { Alert, Button, Card, Typography } from 'antd';
 import { Link } from 'react-router';
 import { getV1Base } from '../../config.js';
-import { helpArticleIdForSetupStep } from '../../shared/timci/help/catalog.js';
+import { helpArticleIdForSetupStep } from '../../shared/timci/help/setup-step-help.js';
 import { useTimciHelp } from '../../shared/timci/help/TimciHelpContext.js';
 import { timciFetch } from '../../shared/timci/http.js';
 import {

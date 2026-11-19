@@ -138,8 +138,12 @@ export function getCustomerCurrentAccountSettlementUrl(
   customerId: string,
   currencyId: string,
   asOf: string,
+  ids?: string[],
+  asOfs?: string[],
 ): string {
   const qs = new URLSearchParams({ asOf: asOf.slice(0, 10) });
+  if (ids && ids.length > 0) qs.set('ids', JSON.stringify(ids));
+  if (asOfs && asOfs.length > 0) qs.set('asOfs', JSON.stringify(asOfs.slice(0, 50)));
   return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/settlement?${qs}`;
 }
 
@@ -147,8 +151,10 @@ export function getCustomerCurrentAccountAllocationsUrl(
   tenantId: string,
   customerId: string,
   currencyId: string,
+  range: [number, number],
 ): string {
-  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/allocations`;
+  const qs = new URLSearchParams({ range: JSON.stringify(range) });
+  return `${getV1Base()}/tenants/${requireTimciPathSegment(tenantId)}/customers/${requireTimciPathSegment(customerId)}/current-accounts/${requireTimciPathSegment(currencyId)}/allocations?${qs}`;
 }
 
 export function getCustomerCurrentAccountStatementPdfUrl(

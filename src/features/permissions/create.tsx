@@ -8,8 +8,13 @@ import {
 } from '@refinedev/core';
 import { Form, Select, Typography } from 'antd';
 import { useState } from 'react';
-import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
 import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
+
+function nameContains(value: string) {
+  const term = value.trim();
+  if (!term) return [];
+  return [{ field: 'name', operator: 'contains' as const, value: term }];
+}
 
 type ActionRow = BaseRecord & { code?: string; name?: string };
 
@@ -32,26 +37,26 @@ export function PermissionCreate() {
     errorNotification: false,
   });
 
-  const { selectProps: roleSelectRaw } = useSelect({
+  const { selectProps: roleSelect } = useSelect({
     resource: 'roles',
     optionLabel: 'name',
     optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 100 },
+    pagination: { currentPage: 1, pageSize: 20 },
     sorters: [{ field: 'name', order: 'asc' }],
+    onSearch: nameContains,
   });
-  const roleSelect = stripSelectServerSearch(roleSelectRaw);
 
-  const { selectProps: tenantSelectRaw } = useSelect({
+  const { selectProps: tenantSelect } = useSelect({
     resource: 'tenants',
     optionLabel: 'name',
     optionValue: 'id',
     filters: [{ field: 'isActive', operator: 'eq', value: true }],
-    pagination: { currentPage: 1, pageSize: 100 },
+    pagination: { currentPage: 1, pageSize: 20 },
     sorters: [{ field: 'name', order: 'asc' }],
+    onSearch: nameContains,
   });
-  const tenantSelect = stripSelectServerSearch(tenantSelectRaw);
 
-  const { selectProps: actionSelectRaw } = useSelect<ActionRow>({
+  const { selectProps: actionSelect } = useSelect<ActionRow>({
     resource: 'actions',
     optionLabel: (a) => {
       const code = a.code != null && String(a.code) !== '' ? String(a.code) : '';
@@ -59,10 +64,10 @@ export function PermissionCreate() {
       return code !== '' ? `${code} — ${name}` : name;
     },
     optionValue: (a) => String(a.id ?? ''),
-    pagination: { currentPage: 1, pageSize: 100 },
+    pagination: { currentPage: 1, pageSize: 20 },
     sorters: [{ field: 'name', order: 'asc' }],
+    onSearch: nameContains,
   });
-  const actionSelect = stripSelectServerSearch(actionSelectRaw);
 
   const handleFinish = async (values: Record<string, unknown>) => {
     const roleId = String(values.roleId ?? '');
@@ -114,14 +119,14 @@ export function PermissionCreate() {
           name="roleId"
           rules={[{ required: true, message: translate('form.validation.requiredField') }]}
         >
-          <Select {...roleSelect} showSearch optionFilterProp="label" allowClear />
+          <Select {...roleSelect} allowClear />
         </Form.Item>
         <Form.Item
           label={translate('nav.tenants')}
           name="tenantId"
           rules={[{ required: true, message: translate('form.validation.requiredField') }]}
         >
-          <Select {...tenantSelect} showSearch optionFilterProp="label" allowClear />
+          <Select {...tenantSelect} allowClear />
         </Form.Item>
         <Form.Item
           label={translate('create.permission.actionsLabel')}
@@ -143,8 +148,6 @@ export function PermissionCreate() {
           <Select
             {...actionSelect}
             mode="multiple"
-            showSearch
-            optionFilterProp="label"
             allowClear
             maxTagCount="responsive"
           />

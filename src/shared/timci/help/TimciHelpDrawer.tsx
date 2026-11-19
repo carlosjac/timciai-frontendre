@@ -5,7 +5,7 @@ import { useLocation } from 'react-router';
 import { getStoredTenantId } from '../apiUrl.js';
 import { canManageAllEntities, fetchTimciActionCodes, peekTimciActionCodes } from '../actionCodes.js';
 import { isReadyBannerDismissed } from '../setupProgress.js';
-import { helpArticles, resolveScreenHelpArticle } from './catalog.js';
+import { resolveScreenHelpArticle } from './screen-help.js';
 import {
   groupHelpArticles,
   helpArticlesForReader,
@@ -15,9 +15,27 @@ import {
 } from './domain/help-catalog.js';
 import { useTimciHelp } from './TimciHelpContext.js';
 
-function useReaderHelpArticles(): HelpArticle[] {
+let helpCatalogPromise: Promise<readonly HelpArticle[]> | null = null;
+
+function loadHelpCatalog(): Promise<readonly HelpArticle[]> {
+  helpCatalogPromise ??= import('./catalog.js').then((mod) => mod.helpArticles);
+  return helpCatalogPromise;
+}
+
+function useReaderHelpArticles(enabled: boolean): HelpArticle[] {
   const { data } = useGetIdentity<{ id: string }>();
   const [codes, setCodes] = useState<string[] | null>(() => peekTimciActionCodes());
+  const [catalog, setCatalog] = useState<readonly HelpArticle[] | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    let active = true;
+    void loadHelpCatalog().then((articles) => {
+      if (active) setCatalog(articles);
+    });
+    return () => {
+      active = false;
+    };
+  }, [enabled]);
   useEffect(() => {
     let active = true;
     void fetchTimciActionCodes().then((next) => {
@@ -33,8 +51,8 @@ function useReaderHelpArticles(): HelpArticle[] {
     tenantId &&
     isReadyBannerDismissed(data.id, tenantId)
   );
-  if (!codes) return [];
-  return helpArticlesForReader(helpArticles, {
+  if (!enabled || !catalog || !codes) return [];
+  return helpArticlesForReader(catalog, {
     audience: canManageAllEntities(codes) ? 'root' : 'entity',
     includeGettingStarted,
   });
@@ -52,7 +70,7 @@ function focusedHelpSection(
 
 function TimciHelpPanel(): ReactElement {
   const translate = useTranslate();
-  const articles = useReaderHelpArticles();
+  const articles = useReaderHelpArticles(true);
   const { pinnedArticleId, pinArticle } = useTimciHelp();
   const { resource, action } = useParsed();
   const { pathname } = useLocation();
@@ -160,8 +178,8 @@ function TimciHelpPanel(): ReactElement {
 
 export function TimciHelpDrawer(): ReactElement {
   const translate = useTranslate();
-  const articles = useReaderHelpArticles();
   const { open, closeHelp, pinnedArticleId } = useTimciHelp();
+  const articles = useReaderHelpArticles(open);
   const { resource, action } = useParsed();
   const { pathname } = useLocation();
   const routeMatch = resolveScreenHelpArticle(articles, resource?.name, action, pathname);

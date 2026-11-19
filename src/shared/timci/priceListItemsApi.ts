@@ -17,12 +17,15 @@ async function listPriceListItemRows(params: {
   tenantId: string;
   priceListId: string;
   sellableItemId?: string;
+  sellableItemIds?: string[];
   currencyId?: string;
   validAt?: string;
   take?: number;
 }): Promise<PriceListUnitPriceRow[]> {
   const filter: Record<string, unknown> = {};
-  if (params.sellableItemId) {
+  if (params.sellableItemIds && params.sellableItemIds.length > 0) {
+    filter.sellableItemId = { operator: 'in', value: params.sellableItemIds.slice(0, 100) };
+  } else if (params.sellableItemId) {
     filter.sellableItemId = { operator: 'eq', value: params.sellableItemId };
   }
   if (params.currencyId) {
@@ -92,6 +95,37 @@ export async function fetchUnitPriceFromPriceList(params: {
     take: 5,
   });
   return pickAmount(rows);
+}
+
+/** One list read for the sale lines. Latest valid row wins per sellable item. */
+export async function fetchUnitPricesForSaleLines(params: {
+  tenantId: string;
+  priceListId: string;
+  sellableItemIds: string[];
+  currencyId: string;
+  validAt?: string;
+}): Promise<Map<string, string>> {
+  const ids = [...new Set(params.sellableItemIds.map((id) => id.trim()).filter(Boolean))].slice(
+    0,
+    100,
+  );
+  const prices = new Map<string, string>();
+  if (ids.length === 0) return prices;
+  const rows = await listPriceListItemRows({
+    tenantId: params.tenantId,
+    priceListId: params.priceListId,
+    sellableItemIds: ids,
+    currencyId: params.currencyId,
+    validAt: params.validAt,
+    take: 100,
+  });
+  for (const row of rows) {
+    const sellableItemId = String(row.sellableItemId ?? '');
+    const amount = row.unitPriceAmount != null ? String(row.unitPriceAmount).trim() : '';
+    if (!sellableItemId || !amount || prices.has(sellableItemId)) continue;
+    prices.set(sellableItemId, amount);
+  }
+  return prices;
 }
 
 export function getPriceListItemByIdUrl(tenantId: string, itemId: string): string {

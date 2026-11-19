@@ -1,10 +1,7 @@
 import { useTranslate } from '@refinedev/core';
 import { Form, Select } from 'antd';
 import { useEffect, useState } from 'react';
-import {
-  fetchActiveMonetaryPolicies,
-  type MonetaryPolicyListItem,
-} from '../../shared/timci/monetaryPoliciesApi.js';
+import { fetchActiveMonetaryPolicies } from '../../shared/timci/monetaryPoliciesApi.js';
 
 type Props = {
   tenantId: string;
@@ -27,25 +24,36 @@ export function MonetaryPolicyDefaultSelect({
 }: Props) {
   const translate = useTranslate();
   const enabled = Boolean(tenantId && entityId);
-  const [options, setOptions] = useState<MonetaryPolicyListItem[]>([]);
+  const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    void (async () => {
-      setLoading(true);
-      try {
-        const items = await fetchActiveMonetaryPolicies(tenantId, entityId);
-        if (!cancelled) setOptions(items);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
+    const handle = window.setTimeout(() => {
+      void (async () => {
+        setLoading(true);
+        try {
+          const items = await fetchActiveMonetaryPolicies(tenantId, entityId, search);
+          if (!cancelled) {
+            setOptions(
+              items.map((policy) => ({
+                value: policy.id,
+                label: policy.name.replace(/\s+/g, ' ').trim(),
+              })),
+            );
+          }
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      })();
+    }, 250);
     return () => {
       cancelled = true;
+      window.clearTimeout(handle);
     };
-  }, [enabled, tenantId, entityId]);
+  }, [enabled, tenantId, entityId, search]);
 
   return (
     <Form.Item
@@ -59,13 +67,11 @@ export function MonetaryPolicyDefaultSelect({
     >
       <Select
         showSearch
+        filterOption={false}
+        onSearch={setSearch}
         loading={enabled && loading}
-        optionFilterProp="label"
         allowClear={!required}
-        options={(enabled ? options : []).map((p) => ({
-          value: p.id,
-          label: p.name.replace(/\s+/g, ' ').trim(),
-        }))}
+        options={enabled ? options : []}
         placeholder={translate('create.entity.defaultMonetaryPolicyPlaceholder')}
       />
     </Form.Item>

@@ -250,21 +250,30 @@ export function CustomerShow() {
                     key: 'current-account',
                     label: translate('pages.customers.tabCurrentAccount'),
                     children: record?.id ? (
-                      <CustomerCurrentAccountTab customerId={String(record.id)} />
+                      <CustomerCurrentAccountTab
+                        customerId={String(record.id)}
+                        defaultCurrencyId={record.defaultCurrencyId}
+                      />
                     ) : null,
                   },
                   {
                     key: 'settlement',
                     label: translate('pages.customers.tabSettlement'),
                     children: record?.id ? (
-                      <CustomerSettlementTab customerId={String(record.id)} />
+                      <CustomerSettlementTab
+                        customerId={String(record.id)}
+                        defaultCurrencyId={record.defaultCurrencyId}
+                      />
                     ) : null,
                   },
                   {
                     key: 'allocations',
                     label: translate('pages.customers.tabAllocations'),
                     children: record?.id ? (
-                      <CustomerAllocationsTab customerId={String(record.id)} />
+                      <CustomerAllocationsTab
+                        customerId={String(record.id)}
+                        defaultCurrencyId={record.defaultCurrencyId}
+                      />
                     ) : null,
                   },
                 ]

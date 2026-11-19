@@ -333,6 +333,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
         first.total <= first.data.length
           ? first.data
           : await fetchAllListPages({
+              initial: first,
               fetchPage: async (page, size) =>
                 fetchTimciListPage<T>({
                   resource: props.resource,

@@ -36,4 +36,5 @@ export type SubscriptionRecord = {
   lastBillingError: string | null;
   lines: SubscriptionLineRecord[];
   generatedSales: SubscriptionGeneratedSale[];
+  generatedSalesTotal?: number;
 };

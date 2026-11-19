@@ -15,8 +15,8 @@ import {
   type AllocationCandidateRow,
 } from './collectionAllocations.js';
 import { Link, useNavigate } from 'react-router';
-import { Button, Form, InputNumber, Space, Table, Typography } from 'antd';
-import { useCallback, useEffect, useMemo } from 'react';
+import { Button, Form, Input, InputNumber, Space, Table, Typography } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslate } from '@refinedev/core';
 import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
 
@@ -87,6 +87,21 @@ export function CollectionAllocationsTable({
   }, [amountByTargetId, candidates]);
 
   const candidateIds = useMemo(() => new Set(candidates.map((c) => c.id)), [candidates]);
+  const [rowFilter, setRowFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const visibleCandidates = useMemo(() => {
+    const query = rowFilter.trim().toLowerCase();
+    if (!query) return candidates;
+    return candidates.filter((row) => {
+      const number = row.entityTxnNumber != null ? String(row.entityTxnNumber) : '';
+      const concept = typeof row.concept === 'string' ? row.concept : '';
+      return number.toLowerCase().includes(query) || concept.toLowerCase().includes(query);
+    });
+  }, [candidates, rowFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rowFilter, candidates]);
 
   /** Drop allocations that no longer appear in the candidate table (customer/currency change). */
   useEffect(() => {
@@ -188,12 +203,26 @@ export function CollectionAllocationsTable({
           {emptyHint}
         </Typography.Paragraph>
       ) : (
+        <>
+        <Input
+          allowClear
+          value={rowFilter}
+          onChange={(event) => setRowFilter(event.target.value)}
+          placeholder={translate('pages.commercialTransactions.fields.allocationsFilter')}
+          aria-label={translate('pages.commercialTransactions.fields.allocationsFilter')}
+          style={{ maxWidth: 320, marginBottom: 8 }}
+        />
         <Table<AllocationCandidateRow>
           size="small"
           rowKey="id"
           loading={loading}
-          pagination={false}
-          dataSource={candidates}
+          pagination={{
+            current: page,
+            pageSize: 25,
+            showSizeChanger: false,
+            onChange: (next) => setPage(next),
+          }}
+          dataSource={visibleCandidates}
           scroll={{ x: true }}
           onRow={(row) => ({
             onClick: () => openTargetShow(row),
@@ -292,6 +321,7 @@ export function CollectionAllocationsTable({
             },
           ]}
         />
+        </>
       )}
     </>
   );

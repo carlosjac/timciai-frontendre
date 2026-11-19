@@ -1,6 +1,7 @@
-import { useList, usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
+import { useSelect } from '@refinedev/antd';
+import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Alert, Button, Select, Space, Spin, Typography } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatTimciUserDateOnly, formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -12,6 +13,16 @@ import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { SellableItemPriceDrawer } from './SellableItemPriceDrawer.js';
 
 type PriceListRow = BaseRecord & { id: string; name?: string; isActive?: boolean };
+
+/** The entity's only price list, when the unfiltered total is one. */
+export function solePriceListId(
+  total: number | undefined,
+  rows: readonly { id: string }[],
+  searching: boolean,
+): string | null {
+  if (searching || total !== 1 || rows.length !== 1 || !rows[0]) return null;
+  return String(rows[0].id);
+}
 
 type ItemRow = BaseRecord & {
   currencyCode?: string;
@@ -45,25 +56,58 @@ export function SellableItemPricesTab({
   const canUpdate = !readOnly && codes.includes('price_list_items.update');
   const canAdd = !readOnly && codes.includes('price_list_items.add');
 
-  const { query: listsQuery, result: listsResult } = useList<PriceListRow>({
+  const [priceListId, setPriceListId] = useState<string | null>(null);
+  const [pickedList, setPickedList] = useState<PriceListRow | null>(null);
+  const userClearedList = useRef(false);
+  const [listSearch, setListSearch] = useState('');
+
+  const priceListSelect = useSelect<PriceListRow>({
     resource: 'price_lists',
-    meta: { entityId },
-    pagination: { currentPage: 1, pageSize: 100 },
+    optionLabel: (row) => {
+      const base = row.name ?? row.id;
+      return row.isActive === false
+        ? `${base} (${translate('pages.sellableItems.pricesInactiveListSuffix')})`
+        : base;
+    },
+    optionValue: (row) => String(row.id),
+    pagination: { currentPage: 1, pageSize: 20 },
     sorters: [{ field: 'name', order: 'asc' }],
+    meta: { entityId },
     queryOptions: { enabled: Boolean(entityId) },
+    onSearch: (value) => {
+      const term = value.trim();
+      setListSearch(term);
+      if (!term) return [];
+      return [{ field: 'name', operator: 'contains', value: term }];
+    },
   });
 
-  const priceLists = useMemo(() => listsResult.data ?? [], [listsResult.data]);
-  const listsLoading = listsQuery.isLoading || listsQuery.isFetching;
+  const priceLists = useMemo(
+    () => (priceListSelect.query.data?.data ?? []) as PriceListRow[],
+    [priceListSelect.query.data?.data],
+  );
+  const listsLoading = priceListSelect.query.isLoading && priceLists.length === 0 && listSearch === '';
 
-  const [priceListId, setPriceListId] = useState<string | null>(null);
+  useEffect(() => {
+    if (userClearedList.current || priceListId) return;
+    const onlyId = solePriceListId(
+      priceListSelect.query.data?.total,
+      priceLists,
+      listSearch !== '',
+    );
+    if (!onlyId) return;
+    setPriceListId(onlyId);
+    setPickedList(priceLists[0] ?? null);
+  }, [listSearch, priceListId, priceListSelect.query.data?.total, priceLists]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const selectedPriceList = useMemo(
-    () => priceLists.find((p) => String(p.id) === String(priceListId)) ?? null,
-    [priceLists, priceListId],
-  );
+  const selectedPriceList = useMemo(() => {
+    const fromPage = priceLists.find((p) => String(p.id) === String(priceListId));
+    if (fromPage) return fromPage;
+    if (pickedList && String(pickedList.id) === String(priceListId)) return pickedList;
+    return null;
+  }, [pickedList, priceLists, priceListId]);
 
   const canMutatePricesForList =
     Boolean(priceListId) && selectedPriceList != null && selectedPriceList.isActive !== false;
@@ -179,11 +223,18 @@ export function SellableItemPricesTab({
     );
   }
 
-  if (priceLists.length === 0) {
+  const noPriceLists =
+    !priceListSelect.query.isLoading &&
+    (priceListSelect.query.data?.total ?? 0) === 0 &&
+    listSearch === '' &&
+    !priceListId;
+  if (noPriceLists) {
     return (
       <Alert type="info" showIcon message={translate('pages.sellableItems.pricesNoPriceLists')} />
     );
   }
+
+  const { options, loading, onSearch, filterOption, showSearch } = priceListSelect.selectProps;
 
   const listReady = Boolean(priceListId && entityId && sellableItemId);
 
@@ -193,21 +244,23 @@ export function SellableItemPricesTab({
         <div>
           <Typography.Text strong>{translate('pages.sellableItems.pricesPickList')}</Typography.Text>
           <Select
+            options={options}
+            loading={loading}
+            onSearch={onSearch}
+            filterOption={filterOption}
+            showSearch={showSearch}
             style={{ width: '100%', maxWidth: 400, display: 'block', marginTop: 8 }}
             placeholder={translate('pages.sellableItems.pricesPickListPlaceholder')}
             value={priceListId ?? undefined}
             onChange={(v) => {
-              setPriceListId(v ? String(v) : null);
+              const nextId = v ? String(v) : null;
+              if (!nextId) userClearedList.current = true;
+              setPriceListId(nextId);
+              setPickedList(
+                nextId ? (priceLists.find((row) => String(row.id) === nextId) ?? pickedList) : null,
+              );
             }}
             allowClear
-            options={priceLists.map((p) => {
-              const base = p.name ?? p.id;
-              const suffix =
-                p.isActive === false
-                  ? ` (${translate('pages.sellableItems.pricesInactiveListSuffix')})`
-                  : '';
-              return { value: p.id, label: `${base}${suffix}` };
-            })}
           />
           <Typography.Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
             {translate('pages.sellableItems.pricesPickListHint')}

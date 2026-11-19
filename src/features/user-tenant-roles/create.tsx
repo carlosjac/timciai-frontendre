@@ -2,7 +2,11 @@ import { Create, useForm, useSelect } from '@refinedev/antd';
 import { useTranslate, type BaseRecord } from '@refinedev/core';
 import { useCallback } from 'react';
 import { Form, Select, Typography } from 'antd';
-import { stripSelectServerSearch } from '../../shared/timci/stripSelectServerSearch.js';
+function nameContains(value: string) {
+  const term = value.trim();
+  if (!term) return [];
+  return [{ field: 'name', operator: 'contains' as const, value: term }];
+}
 
 type UserRow = BaseRecord & { name?: string; email?: string };
 
@@ -25,27 +29,29 @@ export function UserTenantRoleCreate() {
     resource: 'users',
     optionLabel: (u) => `${u.name ?? '—'} (${u.email ?? ''})`,
     optionValue: (u) => String(u.id ?? ''),
-    pagination: { currentPage: 1, pageSize: 100 },
+    pagination: { currentPage: 1, pageSize: 20 },
     sorters: [{ field: 'name', order: 'asc' }],
     onSearch: onUserSearch,
   });
 
-  const { selectProps: tenantSelectRaw } = useSelect({
+  const { selectProps: tenantSelect } = useSelect({
     resource: 'tenants',
     optionLabel: 'name',
     optionValue: 'id',
     filters: [{ field: 'isActive', operator: 'eq', value: true }],
-    pagination: { currentPage: 1, pageSize: 100 },
+    pagination: { currentPage: 1, pageSize: 20 },
+    sorters: [{ field: 'name', order: 'asc' }],
+    onSearch: nameContains,
   });
-  const tenantSelect = stripSelectServerSearch(tenantSelectRaw);
 
-  const { selectProps: roleSelectRaw } = useSelect({
+  const { selectProps: roleSelect } = useSelect({
     resource: 'roles',
     optionLabel: 'name',
     optionValue: 'id',
-    pagination: { currentPage: 1, pageSize: 100 },
+    pagination: { currentPage: 1, pageSize: 20 },
+    sorters: [{ field: 'name', order: 'asc' }],
+    onSearch: nameContains,
   });
-  const roleSelect = stripSelectServerSearch(roleSelectRaw);
 
   return (
     <Create title={translate('pages.userTenantRoles.create')} saveButtonProps={saveButtonProps}>
@@ -77,14 +83,14 @@ export function UserTenantRoleCreate() {
           name="tenantId"
           rules={[{ required: true, message: translate('form.validation.requiredField') }]}
         >
-          <Select {...tenantSelect} showSearch optionFilterProp="label" allowClear />
+          <Select {...tenantSelect} allowClear />
         </Form.Item>
         <Form.Item
           label={translate('table.userTenantRoles.roleName')}
           name="roleId"
           rules={[{ required: true, message: translate('form.validation.requiredField') }]}
         >
-          <Select {...roleSelect} showSearch optionFilterProp="label" allowClear />
+          <Select {...roleSelect} allowClear />
         </Form.Item>
       </Form>
     </Create>

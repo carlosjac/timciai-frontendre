@@ -1,6 +1,7 @@
 import { useTimciDescriptionStyles } from '../../shared/timci/descriptionLayout.js';
 import { useTranslate } from '@refinedev/core';
-import { Descriptions, Empty, Tag, Typography } from 'antd';
+import { Descriptions, Empty, Pagination, Tag, Typography } from 'antd';
+import { useState } from 'react';
 
 export type CustomerContactView = {
   id?: string;
@@ -30,6 +31,9 @@ export function CustomerContactsReadonlyTab({ contacts }: CustomerContactsReadon
   const translate = useTranslate();
   const descriptionStyles = useTimciDescriptionStyles();
   const list = contacts ?? [];
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
+  const visible = list.slice((page - 1) * pageSize, page * pageSize);
 
   if (list.length === 0) {
     return <Empty description={translate('pages.customers.contactsEmpty')} />;
@@ -37,9 +41,11 @@ export function CustomerContactsReadonlyTab({ contacts }: CustomerContactsReadon
 
   return (
     <>
-      {list.map((c, index) => (
+      {visible.map((c, index) => {
+        const ordinal = (page - 1) * pageSize + index;
+        return (
         <div
-          key={c.id ?? `contact-${index}`}
+          key={c.id ?? `contact-${ordinal}`}
           style={{
             marginBottom: 16,
             padding: 16,
@@ -48,7 +54,7 @@ export function CustomerContactsReadonlyTab({ contacts }: CustomerContactsReadon
           }}
         >
           <Typography.Text strong style={{ display: 'block', marginBottom: 12 }}>
-            {c.name?.trim() || translate('pages.customers.contactFallback', { n: String(index + 1) })}
+            {c.name?.trim() || translate('pages.customers.contactFallback', { n: String(ordinal + 1) })}
           </Typography.Text>
           <Descriptions
             bordered
@@ -82,7 +88,17 @@ export function CustomerContactsReadonlyTab({ contacts }: CustomerContactsReadon
             </Descriptions.Item>
           </Descriptions>
         </div>
-      ))}
+        );
+      })}
+      {list.length > pageSize ? (
+        <Pagination
+          current={page}
+          pageSize={pageSize}
+          total={list.length}
+          showSizeChanger={false}
+          onChange={setPage}
+        />
+      ) : null}
     </>
   );
 }

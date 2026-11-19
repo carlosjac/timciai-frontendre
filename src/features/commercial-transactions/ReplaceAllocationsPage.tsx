@@ -1,4 +1,4 @@
-import { useInvalidate, useList, useOne, useShow, useTranslate, type BaseRecord } from '@refinedev/core';
+import { useInvalidate, useOne, useShow, useTranslate } from '@refinedev/core';
 import { Alert, Button, Form, Space, Spin, Typography } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
@@ -6,6 +6,8 @@ import type { CommercialTransactionResource } from '../../shared/timci/commercia
 import {
   commercialTransactionShowPath,
   getCommercialTransactionReplaceAllocationsUrl,
+  getCustomerCurrentAccountSettlementUrl,
+  type CurrentAccountSettlementLine,
 } from '../../shared/timci/commercialTransactionsApi.js';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { timciFetch } from '../../shared/timci/http.js';
@@ -62,16 +64,39 @@ export function ReplaceAllocationsPage({ resource }: Props) {
   const canEditAllocations =
     record?.status === 'registered' && !record.reversedByTransactionId;
 
-  const { result: salesResult, query: salesQuery } = useList<BaseRecord>({
-    resource: 'sales',
-    pagination: { currentPage: 1, pageSize: 100 },
-    queryOptions: { enabled: Boolean(customerId) && canEditAllocations },
-  });
-  const { result: debitsResult, query: debitsQuery } = useList<BaseRecord>({
-    resource: 'debits',
-    pagination: { currentPage: 1, pageSize: 100 },
-    queryOptions: { enabled: Boolean(customerId) && canEditAllocations },
-  });
+  const [settlementLines, setSettlementLines] = useState<CurrentAccountSettlementLine[]>([]);
+  const [settlementLoading, setSettlementLoading] = useState(false);
+
+  useEffect(() => {
+    if (!canEditAllocations || !tenantId || !customerId || !currencyId) {
+      setSettlementLines([]);
+      setSettlementLoading(false);
+      return;
+    }
+    const asOf =
+      record?.transactionDate != null && String(record.transactionDate).trim() !== ''
+        ? String(record.transactionDate).slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+    let cancelled = false;
+    void (async () => {
+      setSettlementLoading(true);
+      try {
+        const { json } = await timciFetch(
+          getCustomerCurrentAccountSettlementUrl(tenantId, customerId, currencyId, asOf),
+        );
+        if (cancelled) return;
+        const lines = (json as { lines?: CurrentAccountSettlementLine[] })?.lines ?? [];
+        setSettlementLines(lines.filter((line) => line?.id));
+      } catch {
+        if (!cancelled) setSettlementLines([]);
+      } finally {
+        if (!cancelled) setSettlementLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canEditAllocations, currencyId, customerId, record?.transactionDate, tenantId]);
 
   const allocatedByTarget = useMemo(() => {
     const map = new Map<string, number>();
@@ -86,56 +111,45 @@ export function ReplaceAllocationsPage({ resource }: Props) {
 
   const candidates = useMemo((): AllocationCandidateRow[] => {
     if (!customerId) return [];
-    const rows = [...(salesResult.data ?? []), ...(debitsResult.data ?? [])].filter((r) => {
-      const id = r.id != null ? String(r.id) : '';
-      if (!id || id === sourceId) return false;
-      if (String(r.customerId ?? '') !== customerId) return false;
-      if (r.status !== 'registered') return false;
-      if (currencyId && String(r.currencyId ?? '') !== currencyId) return false;
-      const open = parseMoneyNumber(r.openAmount ?? r.amount) ?? 0;
+    const byId = new Map<string, AllocationCandidateRow>();
+    for (const line of settlementLines) {
+      const id = String(line.id);
+      if (!id || id === sourceId) continue;
+      const open = parseMoneyNumber(line.openAmount) ?? 0;
       const held = allocatedByTarget.get(id) ?? 0;
-      return open > 0 || held > 0;
-    });
-    rows.sort((a, b) =>
-      compareAllocationRowsByDateThenTxnNumber(
-        {
-          transactionDate: a.transactionDate != null ? String(a.transactionDate) : null,
-          entityTxnNumber: a.entityTxnNumber != null ? Number(a.entityTxnNumber) : null,
-        },
-        {
-          transactionDate: b.transactionDate != null ? String(b.transactionDate) : null,
-          entityTxnNumber: b.entityTxnNumber != null ? Number(b.entityTxnNumber) : null,
-        },
-      ),
-    );
-    return rows.map((r) => {
-      const id = String(r.id);
-      const open = parseMoneyNumber(r.openAmount ?? r.amount) ?? 0;
-      const held = allocatedByTarget.get(id) ?? 0;
+      if (open <= 0 && held <= 0) continue;
       const available = Math.round((open + held) * 100) / 100;
-      return {
+      byId.set(id, {
         id,
-        entityTxnNumber:
-          r.entityTxnNumber != null ? Number(r.entityTxnNumber) : undefined,
-        type: String(r.type ?? 'sale'),
-        transactionDate: r.transactionDate != null ? String(r.transactionDate) : undefined,
-        amount: r.amount != null ? String(r.amount) : undefined,
+        entityTxnNumber: line.entityTxnNumber,
+        type: line.type,
+        transactionDate: line.transactionDate,
+        amount: line.openAmount,
         openAmount: formatMoney2(available),
-        concept: typeof r.concept === 'string' ? r.concept : null,
-      };
-    });
-  }, [
-    allocatedByTarget,
-    currencyId,
-    customerId,
-    debitsResult.data,
-    salesResult.data,
-    sourceId,
-  ]);
+        concept: line.concept,
+        adjustmentAmount: line.adjustmentAmount,
+        settlementAmount: line.settlementAmount,
+      });
+    }
+    for (const allocation of record?.allocations ?? []) {
+      const id =
+        allocation.targetTransactionId != null ? String(allocation.targetTransactionId) : '';
+      if (!id || id === sourceId || byId.has(id)) continue;
+      const held = allocatedByTarget.get(id) ?? 0;
+      if (held <= 0) continue;
+      byId.set(id, {
+        id,
+        entityTxnNumber: allocation.targetEntityTxnNumber ?? undefined,
+        type: allocation.targetType ?? 'sale',
+        transactionDate: allocation.targetTransactionDate ?? undefined,
+        openAmount: formatMoney2(held),
+        concept: allocation.targetConcept ?? null,
+      });
+    }
+    return [...byId.values()].sort(compareAllocationRowsByDateThenTxnNumber);
+  }, [allocatedByTarget, customerId, record?.allocations, settlementLines, sourceId]);
 
-  const loadingCandidates = Boolean(
-    canEditAllocations && (salesQuery?.isLoading || debitsQuery?.isLoading),
-  );
+  const loadingCandidates = Boolean(canEditAllocations && settlementLoading);
 
   useEffect(() => {
     if (isLoading || !record?.id || canEditAllocations || redirected.current) return;

@@ -725,6 +725,7 @@ export function CommercialTransactionShow({ resource }: Props) {
           incomingAllocations={
             Array.isArray(record?.incomingAllocations) ? record.incomingAllocations : []
           }
+          incomingAllocationsTotal={record?.incomingAllocationsTotal}
           targetTransactionId={record?.id}
           customerId={record?.customerId}
           currencyId={record?.currencyId}

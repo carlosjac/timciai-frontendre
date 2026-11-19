@@ -16,6 +16,67 @@ import {
   type DraftNoticeResource,
 } from './draftNotice.js';
 
+const DRAFT_NOTICE_TTL_MS = 20_000;
+
+type DraftNoticeCache = {
+  tenantId: string;
+  visibleKey: string;
+  at: number;
+  counts: Partial<Record<DraftNoticeResource, number>>;
+};
+
+let draftNoticeCache: DraftNoticeCache | null = null;
+let draftNoticeInflight: Promise<DraftNoticeCache> | null = null;
+const draftNoticeListeners = new Set<(cache: DraftNoticeCache) => void>();
+let draftNoticeFocusBound = false;
+
+function publishDraftNotice(cache: DraftNoticeCache) {
+  draftNoticeCache = cache;
+  for (const listener of draftNoticeListeners) listener(cache);
+}
+
+function loadDraftNotice(tenantId: string, visibleKey: string, force = false): Promise<DraftNoticeCache> {
+  const fresh =
+    draftNoticeCache != null &&
+    draftNoticeCache.tenantId === tenantId &&
+    draftNoticeCache.visibleKey === visibleKey &&
+    Date.now() - draftNoticeCache.at < DRAFT_NOTICE_TTL_MS;
+  if (!force && fresh && draftNoticeCache) return Promise.resolve(draftNoticeCache);
+  if (!force && draftNoticeInflight) return draftNoticeInflight;
+  const resources = visibleKey.split(',') as DraftNoticeResource[];
+  draftNoticeInflight = Promise.all(
+    resources.map(async (resource) => {
+      try {
+        return [resource, await fetchDraftCount(resource)] as const;
+      } catch {
+        return [resource, 0] as const;
+      }
+    }),
+  ).then((rows) => {
+    const cache: DraftNoticeCache = {
+      tenantId,
+      visibleKey,
+      at: Date.now(),
+      counts: Object.fromEntries(rows),
+    };
+    draftNoticeInflight = null;
+    publishDraftNotice(cache);
+    return cache;
+  });
+  return draftNoticeInflight;
+}
+
+function ensureDraftNoticeFocusRefresh() {
+  if (draftNoticeFocusBound || typeof window === 'undefined') return;
+  draftNoticeFocusBound = true;
+  window.addEventListener('focus', () => {
+    const current = draftNoticeCache;
+    if (!current) return;
+    if (Date.now() - current.at < DRAFT_NOTICE_TTL_MS) return;
+    void loadDraftNotice(current.tenantId, current.visibleKey, true);
+  });
+}
+
 async function fetchDraftCount(resource: DraftNoticeResource): Promise<number> {
   const base = getResourceApiBase(resource);
   if (!base) return 0;
@@ -63,27 +124,17 @@ export function DraftNotice({ placement }: Props) {
 
   useEffect(() => {
     if (!tenantId || !visibleKey) return;
-    const resources = visibleKey.split(',') as DraftNoticeResource[];
+    ensureDraftNoticeFocusRefresh();
     let cancelled = false;
-    const load = () => {
-      void Promise.all(
-        resources.map(async (resource) => {
-          try {
-            return [resource, await fetchDraftCount(resource)] as const;
-          } catch {
-            return [resource, 0] as const;
-          }
-        }),
-      ).then((rows) => {
-        if (cancelled) return;
-        setSnapshot({ tenantId, visibleKey, counts: Object.fromEntries(rows) });
-      });
+    const apply = (cache: DraftNoticeCache) => {
+      if (cancelled || cache.tenantId !== tenantId || cache.visibleKey !== visibleKey) return;
+      setSnapshot({ tenantId: cache.tenantId, visibleKey: cache.visibleKey, counts: cache.counts });
     };
-    load();
-    window.addEventListener('focus', load);
+    draftNoticeListeners.add(apply);
+    void loadDraftNotice(tenantId, visibleKey).then(apply);
     return () => {
       cancelled = true;
-      window.removeEventListener('focus', load);
+      draftNoticeListeners.delete(apply);
     };
   }, [tenantId, visibleKey]);
 

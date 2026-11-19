@@ -54,7 +54,8 @@ export function CommercialTransactionDocumentsPanel({
     setLoading(true);
     try {
       const base = getV1Base();
-      const url = `${base}/tenants/${encodeURIComponent(tenantId)}/documents?commercialTransactionId=${encodeURIComponent(commercialTransactionId)}`;
+      const range = encodeURIComponent(JSON.stringify([0, 49]));
+      const url = `${base}/tenants/${encodeURIComponent(tenantId)}/documents?commercialTransactionId=${encodeURIComponent(commercialTransactionId)}&range=${range}`;
       const { json } = await timciFetch(url);
       setRows(Array.isArray(json) ? (json as IssuedDocumentRecord[]) : []);
     } catch (e) {
@@ -106,7 +107,7 @@ export function CommercialTransactionDocumentsPanel({
         rowKey="id"
         loading={loading}
         dataSource={rows}
-        pagination={false}
+        pagination={{ pageSize: 25, showSizeChanger: false }}
         locale={{ emptyText: translate('documents.empty') }}
         columns={[
           {

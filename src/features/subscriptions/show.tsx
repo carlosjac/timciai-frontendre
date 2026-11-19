@@ -1,6 +1,6 @@
 import { DeleteButton, RefreshButton, Show } from '@refinedev/antd';
 import { usePermissions, useShow, useTranslate } from '@refinedev/core';
-import { Alert, App as AntdApp, Button, Descriptions, Space, Table, Tag } from 'antd';
+import { Alert, App as AntdApp, Button, Descriptions, Space, Table, Tag, Typography } from 'antd';
 import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
@@ -247,9 +247,17 @@ export function SubscriptionShow() {
         ]}
       />
       <h2 style={{ marginTop: 24 }}>{translate('pages.subscriptions.generatedSales')}</h2>
+      {(record?.generatedSalesTotal ?? 0) > (record?.generatedSales.length ?? 0) ? (
+        <Typography.Paragraph type="secondary">
+          {translate('pages.subscriptions.generatedSalesShown', {
+            shown: String(record?.generatedSales.length ?? 0),
+            total: String(record?.generatedSalesTotal ?? 0),
+          })}
+        </Typography.Paragraph>
+      ) : null}
       <Table
         rowKey="id"
-        pagination={false}
+        pagination={{ pageSize: 25, showSizeChanger: false }}
         scroll={{ x: 'max-content' }}
         dataSource={record?.generatedSales ?? []}
         locale={{ emptyText: translate('pages.subscriptions.noSales') }}
