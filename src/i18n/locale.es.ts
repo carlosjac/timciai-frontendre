@@ -2169,6 +2169,7 @@ export const esMessages = {
     view: 'Ver',
     download: 'Descargar PDF',
     previewTitle: 'Vista previa',
+    previewPage: 'Página {{page}}',
     previewLoading: 'Cargando PDF…',
     previewError: 'No se pudo mostrar la vista previa del PDF.',
     noContent: 'Este comprobante aún no tiene PDF disponible para descargar.',

@@ -2,7 +2,7 @@ import { Show } from '@refinedev/antd';
 import { useShow, useTranslate } from '@refinedev/core';
 import { Button, Descriptions, Spin, Tag, Typography } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import {
   downloadIssuedDocumentPdf,
@@ -12,6 +12,9 @@ import {
 import { formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import { useTimciNotify } from '../../shared/timci/notifyTimci.js';
+import { supportsEmbeddedPdfPreview } from './supportsEmbeddedPdfPreview.js';
+
+const MobileDocumentPdfPreview = lazy(() => import('./MobileDocumentPdfPreview.js'));
 
 function statusColor(status: string): string {
   switch (status) {
@@ -55,9 +58,13 @@ export function DocumentShow() {
   const record = query?.data?.data;
   const isLoading = query?.isLoading ?? false;
   const [downloading, setDownloading] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [pdfObjectUrl, setPdfObjectUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
+  const embedPdf = supportsEmbeddedPdfPreview(
+    typeof navigator === 'undefined' ? '' : navigator.userAgent,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -65,33 +72,37 @@ export function DocumentShow() {
 
     void Promise.resolve().then(() => {
       if (cancelled) return;
+      setPdfBlob(null);
       setPdfObjectUrl(null);
       setPdfError(false);
 
-    const loadPdf = async () => {
-      if (!record?.id || !record.hasContent) {
-        setPdfLoading(false);
-        return;
-      }
-      setPdfLoading(true);
-      try {
-        const blob = await fetchIssuedDocumentPdfBlob(String(record.id));
-        if (cancelled) return;
-        if (!blob) {
-          setPdfError(true);
+      const loadPdf = async () => {
+        if (!record?.id || !record.hasContent) {
+          setPdfLoading(false);
           return;
         }
-        // Chrome/Edge PDF viewer: default zoom 100% via fragment.
-        objectUrl = `${URL.createObjectURL(blob)}#zoom=100`;
-        setPdfObjectUrl(objectUrl);
-      } catch {
-        if (!cancelled) setPdfError(true);
-      } finally {
-        if (!cancelled) setPdfLoading(false);
-      }
-    };
+        setPdfLoading(true);
+        try {
+          const blob = await fetchIssuedDocumentPdfBlob(String(record.id));
+          if (cancelled) return;
+          if (!blob) {
+            setPdfError(true);
+            return;
+          }
+          setPdfBlob(blob);
+          if (embedPdf) {
+            // Chrome/Edge PDF viewer: default zoom 100% via fragment.
+            objectUrl = `${URL.createObjectURL(blob)}#zoom=100`;
+            setPdfObjectUrl(objectUrl);
+          }
+        } catch {
+          if (!cancelled) setPdfError(true);
+        } finally {
+          if (!cancelled) setPdfLoading(false);
+        }
+      };
 
-    void loadPdf();
+      void loadPdf();
     });
 
     return () => {
@@ -101,7 +112,7 @@ export function DocumentShow() {
         URL.revokeObjectURL(base);
       }
     };
-  }, [record?.id, record?.hasContent]);
+  }, [embedPdf, record?.id, record?.hasContent]);
 
   const onDownload = async () => {
     if (!record?.id) return;
@@ -227,14 +238,14 @@ export function DocumentShow() {
             >
               <Spin />
             </div>
-          ) : pdfError || !pdfObjectUrl ? (
+          ) : pdfError || (embedPdf ? !pdfObjectUrl : !pdfBlob) ? (
             <Typography.Paragraph type="secondary">
               {translate('documents.previewError')}
             </Typography.Paragraph>
-          ) : (
+          ) : embedPdf ? (
             <iframe
               title={translate('documents.previewTitle')}
-              src={pdfObjectUrl}
+              src={pdfObjectUrl ?? undefined}
               style={{
                 width: '100%',
                 height: 'calc(100vh - 220px)',
@@ -244,6 +255,20 @@ export function DocumentShow() {
                 background: 'var(--ant-color-bg-container)',
               }}
             />
+          ) : (
+            <Suspense
+              fallback={
+                <div
+                  role="status"
+                  aria-label={translate('documents.previewLoading')}
+                  style={{ textAlign: 'center', padding: 48 }}
+                >
+                  <Spin />
+                </div>
+              }
+            >
+              {pdfBlob ? <MobileDocumentPdfPreview blob={pdfBlob} /> : null}
+            </Suspense>
           )}
         </div>
       ) : (

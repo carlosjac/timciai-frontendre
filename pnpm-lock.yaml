@@ -40,7 +40,10 @@ importers:
         version: 1.11.23
       isomorphic-dompurify:
         specifier: ^4.7.0
-        version: 4.7.0
+        version: 4.7.0(@napi-rs/canvas@1.1.1)
+      pdfjs-dist:
+        specifier: 6.5.438
+        version: 6.5.438
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -101,7 +104,7 @@ importers:
         version: 8.3.8(@types/node@24.19.2)
       vitest:
         specifier: ^5.1.0
-        version: 5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(jsdom@31.0.0)(msw@3.0.5(@types/node@24.19.2)(graphql@16.14.2)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)))(vite@8.3.8(@types/node@24.19.2))
+        version: 5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(jsdom@31.0.0(@napi-rs/canvas@1.1.1))(msw@3.0.5(@types/node@24.19.2)(graphql@16.14.2)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)))(vite@8.3.8(@types/node@24.19.2))
 
 packages:
 
@@ -538,6 +541,76 @@ packages:
   '@mswjs/interceptors@0.45.12':
     resolution: {integrity: sha512-LLttQ/SSmseGFD/sNiHv9q34hd4gmPLN9uQdIIsU/V/o2AgTJm3dWoKHA4KTj0BzAans6CoEmpHYmp80yp69VA==}
     engines: {node: '>=22'}
+
+  '@napi-rs/canvas-android-arm64@1.1.1':
+    resolution: {integrity: sha512-rSEp3y+/YXw6TxSx4/NHSAFxumZrkMoXy2WiVqpKGT8oF5GHOUDzTKj45e5cvzophX4iFaxwKs3+/gNkJ7FmzQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [android]
+
+  '@napi-rs/canvas-darwin-arm64@1.1.1':
+    resolution: {integrity: sha512-NrPTZWpu0ywOGdp9JBDi46gABUzDJK6IzlP7cOEwaAuVVFM8KRakUWk12RK3YQ/Ea5FrNVTWUFTmkXVk4RfHqg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@napi-rs/canvas-darwin-x64@1.1.1':
+    resolution: {integrity: sha512-p3DOT8VBfu8cR3SVBUs6cEzJmzwOUQkNfo1S4nKLgeKDsSlvn2oZsRaa9m0lfMccn1WbwtgKCEpJXmHhp++Zrg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@napi-rs/canvas-linux-arm-gnueabihf@1.1.1':
+    resolution: {integrity: sha512-YWGJfMa8TtEhsHd/kDiyBFwT/dAbRQiXwsm0tDev4H5cJiyOk08CC83JihrwnUsePGjIvxC8/8g/zqKKuqjpQA==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+
+  '@napi-rs/canvas-linux-arm64-gnu@1.1.1':
+    resolution: {integrity: sha512-q1HBkNmB9mc6SF6uSz2492qSgsB46MqS+n3bPbPCE0kUXmWAPkH9vDADeawbhepQYn8RhlV2V/P5u6nykFXbuQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@napi-rs/canvas-linux-arm64-musl@1.1.1':
+    resolution: {integrity: sha512-aF4RkTp2T45fERFPCIqbxeKVhvhHuXeyyk5/jdJ+N0tGLZy4NvMkIrBWt6GOCmAQ7H0G3M/O03hAsc4Li52q4A==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@napi-rs/canvas-linux-riscv64-gnu@1.1.1':
+    resolution: {integrity: sha512-rCU4Xo5h0AQFEaa9dNr7Kxbk4gke9Uyi/I6ZXuBGYPSNWxYmWRS6DkrxaSKUJyCgA7c8l6lZBYfx/FtbJo3fMA==}
+    engines: {node: '>= 10'}
+    cpu: [riscv64]
+    os: [linux]
+
+  '@napi-rs/canvas-linux-x64-gnu@1.1.1':
+    resolution: {integrity: sha512-7bZfDI9lxKqj9wJRHiSQBimCRanxDGHYE7TugnOmFJ9ScpgFSsLHFQtOH9wvmbQvBwv5nBuDBGJlG0+7iGkN+w==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@napi-rs/canvas-linux-x64-musl@1.1.1':
+    resolution: {integrity: sha512-xaFof2p0aO7C7ziMCLeueve09PVEKYCebljLTL3nyxoaRsYpEnBrUBP1aVpfD1Nk464dc7/wPV23fkHdOBie2g==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@napi-rs/canvas-win32-arm64-msvc@1.1.1':
+    resolution: {integrity: sha512-wOLX/WRwWr0xGj2hnDf/t3tZfPlzzL9rGPsO1UnYSuNbRzwas/hC8JXnuhaEs8eCw+J+W4zxOJiVF4RxkvcMfw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@napi-rs/canvas-win32-x64-msvc@1.1.1':
+    resolution: {integrity: sha512-6Ge1AF1SVO+Ypjaw9IPcApm95krR3GQ32HgVqlIckbN/WqUlWYS0hnb8ZIdu3e0IbutbJgd8D2qSeb2/Cdpbdw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@napi-rs/canvas@1.1.1':
+    resolution: {integrity: sha512-UyNspnx0rXclATMOBXiWgy1xtWUSUDm4UOO6+YO8xzyVKaZRpvK+SlJSCtRoSI9J/mEqklJiPYtroN1B+hgLXg==}
+    engines: {node: '>= 10'}
 
   '@napi-rs/wasm-runtime@1.2.6':
     resolution: {integrity: sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw==}
@@ -2104,6 +2177,10 @@ packages:
   pdfast@0.2.0:
     resolution: {integrity: sha512-cq6TTu6qKSFUHwEahi68k/kqN2mfepjkGrG9Un70cgdRRKLKY6Rf8P8uvP2NvZktaQZNF3YE7agEkLj0vGK9bA==}
 
+  pdfjs-dist@6.5.438:
+    resolution: {integrity: sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA==}
+    engines: {node: '>=22.13.0 || >=24'}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -3587,6 +3664,54 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@napi-rs/canvas-android-arm64@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-darwin-arm64@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-darwin-x64@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-linux-arm-gnueabihf@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-linux-arm64-gnu@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-linux-arm64-musl@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-linux-riscv64-gnu@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-linux-x64-gnu@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-linux-x64-musl@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-win32-arm64-msvc@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas-win32-x64-msvc@1.1.1':
+    optional: true
+
+  '@napi-rs/canvas@1.1.1':
+    optionalDependencies:
+      '@napi-rs/canvas-android-arm64': 1.1.1
+      '@napi-rs/canvas-darwin-arm64': 1.1.1
+      '@napi-rs/canvas-darwin-x64': 1.1.1
+      '@napi-rs/canvas-linux-arm-gnueabihf': 1.1.1
+      '@napi-rs/canvas-linux-arm64-gnu': 1.1.1
+      '@napi-rs/canvas-linux-arm64-musl': 1.1.1
+      '@napi-rs/canvas-linux-riscv64-gnu': 1.1.1
+      '@napi-rs/canvas-linux-x64-gnu': 1.1.1
+      '@napi-rs/canvas-linux-x64-musl': 1.1.1
+      '@napi-rs/canvas-win32-arm64-msvc': 1.1.1
+      '@napi-rs/canvas-win32-x64-msvc': 1.1.1
+    optional: true
+
   '@napi-rs/wasm-runtime@1.2.6(@emnapi/core@2.0.0-beta.2)(@emnapi/runtime@2.0.0-beta.2)':
     dependencies:
       '@emnapi/core': 2.0.0-beta.2
@@ -4198,7 +4323,7 @@ snapshots:
       obug: 3.0.0
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(jsdom@31.0.0)(msw@3.0.5(@types/node@24.19.2)(graphql@16.14.2)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)))(vite@8.3.8(@types/node@24.19.2))
+      vitest: 5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(jsdom@31.0.0(@napi-rs/canvas@1.1.1))(msw@3.0.5(@types/node@24.19.2)(graphql@16.14.2)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)))(vite@8.3.8(@types/node@24.19.2))
 
   '@vitest/istanbul-lib-coverage@2.1.0': {}
 
@@ -4844,10 +4969,10 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isomorphic-dompurify@4.7.0:
+  isomorphic-dompurify@4.7.0(@napi-rs/canvas@1.1.1):
     dependencies:
       dompurify: 3.4.17
-      jsdom: 31.0.0
+      jsdom: 31.0.0(@napi-rs/canvas@1.1.1)
     transitivePeerDependencies:
       - '@napi-rs/canvas'
       - '@noble/hashes'
@@ -4856,7 +4981,7 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  jsdom@31.0.0:
+  jsdom@31.0.0(@napi-rs/canvas@1.1.1):
     dependencies:
       '@exodus/bytes': 1.16.0
       bcp-47: 2.1.2
@@ -4876,6 +5001,8 @@ snapshots:
       whatwg-mimetype: 5.0.0
       whatwg-url: 17.3.0
       xml-name-validator: 5.0.0
+    optionalDependencies:
+      '@napi-rs/canvas': 1.1.1
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -5218,6 +5345,10 @@ snapshots:
   path-to-regexp@8.2.0: {}
 
   pdfast@0.2.0: {}
+
+  pdfjs-dist@6.5.438:
+    optionalDependencies:
+      '@napi-rs/canvas': 1.1.1
 
   picocolors@1.1.1: {}
 
@@ -6032,7 +6163,7 @@ snapshots:
       '@types/node': 24.19.2
       fsevents: 2.3.3
 
-  vitest@5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(jsdom@31.0.0)(msw@3.0.5(@types/node@24.19.2)(graphql@16.14.2)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)))(vite@8.3.8(@types/node@24.19.2)):
+  vitest@5.1.0(@types/node@24.19.2)(@vitest/coverage-v8@5.1.0)(jsdom@31.0.0(@napi-rs/canvas@1.1.1))(msw@3.0.5(@types/node@24.19.2)(graphql@16.14.2)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)))(vite@8.3.8(@types/node@24.19.2)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.1.0(msw@3.0.5(@types/node@24.19.2)(graphql@16.14.2)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)))(vite@8.3.8(@types/node@24.19.2))
@@ -6051,7 +6182,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.19.2
       '@vitest/coverage-v8': 5.1.0(vitest@5.1.0)
-      jsdom: 31.0.0
+      jsdom: 31.0.0(@napi-rs/canvas@1.1.1)
     transitivePeerDependencies:
       - msw
 

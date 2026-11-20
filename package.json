@@ -26,6 +26,7 @@
     "antd": "^5.29.3",
     "dayjs": "^1.11.23",
     "isomorphic-dompurify": "^4.7.0",
+    "pdfjs-dist": "^6.5.438",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-grid-layout": "^2.3.0",
