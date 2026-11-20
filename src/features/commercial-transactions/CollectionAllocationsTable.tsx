@@ -89,6 +89,11 @@ export function CollectionAllocationsTable({
   const candidateIds = useMemo(() => new Set(candidates.map((c) => c.id)), [candidates]);
   const [rowFilter, setRowFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [pageScope, setPageScope] = useState({ rowFilter, candidates });
+  if (pageScope.rowFilter !== rowFilter || pageScope.candidates !== candidates) {
+    setPageScope({ rowFilter, candidates });
+    setPage(1);
+  }
   const visibleCandidates = useMemo(() => {
     const query = rowFilter.trim().toLowerCase();
     if (!query) return candidates;
@@ -98,10 +103,6 @@ export function CollectionAllocationsTable({
       return number.toLowerCase().includes(query) || concept.toLowerCase().includes(query);
     });
   }, [candidates, rowFilter]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [rowFilter, candidates]);
 
   /** Drop allocations that no longer appear in the candidate table (customer/currency change). */
   useEffect(() => {

@@ -51,7 +51,10 @@ export function CommercialTransactionIncomingAllocationsPanel({
   const translate = useTranslate();
   const navigate = useNavigate();
   const { dateFormat, timeZone } = useUserPreferences();
-  const rows = Array.isArray(incomingAllocations) ? incomingAllocations : [];
+  const rows = useMemo(
+    () => (Array.isArray(incomingAllocations) ? incomingAllocations : []),
+    [incomingAllocations],
+  );
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
   const creditAsOfDates = useMemo(

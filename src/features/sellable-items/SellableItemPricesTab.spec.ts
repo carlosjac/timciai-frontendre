@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { solePriceListId } from './SellableItemPricesTab.js';
+import { solePriceListId } from './solePriceListId.js';
 
 describe('solePriceListId', () => {
   it('returns the only price list of the entity', () => {

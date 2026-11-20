@@ -84,6 +84,9 @@ importers:
       globals:
         specifier: ^17.14.0
         version: 17.14.0
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
       msw:
         specifier: ^3.0.5
         version: 3.0.5(@types/node@24.19.2)(graphql@16.14.2)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2))
@@ -1694,6 +1697,11 @@ packages:
   html2canvas@1.4.1:
     resolution: {integrity: sha512-fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA==}
     engines: {node: '>=8.0.0'}
+
+  husky@9.1.7:
+    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
@@ -4777,6 +4785,8 @@ snapshots:
     dependencies:
       css-line-break: 2.1.0
       text-segmentation: 1.0.3
+
+  husky@9.1.7: {}
 
   iconv-lite@0.6.3:
     dependencies:

@@ -757,14 +757,14 @@ export function CommercialTransactionFormFields({
   const settlementQueryEnabled = Boolean(
     needsAllocations && tenantId && customerId && currencyId,
   );
+  if (!settlementQueryEnabled && (settlementLines.length > 0 || settlementLoading)) {
+    setSettlementLines([]);
+    setSettlementLoading(false);
+  }
 
   /** Open documents of this customer and currency, including policy adjustments. */
   useEffect(() => {
-    if (!settlementQueryEnabled || !tenantId || !customerId || !currencyId) {
-      setSettlementLines([]);
-      setSettlementLoading(false);
-      return;
-    }
+    if (!settlementQueryEnabled || !tenantId || !customerId || !currencyId) return;
     const asOf =
       transactionDate != null && String(transactionDate).trim() !== ''
         ? String(transactionDate).slice(0, 10)

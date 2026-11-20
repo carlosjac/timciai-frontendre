@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Button, Space, Tag } from 'antd';
 import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
@@ -38,7 +38,7 @@ export function EmailBounceList() {
     [canView],
   );
 
-  const acknowledge = async (id: string) => {
+  const acknowledge = useCallback(async (id: string) => {
     const base = getResourceApiBase('emailBounces');
     if (!base) return;
     try {
@@ -48,7 +48,7 @@ export function EmailBounceList() {
     } catch {
       notify.error(translate('pages.emailBounces.acknowledgeError'));
     }
-  };
+  }, [notify, translate]);
 
   const columnDefs = useMemo((): TimciColumnDef<EmailBounceRow>[] => {
     const cols: TimciColumnDef<EmailBounceRow>[] = [
@@ -129,7 +129,7 @@ export function EmailBounceList() {
     ];
 
     return cols;
-  }, [canAck, dateFormat, timeZone, translate]);
+  }, [acknowledge, canAck, dateFormat, timeZone, translate]);
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">

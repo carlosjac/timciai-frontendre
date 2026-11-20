@@ -78,6 +78,8 @@ pnpm test:coverage
 
 Los specs viven junto al código en `src/**/*.spec.ts` (helpers de `shared/`, `http` / data provider con **MSW**). No se incluyen en el build de la app. Setup compartido: `src/test/setup.ts`.
 
+`pnpm install` instala un hook de Git (`Husky`) que, antes de cada `git push`, corre `pnpm lint`, `pnpm test` y `pnpm build` con `VITE_API_URL` vacío, igual que el job de CI. Si alguno falla, el push no sale. Para saltarlo una vez: `HUSKY=0 git push`.
+
 ## Autenticación y tenant
 
 - **Login:** `POST /v1/auth/login` con email/contraseña; sesión en cookie **HttpOnly** (igual que `frontend`).

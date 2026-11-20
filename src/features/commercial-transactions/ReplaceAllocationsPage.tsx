@@ -66,13 +66,16 @@ export function ReplaceAllocationsPage({ resource }: Props) {
 
   const [settlementLines, setSettlementLines] = useState<CurrentAccountSettlementLine[]>([]);
   const [settlementLoading, setSettlementLoading] = useState(false);
+  const settlementQueryEnabled = Boolean(
+    canEditAllocations && tenantId && customerId && currencyId,
+  );
+  if (!settlementQueryEnabled && (settlementLines.length > 0 || settlementLoading)) {
+    setSettlementLines([]);
+    setSettlementLoading(false);
+  }
 
   useEffect(() => {
-    if (!canEditAllocations || !tenantId || !customerId || !currencyId) {
-      setSettlementLines([]);
-      setSettlementLoading(false);
-      return;
-    }
+    if (!canEditAllocations || !tenantId || !customerId || !currencyId) return;
     const asOf =
       record?.transactionDate != null && String(record.transactionDate).trim() !== ''
         ? String(record.transactionDate).slice(0, 10)

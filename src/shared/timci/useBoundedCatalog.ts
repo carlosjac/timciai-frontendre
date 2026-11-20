@@ -71,30 +71,41 @@ export function useBoundedCatalog<T extends BaseRecord>(
 ): { rows: T[]; loading: boolean } {
   const getDataProvider = useDataProvider();
   const tenantId = resource === 'document_types' ? (getStoredTenantId() ?? '') : '';
+  const key = catalogCacheKey(resource, tenantId);
+  const cached = enabled ? readFresh<T>(key) : undefined;
   const [rows, setRows] = useState<T[]>([]);
-  const [loading, setLoading] = useState(enabled);
+  const [loading, setLoading] = useState(false);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!enabled) {
+  if (!enabled) {
+    if (loadedKey !== null || rows.length > 0 || loading) {
       setRows([]);
       setLoading(false);
-      return;
+      setLoadedKey(null);
     }
-    const key = catalogCacheKey(resource, tenantId);
-    const fresh = readFresh<T>(key);
-    if (fresh) {
-      setRows(fresh);
+  } else if (cached) {
+    if (loadedKey !== key || loading || rows !== cached) {
+      setRows(cached);
       setLoading(false);
-      return;
+      setLoadedKey(key);
     }
-    let cancelled = false;
+  } else if (!loading && loadedKey !== key) {
     setLoading(true);
+  }
+
+  useEffect(() => {
+    if (!enabled || readFresh<T>(key)) return;
+    let cancelled = false;
     void loadCatalog<T>(key, resource, getDataProvider)
       .then((data) => {
-        if (!cancelled) setRows(data);
+        if (cancelled) return;
+        setRows(data);
+        setLoadedKey(key);
       })
       .catch(() => {
-        if (!cancelled) setRows([]);
+        if (cancelled) return;
+        setRows([]);
+        setLoadedKey(key);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -103,7 +114,7 @@ export function useBoundedCatalog<T extends BaseRecord>(
     return () => {
       cancelled = true;
     };
-  }, [enabled, getDataProvider, resource, tenantId]);
+  }, [enabled, getDataProvider, key, resource]);
 
-  return { rows, loading };
+  return { rows: enabled ? rows : [], loading: enabled && loading };
 }

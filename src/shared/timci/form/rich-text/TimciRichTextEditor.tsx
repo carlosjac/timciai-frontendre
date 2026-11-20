@@ -4,7 +4,7 @@ import Underline from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Button } from 'antd';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { sanitizeRichTextHtml } from './richTextSanitize.js';
 
 export type TimciRichTextEditorProps = {
@@ -67,16 +67,16 @@ export function TimciRichTextEditor({
 }: TimciRichTextEditorProps) {
   const translate = useTranslate();
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
   const emittedRef = useRef<string | null>(null);
-  const initialContentRef = useRef<string | null>(null);
-  if (initialContentRef.current === null) {
-    initialContentRef.current = sanitizeRichTextHtml(value ?? '');
-  }
+  const [initialContent] = useState(() => sanitizeRichTextHtml(value ?? ''));
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const editor = useEditor({
     extensions: richTextExtensions,
-    content: initialContentRef.current,
+    content: initialContent,
     editable: !disabled,
     shouldRerenderOnTransaction: true,
     onUpdate: ({ editor: ed }) => {

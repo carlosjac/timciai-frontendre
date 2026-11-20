@@ -56,7 +56,10 @@ export function CommercialTransactionAllocationsPanel({
   const translate = useTranslate();
   const navigate = useNavigate();
   const { dateFormat, timeZone } = useUserPreferences();
-  const rows = Array.isArray(allocations) ? allocations : [];
+  const rows = useMemo(
+    () => (Array.isArray(allocations) ? allocations : []),
+    [allocations],
+  );
   const tenantId = typeof window !== 'undefined' ? getStoredTenantId() : null;
 
   /** Collections: only drafts store nominal. Credits: always nominal (no materialize rewrite). */
@@ -91,16 +94,16 @@ export function CommercialTransactionAllocationsPanel({
   >(new Map());
   const canLoadSettlement =
     needsSettlementDisplay && Boolean(tenantId && customerId && currencyId);
-  if (!canLoadSettlement && settlementByTargetId.size > 0) {
+  if (
+    settlementByTargetId.size > 0 &&
+    (!canLoadSettlement || settlementTargetIds.length === 0)
+  ) {
     setSettlementByTargetId(new Map());
   }
 
   useEffect(() => {
     if (!canLoadSettlement || !tenantId || !customerId || !currencyId) return;
-    if (settlementTargetIds.length === 0) {
-      setSettlementByTargetId(new Map());
-      return;
-    }
+    if (settlementTargetIds.length === 0) return;
     const asOf =
       transactionDate != null && String(transactionDate).trim() !== ''
         ? String(transactionDate).slice(0, 10)

@@ -1,7 +1,7 @@
 import { useSelect } from '@refinedev/antd';
 import { usePermissions, useTranslate, type BaseRecord } from '@refinedev/core';
 import { Alert, Button, Select, Space, Spin, Typography } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { formatTimciUserDateOnly, formatTimciUserDateTime } from '../../shared/timci/formatUserDateTime.js';
 import { TimciFormInactiveRecordBanner } from '../../shared/timci/form/TimciFormInactiveRecordBanner.js';
 import type { TimciColumnDef } from '../../shared/timci/list/domain/timci-column-def.js';
@@ -11,18 +11,9 @@ import type { TimciPermissionsData } from '../../shared/timci/actionCodes.js';
 import { useUserPreferences } from '../preferences/useUserPreferences.js';
 import type { TimciAuditUserRef } from '../../shared/timci/auditUserRef.js';
 import { SellableItemPriceDrawer } from './SellableItemPriceDrawer.js';
+import { solePriceListId } from './solePriceListId.js';
 
 type PriceListRow = BaseRecord & { id: string; name?: string; isActive?: boolean };
-
-/** The entity's only price list, when the unfiltered total is one. */
-export function solePriceListId(
-  total: number | undefined,
-  rows: readonly { id: string }[],
-  searching: boolean,
-): string | null {
-  if (searching || total !== 1 || rows.length !== 1 || !rows[0]) return null;
-  return String(rows[0].id);
-}
 
 type ItemRow = BaseRecord & {
   currencyCode?: string;
@@ -58,7 +49,7 @@ export function SellableItemPricesTab({
 
   const [priceListId, setPriceListId] = useState<string | null>(null);
   const [pickedList, setPickedList] = useState<PriceListRow | null>(null);
-  const userClearedList = useRef(false);
+  const [userClearedList, setUserClearedList] = useState(false);
   const [listSearch, setListSearch] = useState('');
 
   const priceListSelect = useSelect<PriceListRow>({
@@ -87,18 +78,15 @@ export function SellableItemPricesTab({
     [priceListSelect.query.data?.data],
   );
   const listsLoading = priceListSelect.query.isLoading && priceLists.length === 0 && listSearch === '';
-
-  useEffect(() => {
-    if (userClearedList.current || priceListId) return;
-    const onlyId = solePriceListId(
-      priceListSelect.query.data?.total,
-      priceLists,
-      listSearch !== '',
-    );
-    if (!onlyId) return;
-    setPriceListId(onlyId);
+  const onlyPriceListId = solePriceListId(
+    priceListSelect.query.data?.total,
+    priceLists,
+    listSearch !== '',
+  );
+  if (!userClearedList && !priceListId && onlyPriceListId) {
+    setPriceListId(onlyPriceListId);
     setPickedList(priceLists[0] ?? null);
-  }, [listSearch, priceListId, priceListSelect.query.data?.total, priceLists]);
+  }
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -254,7 +242,7 @@ export function SellableItemPricesTab({
             value={priceListId ?? undefined}
             onChange={(v) => {
               const nextId = v ? String(v) : null;
-              if (!nextId) userClearedList.current = true;
+              if (!nextId) setUserClearedList(true);
               setPriceListId(nextId);
               setPickedList(
                 nextId ? (priceLists.find((row) => String(row.id) === nextId) ?? pickedList) : null,

@@ -1,0 +1,3 @@
+pnpm lint
+pnpm test
+VITE_API_URL= pnpm build
