@@ -3,6 +3,7 @@ import { useTranslate } from '@refinedev/core';
 import { Alert, Button, Select, Space, Table, Tag, Typography, theme } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router';
+import { antdPaginationLocaleEs } from '../../shared/timci/antdPaginationLocaleEs.js';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
   commercialResourceFromType,
@@ -291,6 +292,7 @@ export function CustomerCurrentAccountTab({ customerId, defaultCurrencyId }: Pro
           total: movementsTotal,
           showSizeChanger: true,
           pageSizeOptions: [10, 25, 50, 100],
+          locale: antdPaginationLocaleEs,
           onChange: (page, pageSize) => {
             setMovementsPage(page);
             setMovementsPageSize(pageSize);

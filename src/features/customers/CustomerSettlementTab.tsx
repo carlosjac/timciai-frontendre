@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { Link, useNavigate } from 'react-router';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import { antdDatePickerLocaleEs } from '../../shared/timci/antdPickerLocaleEs.js';
+import { antdPaginationLocaleEs } from '../../shared/timci/antdPaginationLocaleEs.js';
 import {
   commercialResourceFromType,
   commercialTransactionShowPath,
@@ -218,7 +219,12 @@ export function CustomerSettlementTab({ customerId, defaultCurrencyId }: Props) 
           loading={settlementLoading}
           rowKey="id"
           dataSource={settlement?.lines ?? []}
-          pagination={{ pageSize: 25, showSizeChanger: true, pageSizeOptions: [10, 25, 50, 100] }}
+          pagination={{
+            pageSize: 25,
+            showSizeChanger: true,
+            pageSizeOptions: [10, 25, 50, 100],
+            locale: antdPaginationLocaleEs,
+          }}
           locale={{
             emptyText: !currencyId
               ? translate('pages.customers.currentAccountCurrencyPlaceholder')

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslate } from '@refinedev/core';
 import { Alert, Button, Select, Space, Table, Typography } from 'antd';
 import { useNavigate } from 'react-router';
+import { antdPaginationLocaleEs } from '../../shared/timci/antdPaginationLocaleEs.js';
 import { getStoredTenantId } from '../../shared/timci/apiUrl.js';
 import {
   commercialResourceFromType,
@@ -178,6 +179,7 @@ export function CustomerAllocationsTab({ customerId, defaultCurrencyId }: Props)
           total: rowsTotal,
           showSizeChanger: true,
           pageSizeOptions: [10, 25, 50, 100],
+          locale: antdPaginationLocaleEs,
           onChange: (page, pageSize) => {
             setRowsPage(page);
             setRowsPageSize(pageSize);

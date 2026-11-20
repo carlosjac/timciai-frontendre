@@ -7,7 +7,6 @@ import {
   type LogicalFilter,
 } from '@refinedev/core';
 import { Alert, Button, Checkbox, Popover, Space, Table, theme } from 'antd';
-import esES from 'antd/locale/es_ES';
 import { DownloadOutlined, FilterOutlined, SettingOutlined } from '@ant-design/icons';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import {
@@ -21,24 +20,10 @@ import {
 } from 'react';
 import { Link, useNavigate } from 'react-router';
 import type { TimciColumnDef } from '../domain/timci-column-def.js';
-
-/** Alineado con `rc-pagination` `es_ES` por si el locale de antd no se resuelve en runtime. */
-const RC_PAGINATION_ES_FALLBACK = {
-  items_per_page: '/ página',
-  jump_to: 'Ir a',
-  jump_to_confirm: 'confirmar',
-  page: 'Página',
-  prev_page: 'Página anterior',
-  next_page: 'Página siguiente',
-  prev_5: '5 páginas previas',
-  next_5: '5 páginas siguientes',
-  prev_3: '3 páginas previas',
-  next_3: '3 páginas siguientes',
-  page_size: 'tamaño de página',
-} as const;
 import { fetchAllListPages } from '../../../lib/fetch-all-pages.js';
 import { downloadTextFile, rowsToCsv } from '../../../lib/csv-export.js';
 import { fetchTimciListPage } from '../infrastructure/timci-list-http.fetcher.js';
+import { antdPaginationLocaleEs } from '../../antdPaginationLocaleEs.js';
 import { getStoredTenantId } from '../../apiUrl.js';
 import { isLogicalFilter } from '../../listQuery.js';
 import { AppliedFiltersBar } from './applied-filters-bar.js';
@@ -517,7 +502,7 @@ export function TimciDataList<T extends BaseRecord>(props: TimciDataListProps<T>
       typeof tablePagination.locale === 'object'
         ? tablePagination.locale
         : {};
-    const rcEs = esES.Pagination ?? RC_PAGINATION_ES_FALLBACK;
+    const rcEs = antdPaginationLocaleEs;
     return {
       ...tablePagination,
       pageSizeOptions: [10, 20, 50, 100],
