@@ -64,6 +64,7 @@ export function DocumentShow() {
   const [pdfError, setPdfError] = useState(false);
   const embedPdf = supportsEmbeddedPdfPreview(
     typeof navigator === 'undefined' ? '' : navigator.userAgent,
+    typeof navigator === 'undefined' ? 0 : navigator.maxTouchPoints,
   );
 
   useEffect(() => {

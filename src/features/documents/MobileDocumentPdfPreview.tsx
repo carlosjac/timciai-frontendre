@@ -30,7 +30,7 @@ function isStaleRender(error: unknown, cancelled: boolean, generation: number, c
 
 /**
  * Paints each PDF page on a canvas. Used where the browser cannot embed a PDF
- * (Android). The worker file is loaded only with this module.
+ * (Android and iOS). The worker file is loaded only with this module.
  */
 export default function MobileDocumentPdfPreview({ blob }: { blob: Blob }) {
   const translate = useTranslate();
